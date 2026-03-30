@@ -19,461 +19,234 @@
     --gold: #f5c842;
     --blue: #60a5fa;
     --purple: #a78bfa;
-    --accent: #f5c842;
   }
-
-- { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-background: var(–bg);
-color: var(–text);
-font-family: ‘Noto Sans TC’, sans-serif;
-min-height: 100vh;
-padding: 24px;
-}
-
-.noise {
-position: fixed; inset: 0; pointer-events: none; z-index: 0;
-background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 200 200’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.025’/%3E%3C/svg%3E”);
-opacity: 0.4;
-}
-
-.container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-
-header {
-display: flex; align-items: baseline; justify-content: space-between;
-margin-bottom: 32px; flex-wrap: wrap; gap: 8px;
-}
-
-.logo {
-font-family: ‘Space Mono’, monospace;
-font-size: 1.1rem; font-weight: 700;
-color: var(–accent);
-letter-spacing: 0.05em;
-}
-
-.logo span { color: var(–text-muted); font-weight: 400; }
-
-.time-display {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.8rem; color: var(–text-muted);
-background: var(–surface);
-border: 1px solid var(–border);
-padding: 6px 14px; border-radius: 20px;
-}
-
-/* Grid */
-.grid { display: grid; gap: 16px; }
-.grid-4 { grid-template-columns: repeat(4, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-
-@media (max-width: 900px) {
-.grid-4 { grid-template-columns: repeat(2, 1fr); }
-.grid-3 { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 500px) {
-.grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
-body { padding: 16px; }
-}
-
-/* Cards */
-.card {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 16px;
-padding: 20px;
-position: relative;
-overflow: hidden;
-transition: border-color 0.2s, transform 0.15s;
-animation: fadeUp 0.5s ease both;
-}
-.card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
-
-@keyframes fadeUp {
-from { opacity: 0; transform: translateY(16px); }
-to   { opacity: 1; transform: translateY(0); }
-}
-
-.card::before {
-content: ‘’;
-position: absolute; top: 0; left: 0; right: 0; height: 2px;
-border-radius: 16px 16px 0 0;
-}
-.card.gold::before  { background: var(–gold); }
-.card.green::before { background: var(–green); }
-.card.red::before   { background: var(–red); }
-.card.blue::before  { background: var(–blue); }
-.card.purple::before{ background: var(–purple); }
-
-.card-label {
-font-size: 0.7rem; text-transform: uppercase;
-letter-spacing: 0.12em; color: var(–text-muted);
-margin-bottom: 10px;
-display: flex; align-items: center; gap: 6px;
-}
-
-.card-label .dot {
-width: 6px; height: 6px; border-radius: 50%;
-display: inline-block;
-}
-
-.card-value {
-font-family: ‘Space Mono’, monospace;
-font-size: 1.7rem; font-weight: 700;
-line-height: 1; margin-bottom: 6px;
-letter-spacing: -0.02em;
-}
-
-.card-sub {
-font-size: 0.75rem; color: var(–text-muted);
-display: flex; align-items: center; gap: 6px;
-}
-
-.badge {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem; padding: 2px 8px;
-border-radius: 20px; font-weight: 700;
-}
-.badge.up   { background: rgba(34,211,160,0.15); color: var(–green); }
-.badge.down { background: rgba(244,63,94,0.15);  color: var(–red); }
-.badge.flat { background: rgba(255,255,255,0.07); color: var(–text-muted); }
-
-.loading-dot {
-display: inline-block; width: 6px; height: 6px;
-border-radius: 50%; background: var(–text-muted);
-animation: pulse 1.2s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
-
-/* Section title */
-.section-title {
-font-size: 0.7rem; text-transform: uppercase;
-letter-spacing: 0.12em; color: var(–text-muted);
-margin: 28px 0 14px;
-display: flex; align-items: center; gap: 10px;
-}
-.section-title::after {
-content: ‘’; flex: 1; height: 1px;
-background: var(–border);
-}
-
-/* ETF row */
-.etf-row {
-display: flex; align-items: center; justify-content: space-between;
-padding: 12px 0;
-border-bottom: 1px solid var(–border);
-}
-.etf-row:last-child { border-bottom: none; padding-bottom: 0; }
-.etf-name { font-size: 0.85rem; }
-.etf-code {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.7rem; color: var(–text-muted);
-}
-.etf-price {
-font-family: ‘Space Mono’, monospace;
-font-size: 0.95rem; font-weight: 700;
-}
-
-/* VIX gauge */
-.vix-gauge {
-height: 8px; border-radius: 4px;
-background: linear-gradient(to right, var(–green), var(–gold), var(–red));
-margin: 12px 0 6px; position: relative;
-}
-.vix-needle {
-position: absolute; top: 50%; width: 14px; height: 14px;
-background: white; border-radius: 50%;
-transform: translate(-50%, -50%);
-box-shadow: 0 0 0 3px var(–bg);
-transition: left 1s cubic-bezier(.4,0,.2,1);
-}
-.vix-labels {
-display: flex; justify-content: space-between;
-font-size: 0.65rem; color: var(–text-muted);
-font-family: ‘Space Mono’, monospace;
-}
-
-/* Refresh */
-.refresh-btn {
-background: var(–surface2); border: 1px solid var(–border);
-color: var(–text); font-family: ‘Noto Sans TC’, sans-serif;
-padding: 8px 18px; border-radius: 8px; cursor: pointer;
-font-size: 0.8rem; transition: all 0.15s;
-}
-.refresh-btn:hover { background: var(–surface); border-color: rgba(255,255,255,0.2); }
-.refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.spinning { animation: spin 1s linear infinite; display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Tax tips */
-.tip-card {
-background: var(–surface2);
-border-radius: 10px; padding: 14px;
-font-size: 0.82rem; line-height: 1.7;
-color: var(–text-muted);
-margin-bottom: 10px;
-}
-.tip-card strong { color: var(–text); }
-
-.status-bar {
-margin-top: 28px; padding: 12px 16px;
-background: var(–surface); border: 1px solid var(–border);
-border-radius: 10px; display: flex; justify-content: space-between;
-font-size: 0.72rem; color: var(–text-muted);
-font-family: ‘Space Mono’, monospace;
-flex-wrap: wrap; gap: 8px;
-}
-
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.10s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.20s; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; min-height:100vh; padding:20px; }
+  .container { max-width:900px; margin:0 auto; }
+  header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:10px; }
+  .logo { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:var(--gold); }
+  .logo span { color:var(--text-muted); font-weight:400; }
+  .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .clock { font-family:'Space Mono',monospace; font-size:0.78rem; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:20px; }
+  .refresh-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:6px 16px; border-radius:8px; cursor:pointer; font-size:0.8rem; font-family:'Noto Sans TC',sans-serif; }
+  .refresh-btn:hover { border-color:rgba(255,255,255,0.2); }
+  .refresh-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .section-title { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); margin:24px 0 12px; display:flex; align-items:center; gap:10px; }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media(max-width:700px){ .grid-4{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:420px){ .grid-4,.grid-2{grid-template-columns:1fr;} }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; position:relative; overflow:hidden; }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:14px 14px 0 0; }
+  .card.gold::before  { background:var(--gold); }
+  .card.blue::before  { background:var(--blue); }
+  .card.red::before   { background:var(--red); }
+  .card.green::before { background:var(--green); }
+  .card.purple::before{ background:var(--purple); }
+  .card-label { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+  .dot { width:5px; height:5px; border-radius:50%; display:inline-block; }
+  .card-value { font-family:'Space Mono',monospace; font-size:1.5rem; font-weight:700; line-height:1; margin-bottom:6px; }
+  .card-sub { font-size:0.72rem; color:var(--text-muted); }
+  .badge { font-family:'Space Mono',monospace; font-size:0.68rem; padding:2px 7px; border-radius:20px; font-weight:700; }
+  .badge.up   { background:rgba(34,211,160,0.15); color:var(--green); }
+  .badge.down { background:rgba(244,63,94,0.15); color:var(--red); }
+  .badge.flat { background:rgba(255,255,255,0.07); color:var(--text-muted); }
+  .loading { color:var(--text-muted); font-size:0.8rem; }
+  .etf-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .etf-row:last-child { border-bottom:none; }
+  .etf-name { font-size:0.82rem; }
+  .etf-code { font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--text-muted); }
+  .etf-price { font-family:'Space Mono',monospace; font-size:0.9rem; font-weight:700; text-align:right; }
+  .etf-chg { font-size:0.68rem; font-family:'Space Mono',monospace; text-align:right; }
+  .vix-gauge { height:7px; border-radius:4px; background:linear-gradient(to right,var(--green),var(--gold),var(--red)); margin:10px 0 5px; position:relative; }
+  .vix-needle { position:absolute; top:50%; width:12px; height:12px; background:white; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 2px var(--bg); transition:left 1s ease; }
+  .vix-labels { display:flex; justify-content:space-between; font-size:0.6rem; color:var(--text-muted); font-family:'Space Mono',monospace; }
+  .tip { background:var(--surface2); border-radius:8px; padding:12px; font-size:0.78rem; line-height:1.7; color:var(--text-muted); margin-bottom:8px; }
+  .tip strong { color:var(--text); }
+  .tip a { color:var(--green); }
+  .status { margin-top:20px; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:0.68rem; color:var(--text-muted); font-family:'Space Mono',monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .spinning { display:inline-block; animation:spin 1s linear infinite; }
 </style>
-
 </head>
 <body>
-<div class="noise"></div>
 <div class="container">
 
   <header>
-    <div>
-      <div class="logo">MY DAILY BRIEF <span>/ 每日財經</span></div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">⟳ 更新資料</button>
-      <div class="time-display" id="clock">--:--:--</div>
+    <div class="logo">MY DAILY BRIEF <span>/ 每日財經</span></div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAll()">⟳ 更新資料</button>
+      <div class="clock" id="clock">--:--:--</div>
     </div>
   </header>
 
-  <!-- Row 1: 匯率 + 黃金 + VIX -->
-
   <div class="section-title">🌐 市場概覽</div>
-  <div class="grid grid-4">
-
-```
-<div class="card blue stagger-1" id="card-usdtwd">
-  <div class="card-label"><span class="dot" style="background:var(--blue)"></span>USD / TWD</div>
-  <div class="card-value" id="val-usdtwd"><span class="loading-dot"></span></div>
-  <div class="card-sub" id="sub-usdtwd">台幣匯率</div>
-</div>
-
-<div class="card gold stagger-2" id="card-gold">
-  <div class="card-label"><span class="dot" style="background:var(--gold)"></span>黃金 GOLD</div>
-  <div class="card-value" id="val-gold"><span class="loading-dot"></span></div>
-  <div class="card-sub" id="sub-gold">美元/盎司</div>
-</div>
-
-<div class="card red stagger-3" id="card-vix">
-  <div class="card-label"><span class="dot" style="background:var(--red)"></span>VIX 恐慌指數</div>
-  <div class="card-value" id="val-vix"><span class="loading-dot"></span></div>
-  <div class="vix-gauge"><div class="vix-needle" id="vix-needle" style="left:30%"></div></div>
-  <div class="vix-labels"><span>低恐慌</span><span>20</span><span>高恐慌</span></div>
-</div>
-
-<div class="card green stagger-4" id="card-taiex">
-  <div class="card-label"><span class="dot" style="background:var(--green)"></span>台灣加權指數</div>
-  <div class="card-value" id="val-taiex"><span class="loading-dot"></span></div>
-  <div class="card-sub" id="sub-taiex">TAIEX</div>
-</div>
-```
-
+  <div class="grid-4">
+    <div class="card blue">
+      <div class="card-label"><span class="dot" style="background:var(--blue)"></span>USD / TWD</div>
+      <div class="card-value" id="val-usd"><span class="loading">…</span></div>
+      <div class="card-sub" id="sub-usd">台幣匯率</div>
+    </div>
+    <div class="card gold">
+      <div class="card-label"><span class="dot" style="background:var(--gold)"></span>黃金 GOLD</div>
+      <div class="card-value" id="val-gold"><span class="loading">…</span></div>
+      <div class="card-sub" id="sub-gold">美元/盎司</div>
+    </div>
+    <div class="card red">
+      <div class="card-label"><span class="dot" style="background:var(--red)"></span>VIX 恐慌指數</div>
+      <div class="card-value" id="val-vix"><span class="loading">…</span></div>
+      <div class="vix-gauge"><div class="vix-needle" id="vix-needle" style="left:30%"></div></div>
+      <div class="vix-labels"><span>低恐慌</span><span>20</span><span>高恐慌</span></div>
+    </div>
+    <div class="card green">
+      <div class="card-label"><span class="dot" style="background:var(--green)"></span>台灣加權指數</div>
+      <div class="card-value" id="val-taiex"><span class="loading">…</span></div>
+      <div class="card-sub" id="sub-taiex">TAIEX</div>
+    </div>
   </div>
-
-  <!-- Row 2: ETF -->
 
   <div class="section-title">📊 債券 ETF 追蹤</div>
-  <div class="grid grid-2">
-
-```
-<div class="card blue">
-  <div class="card-label"><span class="dot" style="background:var(--blue)"></span>美國債券 ETF</div>
-  <div id="etf-us">
-    <div class="etf-row">
-      <div><div class="etf-name">美國20年期公債</div><div class="etf-code">TLT</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-tlt"><span class="loading-dot"></span></div><div id="chg-tlt" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
+  <div class="grid-2">
+    <div class="card blue">
+      <div class="card-label"><span class="dot" style="background:var(--blue)"></span>美國債券 ETF</div>
+      <div id="etf-us"><div class="loading">載入中…</div></div>
     </div>
-    <div class="etf-row">
-      <div><div class="etf-name">美國7-10年公債</div><div class="etf-code">IEF</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-ief"><span class="loading-dot"></span></div><div id="chg-ief" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
-    </div>
-    <div class="etf-row">
-      <div><div class="etf-name">投資級公司債</div><div class="etf-code">LQD</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-lqd"><span class="loading-dot"></span></div><div id="chg-lqd" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
+    <div class="card purple">
+      <div class="card-label"><span class="dot" style="background:var(--purple)"></span>台灣債券 ETF</div>
+      <div id="etf-tw"><div class="loading">載入中…</div></div>
     </div>
   </div>
-</div>
 
-<div class="card purple">
-  <div class="card-label"><span class="dot" style="background:var(--purple)"></span>台灣債券 ETF</div>
-  <div>
-    <div class="etf-row">
-      <div><div class="etf-name">元大美債20年</div><div class="etf-code">00679B</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-00679b"><span class="loading-dot"></span></div><div id="chg-00679b" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
+  <div class="section-title">💡 節稅 &amp; 房地產備忘</div>
+  <div class="grid-2">
+    <div class="card gold">
+      <div class="card-label"><span class="dot" style="background:var(--gold)"></span>2025 節稅重點</div>
+      <div class="tip"><strong>📅 綜所稅申報</strong> — 每年 5 月，利用<strong>列舉扣除額</strong>（捐贈、醫療、房貸利息）可能比標準扣除額划算</div>
+      <div class="tip"><strong>📦 股利所得</strong> — 可選<strong>合併計稅</strong>（8.5% 抵減）或<strong>分開計稅</strong>（28%），依所得級距選擇</div>
+      <div class="tip"><strong>🏠 房地合一 2.0</strong> — 持有 2年內：45%｜2–5年：35%｜5–10年：20%｜10年以上：15%</div>
     </div>
-    <div class="etf-row">
-      <div><div class="etf-name">中信高評級公司債</div><div class="etf-code">00772B</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-00772b"><span class="loading-dot"></span></div><div id="chg-00772b" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
-    </div>
-    <div class="etf-row">
-      <div><div class="etf-name">群益投資級金融債</div><div class="etf-code">00791B</div></div>
-      <div style="text-align:right"><div class="etf-price" id="etf-00791b"><span class="loading-dot"></span></div><div id="chg-00791b" style="font-size:0.7rem;color:var(--text-muted)"></div></div>
+    <div class="card green">
+      <div class="card-label"><span class="dot" style="background:var(--green)"></span>房地產觀察指標</div>
+      <div class="tip"><strong>🔍 實價登錄</strong> — <a href="https://lvr.land.moi.gov.tw" target="_blank">lvr.land.moi.gov.tw</a> 查詢實際成交價</div>
+      <div class="tip"><strong>📊 關鍵連動</strong> — 升息 → 房貸壓力大；強台幣 → 外資買房意願高</div>
+      <div class="tip"><strong>⚠️ 現在注意</strong> — 政府持續打炒房，預售屋換約受限，短期投資風險高</div>
     </div>
   </div>
-</div>
-```
 
+  <div class="status">
+    <span>資料來源：Frankfurter (匯率) · stooq.com (黃金/VIX/股票)</span>
+    <span id="last-update">尚未更新</span>
   </div>
-
-  <!-- Row 3: 節稅 & 房地產提示 -->
-
-  <div class="section-title">💡 節稅 & 房地產 備忘</div>
-  <div class="grid grid-2">
-
-```
-<div class="card gold">
-  <div class="card-label"><span class="dot" style="background:var(--gold)"></span>2025 節稅重點</div>
-  <div class="tip-card">
-    <strong>📅 綜所稅申報</strong> — 每年 5 月，利用<strong>列舉扣除額</strong>（捐贈、醫療、房貸利息）可能比標準扣除額划算
-  </div>
-  <div class="tip-card">
-    <strong>📦 股利所得</strong> — 可選<strong>合併計稅</strong>（8.5% 抵減）或<strong>分開計稅</strong>（28% 固定稅率），依所得級距選擇
-  </div>
-  <div class="tip-card">
-    <strong>🏠 房地合一 2.0</strong> — 持有 <strong>2 年內</strong>：45%；2–5 年：35%；5–10 年：20%；10 年以上：15%
-  </div>
-</div>
-
-<div class="card green">
-  <div class="card-label"><span class="dot" style="background:var(--green)"></span>房地產觀察指標</div>
-  <div class="tip-card">
-    <strong>🔍 實價登錄查詢</strong> — <a href="https://lvr.land.moi.gov.tw" target="_blank" style="color:var(--green)">lvr.land.moi.gov.tw</a> 可查詢實際成交價
-  </div>
-  <div class="tip-card">
-    <strong>📊 六都房價走勢</strong> — 搭配<strong>利率走向</strong>（升息 → 房貸壓力）與<strong>台幣匯率</strong>（強台幣 → 外資買房意願）評估
-  </div>
-  <div class="tip-card">
-    <strong>⚠️ 現在注意</strong> — 政府持續打炒房政策，短期投資風險高；觀察<strong>預售屋換約限制</strong>最新動向
-  </div>
-</div>
-```
-
-  </div>
-
-  <div class="status-bar">
-    <span id="data-source">資料來源：Yahoo Finance API (非商業用途)</span>
-    <span id="last-update">上次更新：-</span>
-  </div>
-
 </div>
 
 <script>
-// Clock
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('zh-TW', { hour12: false }) + ' ' +
-    now.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
-}
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleTimeString('zh-TW',{hour12:false})+' '+
+    (n.getMonth()+1).toString().padStart(2,'0')+'/'+(n.getDate()).toString().padStart(2,'0');
+},1000);
 
-// Fetch via Yahoo Finance proxy (no API key needed, CORS-friendly endpoint)
-async function fetchQuote(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2d`;
-  const res = await fetch(url);
-  const data = await res.json();
-  const meta = data.chart.result[0].meta;
-  const prev = data.chart.result[0].indicators?.quote?.[0]?.close?.[0] || meta.chartPreviousClose;
-  return {
-    price: meta.regularMarketPrice,
-    prev: prev,
-    change: meta.regularMarketPrice - prev,
-    changePct: ((meta.regularMarketPrice - prev) / prev) * 100
-  };
-}
+function fmt(n,d=2){ return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
 
-function fmt(n, dec=2) { return Number(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
-
-function setBadge(val, pct) {
-  const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
-  const sign = pct > 0 ? '+' : '';
+function badge(pct){
+  if(pct==null||isNaN(pct)) return '';
+  const dir=pct>0?'up':pct<0?'down':'flat';
+  const sign=pct>0?'+':'';
   return `<span class="badge ${dir}">${sign}${fmt(pct,2)}%</span>`;
 }
 
-function setEtf(id, chgId, q) {
-  document.getElementById(id).textContent = '$' + fmt(q.price);
-  const dir = q.changePct > 0 ? 'var(--green)' : q.changePct < 0 ? 'var(--red)' : 'var(--text-muted)';
-  const sign = q.changePct > 0 ? '+' : '';
-  document.getElementById(chgId).innerHTML = `<span style="color:${dir};font-family:'Space Mono',monospace">${sign}${fmt(q.changePct,2)}%</span>`;
+function etfRow(name, code, price, chgPct){
+  const dir = chgPct>0?'var(--green)':chgPct<0?'var(--red)':'var(--text-muted)';
+  const sign = chgPct>0?'+':'';
+  const priceStr = (price&&!isNaN(price)) ? '$'+fmt(price) : 'N/A';
+  const chgStr = (chgPct!=null&&!isNaN(chgPct)) ? sign+fmt(chgPct,2)+'%' : '';
+  return `<div class="etf-row">
+    <div><div class="etf-name">${name}</div><div class="etf-code">${code}</div></div>
+    <div><div class="etf-price">${priceStr}</div><div class="etf-chg" style="color:${dir}">${chgStr}</div></div>
+  </div>`;
 }
 
-async function loadAll() {
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinning">⟳</span> 載入中…';
-
-  try {
-    // USD/TWD
-    const usd = await fetchQuote('TWD=X');
-    document.getElementById('val-usdtwd').innerHTML = fmt(usd.price, 3);
-    document.getElementById('sub-usdtwd').innerHTML = `1美元 = ${fmt(usd.price,3)} 台幣 ${setBadge(usd.change, usd.changePct)}`;
-
-    // Gold
-    const gold = await fetchQuote('GC=F');
-    document.getElementById('val-gold').innerHTML = '$' + fmt(gold.price, 0);
-    document.getElementById('sub-gold').innerHTML = `美元/盎司 ${setBadge(gold.change, gold.changePct)}`;
-
-    // VIX
-    const vix = await fetchQuote('^VIX');
-    document.getElementById('val-vix').innerHTML = fmt(vix.price, 2);
-    // Map VIX 10–50 to 0-100% for gauge
-    const vixPct = Math.min(Math.max((vix.price - 10) / 40 * 100, 0), 100);
-    document.getElementById('vix-needle').style.left = vixPct + '%';
-
-    // TAIEX
-    try {
-      const taiex = await fetchQuote('^TWII');
-      document.getElementById('val-taiex').innerHTML = fmt(taiex.price, 0);
-      document.getElementById('sub-taiex').innerHTML = `加權指數 ${setBadge(taiex.change, taiex.changePct)}`;
-    } catch {
-      document.getElementById('val-taiex').innerHTML = 'N/A';
-      document.getElementById('sub-taiex').innerHTML = '無法取得台股資料';
-    }
-
-    // US Bond ETFs
-    const [tlt, ief, lqd] = await Promise.all([
-      fetchQuote('TLT'), fetchQuote('IEF'), fetchQuote('LQD')
-    ]);
-    setEtf('etf-tlt','chg-tlt', tlt);
-    setEtf('etf-ief','chg-ief', ief);
-    setEtf('etf-lqd','chg-lqd', lqd);
-
-    // TW Bond ETFs
-    const [b679, b772, b791] = await Promise.all([
-      fetchQuote('00679B.TW'), fetchQuote('00772B.TW'), fetchQuote('00791B.TW')
-    ]);
-    setEtf('etf-00679b','chg-00679b', b679);
-    setEtf('etf-00772b','chg-00772b', b772);
-    setEtf('etf-00791b','chg-00791b', b791);
-
-    document.getElementById('last-update').textContent =
-      '上次更新：' + new Date().toLocaleTimeString('zh-TW', { hour12: false });
-
-  } catch(e) {
-    console.error(e);
-    document.getElementById('last-update').textContent = '❌ 更新失敗，請稍後再試（Yahoo API 有時流量限制）';
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '⟳ 更新資料';
+// stooq CSV fetch (CORS-friendly)
+async function fetchStooq(symbol){
+  const url=`https://stooq.com/q/l/?s=${encodeURIComponent(symbol)}&f=sd2t2ohlcv&h&e=csv`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error('stooq fetch failed');
+  const text=await r.text();
+  const lines=text.trim().split('\n');
+  if(lines.length<2) throw new Error('no data');
+  const cols=lines[1].split(',');
+  const close=parseFloat(cols[6]);
+  const open=parseFloat(cols[3]);
+  if(isNaN(close)) throw new Error('bad data');
+  const chgPct=(!isNaN(open)&&open!==0)?((close-open)/open)*100:null;
+  return { price:close, chgPct };
 }
 
-// Auto load
+// USD/TWD via Frankfurter (free, no key, CORS-ok)
+async function fetchUSDTWD(){
+  const r=await fetch('https://api.frankfurter.app/latest?from=USD&to=TWD');
+  if(!r.ok) throw new Error('frankfurter failed');
+  const d=await r.json();
+  return { price: d.rates.TWD, chgPct: null };
+}
+
+async function safe(fn, fallback=null){
+  try { return await fn(); } catch(e){ console.warn(e); return fallback; }
+}
+
+async function loadAll(){
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinning">⟳</span> 載入中…';
+
+  const [usd, gold, vix, taiex, tlt, ief, lqd, b679, b772, b791] = await Promise.all([
+    safe(fetchUSDTWD),
+    safe(()=>fetchStooq('xauusd')),
+    safe(()=>fetchStooq('^vix')),
+    safe(()=>fetchStooq('^twii')),
+    safe(()=>fetchStooq('tlt.us')),
+    safe(()=>fetchStooq('ief.us')),
+    safe(()=>fetchStooq('lqd.us')),
+    safe(()=>fetchStooq('00679b.tw')),
+    safe(()=>fetchStooq('00772b.tw')),
+    safe(()=>fetchStooq('00791b.tw')),
+  ]);
+
+  // USD/TWD
+  if(usd){ document.getElementById('val-usd').textContent=fmt(usd.price,3); document.getElementById('sub-usd').innerHTML=`1美元 = ${fmt(usd.price,3)} 台幣`; }
+  else { document.getElementById('val-usd').textContent='N/A'; }
+
+  // Gold
+  if(gold){ document.getElementById('val-gold').textContent='$'+fmt(gold.price,0); document.getElementById('sub-gold').innerHTML=`美元/盎司 ${badge(gold.chgPct)}`; }
+  else { document.getElementById('val-gold').textContent='N/A'; }
+
+  // VIX
+  if(vix){ document.getElementById('val-vix').textContent=fmt(vix.price,2); const pct=Math.min(Math.max((vix.price-10)/40*100,0),100); document.getElementById('vix-needle').style.left=pct+'%'; }
+  else { document.getElementById('val-vix').textContent='N/A'; }
+
+  // TAIEX
+  if(taiex){ document.getElementById('val-taiex').textContent=fmt(taiex.price,0); document.getElementById('sub-taiex').innerHTML=`加權指數 ${badge(taiex.chgPct)}`; }
+  else { document.getElementById('val-taiex').textContent='N/A'; }
+
+  // US ETFs
+  document.getElementById('etf-us').innerHTML=
+    etfRow('美國20年期公債','TLT',tlt?.price,tlt?.chgPct)+
+    etfRow('美國7-10年公債','IEF',ief?.price,ief?.chgPct)+
+    etfRow('投資級公司債','LQD',lqd?.price,lqd?.chgPct);
+
+  // TW ETFs
+  document.getElementById('etf-tw').innerHTML=
+    etfRow('元大美債20年','00679B',b679?.price,b679?.chgPct)+
+    etfRow('中信高評級公司債','00772B',b772?.price,b772?.chgPct)+
+    etfRow('群益投資級金融債','00791B',b791?.price,b791?.chgPct);
+
+  document.getElementById('last-update').textContent='更新時間：'+new Date().toLocaleTimeString('zh-TW',{hour12:false});
+  btn.disabled=false; btn.innerHTML='⟳ 更新資料';
+}
+
 loadAll();
-// Auto refresh every 5 min
-setInterval(loadAll, 300000);
+setInterval(loadAll,300000);
 </script>
 
 </body>
