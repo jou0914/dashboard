@@ -14,110 +14,64 @@
     --text-muted: #6b7280;
     --green: #22d3a0;
     --gold: #f5c842;
-    --blue: #60a5fa;
     --red: #f43f5e;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; }
   .container { max-width:1100px; margin:0 auto; }
-  
   header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
   .logo { font-family:'Space Mono',monospace; font-size:0.9rem; font-weight:700; color:var(--gold); }
   .clock { font-family:'Space Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:5px 10px; border-radius:20px; }
-
   .section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin:25px 0 12px; display:flex; align-items:center; gap:10px; }
   .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
-
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  
-  .card { 
-    background: var(--surface); 
-    border: 1px solid var(--border); 
-    border-radius: 12px; 
-    height: 150px;
-    overflow: hidden;
-  }
-
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; height: 160px; overflow: hidden; }
   .tip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
   @media (max-width: 600px) { .tip-grid { grid-template-columns: 1fr; } }
   .tip-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:15px; }
   .tip-head { color: var(--gold); font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; }
   .tip-body { font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; }
-
   iframe { border: none !important; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
-
 <div class="container">
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 財經即時系統</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 2026 財經系統</span></div>
     <div class="clock" id="clock">--:--:--</div>
   </header>
 
-  <div class="section-title">🌐 全球匯率與商品</div>
+  <div class="section-title">🌐 市場核心指標</div>
   <div class="grid">
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe>
-    </div>
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark"></iframe>
-    </div>
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3ATAIEX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(34%2C211%2C160%2C0.3)&trendLineColor=rgba(34%2C211%2C160%2C1)&theme=dark"></iframe>
-    </div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe></div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark"></iframe></div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3ATAIEX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(34%2C211%2C160%2C0.3)&trendLineColor=rgba(34%2C211%2C160%2C1)&theme=dark"></iframe></div>
   </div>
 
-  <div class="section-title">⚠️ 市場波動率 (VIX 指數)</div>
+  <div class="section-title">⚠️ 恐慌指數 (VIX)</div>
   <div class="grid">
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=CBOE%3AVIX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(244%2C63%2C94%2C0.3)&trendLineColor=rgba(244%2C63%2C94%2C1)&theme=dark"></iframe>
-    </div>
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TVINDEX%3AVIXTW&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(244%2C63%2C94%2C0.3)&trendLineColor=rgba(244%2C63%2C94%2C1)&theme=dark"></iframe>
-    </div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=CBOE%3AVIX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(244%2C63%2C94%2C0.3)&trendLineColor=rgba(244%2C63%2C94%2C1)&theme=dark"></iframe></div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TVINDEX%3AVIXTW&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(244%2C63%2C94%2C0.3)&trendLineColor=rgba(244%2C63%2C94%2C1)&theme=dark"></iframe></div>
   </div>
 
-  <div class="section-title">📊 債券資產</div>
+  <div class="section-title">📊 債券追蹤</div>
   <div class="grid">
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe>
-    </div>
-    <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3A00679B&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe>
-    </div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe></div>
+    <div class="card"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3A00679B&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe></div>
   </div>
 
-  <div class="section-title">💡 財經備忘錄</div>
+  <div class="section-title">💡 備忘錄</div>
   <div class="tip-grid">
-    <div class="tip-card">
-        <div class="tip-head">2025-26 節稅提醒</div>
-        <div class="tip-body">
-            • 綜所稅 5 月申報，檢查列舉扣除額。<br>
-            • 股利所得選合併或分開計稅（依級距）。<br>
-            • 房地合一稅：注意持有年限切換點。
-        </div>
-    </div>
-    <div class="tip-card">
-        <div class="tip-head">房地產指標</div>
-        <div class="tip-body">
-            • 關注央行理監事會議利率決策。<br>
-            • 觀察匯率對外資投入不動產之影響。<br>
-            • 預售屋限制與實價登錄落後資訊注意。
-        </div>
-    </div>
+    <div class="tip-card"><div class="tip-head">2025-26 節稅提醒</div><div class="tip-body">• 綜所稅 5 月申報。<br>• 股利所得選 8.5% 或 28%。</div></div>
+    <div class="tip-card"><div class="tip-head">房地產指標</div><div class="tip-body">• 關注升息壓力。<br>• 預售屋轉單限制。</div></div>
   </div>
 </div>
-
 <script>
   function updateClock() {
     const now = new Date();
-    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', { hour12: false }) + ' ' + 
-    (now.getMonth()+1).toString().padStart(2,'0') + '/' + now.getDate().toString().padStart(2,'0');
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', { hour12: false }) + ' ' + (now.getMonth()+1).toString().padStart(2,'0') + '/' + now.getDate().toString().padStart(2,'0');
   }
-  setInterval(updateClock, 1000);
-  updateClock();
+  setInterval(updateClock, 1000); updateClock();
 </script>
-
 </body>
 </html>
