@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v3.1</title>
+<title>每日財經儀表板 Pro v3.3 (Vercel互動穩定版)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -14,95 +14,94 @@
     --text-muted: #6b7280;
     --green: #22d3a0;
     --gold: #f5c842;
+    --red: #f43f5e;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; }
-  .container { max-width:1100px; margin:0 auto; }
+  .container { max-width:1200px; margin:0 auto; }
   
   header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
   .logo { font-family:'Space Mono',monospace; font-size:0.9rem; font-weight:700; color:var(--gold); }
+  .logo span { color:var(--text-muted); font-weight:400; }
   .clock { font-family:'Space Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:5px 10px; border-radius:20px; }
 
   .section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin:25px 0 12px; display:flex; align-items:center; gap:10px; }
   .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  /* 網格系統 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
   
   .card { 
     background: var(--surface); 
     border: 1px solid var(--border); 
     border-radius: 12px; 
-    height: 150px;
+    height: 160px; /* 增加高度以適應互動 Widget */
     overflow: hidden;
+    position: relative;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   }
 
-  .card-img { padding: 12px; }
-  .card-label { font-size: 0.75rem; color: var(--gold); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .card-logo { color: var(--text-muted); font-size: 0.6rem; font-family:'Space Mono',monospace; }
+  .card-label { padding: 12px 12px 5px; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+  .card-label span { color: var(--gold); }
   
-  .img-content { flex: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 6px; background: #000; }
-  .img-content img { width: 110%; height: 110%; object-fit: contain; filter: contrast(1.1); }
-
+  .widget-box { flex: 1; width: 100%; position: relative; }
+  
+  /* 底部備忘錄區塊 */
   .tip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
   @media (max-width: 600px) { .tip-grid { grid-template-columns: 1fr; } }
   .tip-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:15px; }
   .tip-head { color: var(--gold); font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; }
   .tip-body { font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; }
 
-  iframe { border: none !important; width: 100%; height: 100%; }
+  iframe { border: none !important; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 財經監測系統</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 財經系統 (Vercel互動版)</span></div>
     <div class="clock" id="clock">--:--:--</div>
   </header>
 
-  <div class="section-title">🚀 核心追蹤 (含鴻勁 7769)</div>
+  <div class="section-title">🚀 台灣標的 (互動圖表 Widget)</div>
   <div class="grid">
-    <div class="card card-img">
+    <div class="card">
         <div class="card-label">鴻勁 <span class="card-logo">7769:TPE</span></div>
-        <div class="img-content">
-            <img src="https://www.google.com/finance/chart?q=TPE:7769&p=1d&theme=dark" alt="7769 鴻勁走勢">
-        </div>
-    </div>
-
-    <div class="card card-img">
-        <div class="card-label">加權指數 <span class="card-logo">TAIEX</span></div>
-        <div class="img-content">
-            <img src="https://www.google.com/finance/chart?q=INDEXTWD:TWII&p=1d&theme=dark" alt="台股走勢">
+        <div class="widget-box">
+            <iframe src="https://s.tradingview.com/widgetembed/?symbol=TSE%3A7769&interval=D&theme=dark&style=1&timezone=Asia%2FTaipei&withdateranges=true&hide_side_toolbar=true&allow_symbol_change=false&save_image=false&show_popup_button=false&popup_width=1000&popup_height=650&locale=zh_TW"></iframe>
         </div>
     </div>
 
     <div class="card">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe>
+        <div class="card-label">加權指數 <span class="card-logo">TWIIINDEX</span></div>
+        <div class="widget-box">
+            <iframe src="https://s.tradingview.com/widgetembed/?symbol=INDEX%3ATWII&interval=D&theme=dark&style=1&timezone=Asia%2FTaipei&withdateranges=true&hide_side_toolbar=true&allow_symbol_change=false&save_image=false&show_popup_button=false&popup_width=1000&popup_height=650&locale=zh_TW"></iframe>
+        </div>
     </div>
 
-    <div class="card card-img">
-        <div class="card-label">CNN 恐慌指數 <span class="card-logo">GREED/FEAR</span></div>
-        <div class="img-content">
-            <img src="https://money.cnn.com/.element/img/5.0/sections/markets/greedandfear/v2/current_fearandgreed.png" alt="CNN Fear/Greed">
+    <div class="card">
+        <div class="card-label">元大美債20年 <span class="card-logo">00679B.TW</span></div>
+        <div class="widget-box">
+            <iframe src="https://s.tradingview.com/widgetembed/?symbol=TSE%3A00679B&interval=D&theme=dark&style=1&timezone=Asia%2FTaipei&withdateranges=true&hide_side_toolbar=true&allow_symbol_change=false&save_image=false&show_popup_button=false&popup_width=1000&popup_height=650&locale=zh_TW"></iframe>
         </div>
     </div>
   </div>
 
-  <div class="section-title">📊 債券與商品</div>
+  <div class="section-title">🌐 市場核心指標 (互動圖表 Widget)</div>
   <div class="grid">
+    <div class="card">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe>
+    </div>
+    
     <div class="card">
         <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark"></iframe>
     </div>
+
     <div class="card">
         <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe>
-    </div>
-    <div class="card card-img">
-        <div class="card-label">元大美債20年 <span class="card-logo">00679B.TW</span></div>
-        <div class="img-content">
-            <img src="https://www.google.com/finance/chart?q=TPE:00679B&p=1d&theme=dark" alt="00679B 走勢">
-        </div>
     </div>
   </div>
 
@@ -111,13 +110,17 @@
     <div class="tip-card">
         <div class="tip-head">2025-26 節稅提醒</div>
         <div class="tip-body">
-            • 綜所稅 5 月申報。<br>• 股利所得選合併或分開計稅。
+            •綜所稅5月申報，檢查列舉扣除額。<br>
+            •股利所得選合併或分開計稅（依級距）。<br>
+            •房地合一稅：注意持有年限切換點。
         </div>
     </div>
     <div class="tip-card">
         <div class="tip-head">房地產指標</div>
         <div class="tip-body">
-            • 關注央行利率決策。<br>• 實價登錄落後資訊注意。
+            •關注央行理監事會議利率決策。<br>
+            •觀察匯率對外資投入不動產之影響。<br>
+            •預售屋限制與實價登錄落後資訊注意。
         </div>
     </div>
   </div>
