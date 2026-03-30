@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v5.3</title>
+<title>每日財經儀表板 Pro v5.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -16,49 +16,66 @@
     --gold: #f5c842;
     --gold-dim: rgba(245,200,66,0.12);
     --green: #22c55e;
+    --red: #ef4444;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; min-height:100vh; }
   body::before {
     content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image: linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
-                      linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
     background-size:40px 40px;
   }
   .container { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
 
 header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(–border); }
-.logo { font-family:‘Space Mono’,monospace; font-size:0.85rem; font-weight:700; color:var(–gold); letter-spacing:0.05em; }
+.logo { font-family:‘Space Mono’,monospace; font-size:0.85rem; font-weight:700; color:var(–gold); }
 .logo span { color:var(–text-muted); font-weight:400; }
-.badge { display:inline-block; font-size:0.55rem; font-family:‘Space Mono’,monospace; background:var(–gold-dim); color:var(–gold); border:1px solid rgba(245,200,66,0.3); padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle; }
+.badge { font-size:0.55rem; font-family:‘Space Mono’,monospace; background:var(–gold-dim); color:var(–gold); border:1px solid rgba(245,200,66,0.3); padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle; }
 .clock { font-family:‘Space Mono’,monospace; font-size:0.72rem; color:var(–text-muted); background:var(–surface); border:1px solid var(–border); padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px; }
-.clock-dot { width:6px; height:6px; border-radius:50%; background:var(–green); animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.clock-dot { width:6px; height:6px; border-radius:50%; background:var(–green); animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
 
 .section-title { font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em; color:var(–text-muted); margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
 .section-title::after { content:’’; flex:1; height:1px; background:var(–border); }
 
-.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:12px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
 
-.card { background:var(–surface); border:1px solid var(–border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:border-color 0.2s, box-shadow 0.2s; }
-.card:hover { border-color:rgba(245,200,66,0.25); box-shadow:0 0 20px rgba(245,200,66,0.05); }
-.card-label { padding:10px 14px 8px; font-size:0.72rem; color:var(–gold); font-weight:700; display:flex; align-items:center; gap:6px; border-bottom:1px solid var(–border); flex-shrink:0; }
-.ticker { color:var(–text-muted); font-size:0.58rem; font-family:‘Space Mono’,monospace; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; }
+/* ── Taiwan stock card ── */
+.tw-card {
+background:var(–surface); border:1px solid var(–border); border-radius:14px;
+padding:14px 16px 12px; display:flex; flex-direction:column; gap:8px;
+transition:border-color 0.2s,box-shadow 0.2s; min-height:160px;
+}
+.tw-card:hover { border-color:rgba(245,200,66,0.3); box-shadow:0 0 20px rgba(245,200,66,0.05); }
+.tw-card-header { display:flex; justify-content:space-between; align-items:flex-start; }
+.tw-card-name { font-size:0.72rem; color:var(–gold); font-weight:700; }
+.tw-card-ticker { font-size:0.58rem; font-family:‘Space Mono’,monospace; color:var(–text-muted); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; margin-top:3px; display:inline-block; }
+.tw-card-price { font-family:‘Space Mono’,monospace; font-size:1.6rem; font-weight:700; line-height:1; }
+.tw-card-price.up { color:#fff; }
+.tw-card-price.dn { color:var(–red); }
+.tw-card-change { font-size:0.72rem; font-family:‘Space Mono’,monospace; margin-top:4px; }
+.tw-card-change.up { color:var(–green); }
+.tw-card-change.dn { color:var(–red); }
+.tw-card-meta { font-size:0.6rem; color:var(–text-muted); }
+canvas.sparkline { width:100%; height:55px; display:block; border-radius:6px; }
+.tw-card-loading { font-size:0.7rem; color:var(–text-muted); text-align:center; padding:20px 0; }
+.tw-card-error { font-size:0.68rem; color:var(–red); }
 
-/* mini-symbol-overview height */
-.card.mini { height:210px; }
-.card.mini .chart-wrap { flex:1; overflow:hidden; }
-
-/* advanced-chart height — taller for full chart */
-.card.adv { height:240px; }
-.card.adv .chart-wrap { flex:1; overflow:hidden; }
-
-.chart-wrap iframe { border:none; width:100%; height:100%; display:block; }
+/* ── TradingView card ── */
+.tv-card { background:var(–surface); border:1px solid var(–border); border-radius:14px; height:210px; overflow:hidden; display:flex; flex-direction:column; transition:border-color 0.2s; }
+.tv-card:hover { border-color:rgba(245,200,66,0.25); }
+.tv-card-label { padding:10px 14px 8px; font-size:0.72rem; color:var(–gold); font-weight:700; display:flex; align-items:center; gap:6px; border-bottom:1px solid var(–border); flex-shrink:0; }
+.tv-ticker { font-size:0.58rem; font-family:‘Space Mono’,monospace; color:var(–text-muted); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; }
+.tv-wrap { flex:1; overflow:hidden; }
+.tv-wrap iframe { border:none; width:100%; height:100%; display:block; }
 
 .tip-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
-@media (max-width:600px) { .tip-grid { grid-template-columns:1fr; } }
+@media(max-width:600px){ .tip-grid{ grid-template-columns:1fr; } }
 .tip-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px 16px; }
-.tip-head { color:var(–gold); font-size:0.68rem; font-weight:700; margin-bottom:8px; letter-spacing:0.05em; }
+.tip-head { color:var(–gold); font-size:0.68rem; font-weight:700; margin-bottom:8px; }
 .tip-body { font-size:0.72rem; color:var(–text-muted); line-height:1.7; }
 .tip-body strong { color:var(–text); }
 </style>
@@ -68,78 +85,39 @@ header { display:flex; align-items:center; justify-content:space-between; margin
 <div class="container">
 
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控</span><span class="badge">v5.3</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控</span><span class="badge">v5.4</span></div>
     <div class="clock"><span class="clock-dot"></span><span id="clock">--:--:-- --/--</span></div>
   </header>
 
-  <!-- ── 台股核心追蹤：使用 advanced-chart widget ── -->
+  <!-- ── 台股：Finmind API ── -->
 
-  <div class="section-title">🚀 台股核心追蹤 (TradingView Advanced Chart)</div>
-  <div class="grid">
-
-```
-<div class="card adv">
-  <div class="card-label">鴻勁 <span class="ticker">7769.TW</span></div>
-  <div class="chart-wrap">
-    <iframe
-      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_7769&symbol=TWSE%3A7769&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
-      loading="lazy">
-    </iframe>
-  </div>
-</div>
-
-<div class="card adv">
-  <div class="card-label">台灣加權指數 <span class="ticker">^TWII</span></div>
-  <div class="chart-wrap">
-    <iframe
-      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_twii&symbol=TWSE%3ATAIEX&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
-      loading="lazy">
-    </iframe>
-  </div>
-</div>
-
-<div class="card adv">
-  <div class="card-label">元大美債20年 <span class="ticker">00679B.TW</span></div>
-  <div class="chart-wrap">
-    <!-- 00679B 在 TradingView 登錄為 TPEx 代號 -->
-    <iframe
-      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_679b&symbol=TWSE%3A00679B&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
-      loading="lazy">
-    </iframe>
-  </div>
-</div>
-```
-
+  <div class="section-title">🚀 台股核心追蹤 (FinMind 開源數據)</div>
+  <div class="grid" id="tw-grid">
+    <!-- JS rendered -->
   </div>
 
-  <!-- ── 全球核心指標：mini-symbol-overview（已確認正常）── -->
+  <!-- ── 全球：TradingView ── -->
 
   <div class="section-title">🌐 全球核心指標 (TradingView)</div>
   <div class="grid">
-
-```
-<div class="card mini">
-  <div class="card-label">美元/台幣 <span class="ticker">USDTWD</span></div>
-  <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-  </div>
-</div>
-
-<div class="card mini">
-  <div class="card-label">黃金現貨 <span class="ticker">XAUUSD</span></div>
-  <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-  </div>
-</div>
-
-<div class="card mini">
-  <div class="card-label">美國公債ETF <span class="ticker">TLT</span></div>
-  <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-  </div>
-</div>
-```
-
+    <div class="tv-card">
+      <div class="tv-card-label">美元/台幣 <span class="tv-ticker">USDTWD</span></div>
+      <div class="tv-wrap">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+      </div>
+    </div>
+    <div class="tv-card">
+      <div class="tv-card-label">黃金現貨 <span class="tv-ticker">XAUUSD</span></div>
+      <div class="tv-wrap">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+      </div>
+    </div>
+    <div class="tv-card">
+      <div class="tv-card-label">美國公債ETF <span class="tv-ticker">TLT</span></div>
+      <div class="tv-wrap">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+      </div>
+    </div>
   </div>
 
   <!-- ── 備忘錄 ── -->
@@ -147,10 +125,10 @@ header { display:flex; align-items:center; justify-content:space-between; margin
   <div class="section-title">💡 財經備忘錄</div>
   <div class="tip-grid">
     <div class="tip-card">
-      <div class="tip-head">⚙️ v5.3 修正說明</div>
+      <div class="tip-head">⚙️ v5.4 架構說明</div>
       <div class="tip-body">
-        • 台股改用 <strong>widgetembed</strong>（進階圖表），解決 mini-widget 的交易所存取限制。<br>
-        • 全球指標維持 mini-symbol-overview（已確認正常）。
+        • 台股改用 <strong>FinMind 開源 API</strong>，完全不依賴 TradingView embed。<br>
+        • 顯示近 60 個交易日收盤走勢 + 當日漲跌幅。
       </div>
     </div>
     <div class="tip-card">
@@ -166,14 +144,158 @@ header { display:flex; align-items:center; justify-content:space-between; margin
 </div>
 
 <script>
-  function updateClock() {
-    const now = new Date();
-    const time = now.toLocaleTimeString('zh-TW', { hour12: false });
-    const date = (now.getMonth()+1).toString().padStart(2,'0') + '/' + now.getDate().toString().padStart(2,'0');
-    document.getElementById('clock').textContent = time + ' ' + date;
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
+// ── Clock ──
+function updateClock() {
+  const n = new Date();
+  const t = n.toLocaleTimeString('zh-TW',{hour12:false});
+  const d = (n.getMonth()+1).toString().padStart(2,'0')+'/'+n.getDate().toString().padStart(2,'0');
+  document.getElementById('clock').textContent = t+' '+d;
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── Taiwan stocks config ──
+const TW_STOCKS = [
+  { id:'7769', name:'鴻勁', color:'#f5c842', fillColor:'rgba(245,200,66,0.15)' },
+  { id:'Y9999', name:'台灣加權指數', color:'#60a5fa', fillColor:'rgba(96,165,250,0.15)' },
+  { id:'00679B', name:'元大美債20年', color:'#a78bfa', fillColor:'rgba(167,139,250,0.15)' },
+];
+
+// Date helpers
+function toDateStr(d) {
+  return d.toISOString().split('T')[0];
+}
+function nDaysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return toDateStr(d);
+}
+
+// ── Draw sparkline on canvas ──
+function drawSparkline(canvas, prices, color, fillColor) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  if (!prices || prices.length < 2) return;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const pad = { l:4, r:4, t:6, b:6 };
+  const cw = w - pad.l - pad.r;
+  const ch = h - pad.t - pad.b;
+
+  const pts = prices.map((p, i) => ({
+    x: pad.l + (i / (prices.length - 1)) * cw,
+    y: pad.t + ch - ((p - min) / range) * ch
+  }));
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, h - pad.b);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, h - pad.b);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Last dot
+  const last = pts[pts.length-1];
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 3, 0, Math.PI*2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// ── Render card skeleton ──
+function renderCard(stock) {
+  const div = document.createElement('div');
+  div.className = 'tw-card';
+  div.id = 'card-'+stock.id;
+  div.innerHTML = `
+    <div class="tw-card-header">
+      <div>
+        <div class="tw-card-name">${stock.name}</div>
+        <span class="tw-card-ticker">${stock.id}.TW</span>
+      </div>
+      <div style="text-align:right">
+        <div class="tw-card-price" id="price-${stock.id}">---</div>
+        <div class="tw-card-change" id="chg-${stock.id}">載入中...</div>
+      </div>
+    </div>
+    <canvas class="sparkline" id="spark-${stock.id}" style="height:55px"></canvas>
+    <div class="tw-card-meta" id="meta-${stock.id}"></div>
+  `;
+  return div;
+}
+
+// ── Fetch from FinMind ──
+async function fetchStock(stock) {
+  const startDate = nDaysAgo(100); // ~60 trading days
+  const today = toDateStr(new Date());
+  // FinMind public API — no token needed for basic usage
+  const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.id}&start_date=${startDate}&end_date=${today}`;
+
+  const resp = await fetch(url);
+  const json = await resp.json();
+
+  if (!json.data || json.data.length === 0) throw new Error('no data');
+
+  const rows = json.data.slice(-60); // last 60 trading days
+  const prices = rows.map(r => parseFloat(r.close));
+  const latest = rows[rows.length-1];
+  const prev    = rows[rows.length-2];
+  const close   = parseFloat(latest.close);
+  const open    = parseFloat(latest.open);
+  const chgAmt  = close - parseFloat(prev.close);
+  const chgPct  = (chgAmt / parseFloat(prev.close) * 100);
+  const up      = chgAmt >= 0;
+
+  // Update price
+  const priceEl = document.getElementById('price-'+stock.id);
+  priceEl.textContent = close.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2});
+  priceEl.className = 'tw-card-price ' + (up?'up':'dn');
+
+  const chgEl = document.getElementById('chg-'+stock.id);
+  chgEl.textContent = `${up?'+':''}${chgAmt.toFixed(2)} (${up?'+':''}${chgPct.toFixed(2)}%)`;
+  chgEl.className = 'tw-card-change ' + (up?'up':'dn');
+
+  document.getElementById('meta-'+stock.id).textContent =
+    `最新交易日：${latest.date}　成交量：${parseInt(latest.Trading_Volume||0).toLocaleString()}`;
+
+  // Draw sparkline
+  const canvas = document.getElementById('spark-'+stock.id);
+  // Wait for layout
+  requestAnimationFrame(() => drawSparkline(canvas, prices, stock.color, stock.fillColor));
+}
+
+// ── Init ──
+const grid = document.getElementById('tw-grid');
+TW_STOCKS.forEach(stock => {
+  const card = renderCard(stock);
+  grid.appendChild(card);
+  fetchStock(stock).catch(err => {
+    const chgEl = document.getElementById('chg-'+stock.id);
+    if (chgEl) {
+      chgEl.textContent = '資料載入失敗';
+      chgEl.className = 'tw-card-error';
+    }
+    const priceEl = document.getElementById('price-'+stock.id);
+    if (priceEl) priceEl.textContent = 'N/A';
+    console.warn(stock.id, err);
+  });
+});
 </script>
 
 </body>
