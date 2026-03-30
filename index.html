@@ -4,104 +4,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v5.2</title>
+<title>每日財經儀表板 Pro v5.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0c10;
     --surface: #111318;
-    --surface2: #161920;
     --border: rgba(255,255,255,0.07);
     --text: #e8eaf0;
     --text-muted: #6b7280;
     --gold: #f5c842;
     --gold-dim: rgba(245,200,66,0.12);
     --green: #22c55e;
-    --red: #ef4444;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; min-height:100vh; }
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+                      linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+    background-size:40px 40px;
+  }
+  .container { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
 
-/* Subtle grid texture */
-body::before {
-content:’’;
-position:fixed; inset:0; z-index:0; pointer-events:none;
-background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-background-size: 40px 40px;
-}
-
-.container { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
-
-header {
-display:flex; align-items:center; justify-content:space-between;
-margin-bottom:24px; padding-bottom:16px;
-border-bottom: 1px solid var(–border);
-}
+header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(–border); }
 .logo { font-family:‘Space Mono’,monospace; font-size:0.85rem; font-weight:700; color:var(–gold); letter-spacing:0.05em; }
 .logo span { color:var(–text-muted); font-weight:400; }
-.clock {
-font-family:‘Space Mono’,monospace; font-size:0.72rem; color:var(–text-muted);
-background:var(–surface); border:1px solid var(–border);
-padding:5px 12px; border-radius:20px;
-display:flex; align-items:center; gap:6px;
-}
+.badge { display:inline-block; font-size:0.55rem; font-family:‘Space Mono’,monospace; background:var(–gold-dim); color:var(–gold); border:1px solid rgba(245,200,66,0.3); padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle; }
+.clock { font-family:‘Space Mono’,monospace; font-size:0.72rem; color:var(–text-muted); background:var(–surface); border:1px solid var(–border); padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px; }
 .clock-dot { width:6px; height:6px; border-radius:50%; background:var(–green); animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-.section-title {
-font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em;
-color:var(–text-muted); margin:28px 0 14px;
-display:flex; align-items:center; gap:10px;
-}
+.section-title { font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em; color:var(–text-muted); margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
 .section-title::after { content:’’; flex:1; height:1px; background:var(–border); }
 
-.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:12px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:12px; }
 
-.card {
-background:var(–surface); border:1px solid var(–border);
-border-radius:14px; height:210px; overflow:hidden;
-display:flex; flex-direction:column;
-transition: border-color 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-border-color: rgba(245,200,66,0.25);
-box-shadow: 0 0 20px rgba(245,200,66,0.05);
-}
+.card { background:var(–surface); border:1px solid var(–border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:border-color 0.2s, box-shadow 0.2s; }
+.card:hover { border-color:rgba(245,200,66,0.25); box-shadow:0 0 20px rgba(245,200,66,0.05); }
+.card-label { padding:10px 14px 8px; font-size:0.72rem; color:var(–gold); font-weight:700; display:flex; align-items:center; gap:6px; border-bottom:1px solid var(–border); flex-shrink:0; }
+.ticker { color:var(–text-muted); font-size:0.58rem; font-family:‘Space Mono’,monospace; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; }
 
-.card-label {
-padding:10px 14px 6px;
-font-size:0.72rem; color:var(–gold); font-weight:700;
-display:flex; align-items:center; gap:6px;
-border-bottom:1px solid var(–border);
-flex-shrink:0;
-}
-.card-label .ticker {
-color:var(–text-muted); font-size:0.58rem;
-font-family:‘Space Mono’,monospace;
-background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;
-}
+/* mini-symbol-overview height */
+.card.mini { height:210px; }
+.card.mini .chart-wrap { flex:1; overflow:hidden; }
 
-.chart-wrap { flex:1; overflow:hidden; }
+/* advanced-chart height — taller for full chart */
+.card.adv { height:240px; }
+.card.adv .chart-wrap { flex:1; overflow:hidden; }
+
 .chart-wrap iframe { border:none; width:100%; height:100%; display:block; }
 
-/* Tip section */
 .tip-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
 @media (max-width:600px) { .tip-grid { grid-template-columns:1fr; } }
-.tip-card {
-background:var(–surface); border:1px solid var(–border);
-border-radius:10px; padding:14px 16px;
-}
+.tip-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px 16px; }
 .tip-head { color:var(–gold); font-size:0.68rem; font-weight:700; margin-bottom:8px; letter-spacing:0.05em; }
 .tip-body { font-size:0.72rem; color:var(–text-muted); line-height:1.7; }
 .tip-body strong { color:var(–text); }
-
-/* Version badge */
-.badge {
-display:inline-block; font-size:0.55rem; font-family:‘Space Mono’,monospace;
-background:var(–gold-dim); color:var(–gold); border:1px solid rgba(245,200,66,0.3);
-padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle;
-}
 </style>
 
 </head>
@@ -109,67 +68,71 @@ padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle;
 <div class="container">
 
   <header>
-    <div class="logo">
-      MY DAILY BRIEF <span>/ 核心資產監控</span>
-      <span class="badge">v5.2</span>
-    </div>
-    <div class="clock">
-      <span class="clock-dot"></span>
-      <span id="clock">--:--:-- --/--</span>
-    </div>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控</span><span class="badge">v5.3</span></div>
+    <div class="clock"><span class="clock-dot"></span><span id="clock">--:--:-- --/--</span></div>
   </header>
 
-  <!-- ── 台股核心追蹤 ── -->
+  <!-- ── 台股核心追蹤：使用 advanced-chart widget ── -->
 
-  <div class="section-title">🚀 台股核心追蹤 (TradingView 引擎)</div>
+  <div class="section-title">🚀 台股核心追蹤 (TradingView Advanced Chart)</div>
   <div class="grid">
 
 ```
-<div class="card">
+<div class="card adv">
   <div class="card-label">鴻勁 <span class="ticker">7769.TW</span></div>
   <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3A7769&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.2)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+    <iframe
+      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_7769&symbol=TWSE%3A7769&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
+      loading="lazy">
+    </iframe>
   </div>
 </div>
 
-<div class="card">
+<div class="card adv">
   <div class="card-label">台灣加權指數 <span class="ticker">^TWII</span></div>
   <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3ATAIEX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.2)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+    <iframe
+      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_twii&symbol=TWSE%3ATAIEX&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
+      loading="lazy">
+    </iframe>
   </div>
 </div>
 
-<div class="card">
+<div class="card adv">
   <div class="card-label">元大美債20年 <span class="ticker">00679B.TW</span></div>
   <div class="chart-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=TWSE%3A00679B&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.2)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+    <!-- 00679B 在 TradingView 登錄為 TPEx 代號 -->
+    <iframe
+      src="https://s.tradingview.com/widgetembed/?frameElementId=tv_chart_679b&symbol=TWSE%3A00679B&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=0&saveimage=0&toolbarbg=0a0c10&theme=dark&style=3&timezone=Asia%2FTaipei&withdateranges=0&showpopupbutton=0&studies=[]&locale=zh_TW"
+      loading="lazy">
+    </iframe>
   </div>
 </div>
 ```
 
   </div>
 
-  <!-- ── 全球核心指標 ── -->
+  <!-- ── 全球核心指標：mini-symbol-overview（已確認正常）── -->
 
   <div class="section-title">🌐 全球核心指標 (TradingView)</div>
   <div class="grid">
 
 ```
-<div class="card">
+<div class="card mini">
   <div class="card-label">美元/台幣 <span class="ticker">USDTWD</span></div>
   <div class="chart-wrap">
     <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
   </div>
 </div>
 
-<div class="card">
+<div class="card mini">
   <div class="card-label">黃金現貨 <span class="ticker">XAUUSD</span></div>
   <div class="chart-wrap">
     <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
   </div>
 </div>
 
-<div class="card">
+<div class="card mini">
   <div class="card-label">美國公債ETF <span class="ticker">TLT</span></div>
   <div class="chart-wrap">
     <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
@@ -179,15 +142,15 @@ padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle;
 
   </div>
 
-  <!-- ── 財經備忘錄 ── -->
+  <!-- ── 備忘錄 ── -->
 
   <div class="section-title">💡 財經備忘錄</div>
   <div class="tip-grid">
     <div class="tip-card">
-      <div class="tip-head">⚙️ v5.2 更新說明</div>
+      <div class="tip-head">⚙️ v5.3 修正說明</div>
       <div class="tip-body">
-        • 台股改用 <strong>TradingView</strong> 引擎，解決 Yahoo chart.yahoo.com 圖片失效問題。<br>
-        • 所有 6 個標的統一即時數據來源，畫面更一致。
+        • 台股改用 <strong>widgetembed</strong>（進階圖表），解決 mini-widget 的交易所存取限制。<br>
+        • 全球指標維持 mini-symbol-overview（已確認正常）。
       </div>
     </div>
     <div class="tip-card">
