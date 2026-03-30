@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v4.0</title>
+<meta name="referrer" content="no-referrer">
+<title>每日財經儀表板 Pro v4.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -37,14 +38,14 @@
     flex-direction: column;
   }
 
-  .card-label { padding: 12px 15px 8px; font-size: 0.75rem; color: var(--gold); font-weight: 700; border-bottom: 1px solid var(--border); }
+  .card-label { padding: 12px 15px 8px; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
   .card-label span { color: var(--text-muted); font-size: 0.6rem; margin-left: 5px; }
 
-  .view-box { flex: 1; width: 100%; height: 100%; border: none; }
-  
-  /* 針對 Google Finance 嵌入的微調 */
-  .g-finance-wrap { flex: 1; width: 100%; overflow: hidden; background: #fff; }
-  .g-finance-wrap iframe { width: 100%; height: 100%; border: none; }
+  /* 圖片容器：確保圖片填滿且不失真 */
+  .img-container { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .img-container img { width: 105%; height: 105%; object-fit: contain; }
+
+  iframe { border: none !important; width: 100%; height: 100%; }
 
   .tip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
   @media (max-width: 600px) { .tip-grid { grid-template-columns: 1fr; } }
@@ -57,29 +58,35 @@
 
 <div class="container">
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控系統</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控 2.0</span></div>
     <div class="clock" id="clock">--:--:--</div>
   </header>
 
-  <div class="section-title">🚀 台灣核心追蹤 (Google Finance 引擎)</div>
+  <div class="section-title">🚀 台灣核心追蹤 (穩定圖片源)</div>
   <div class="grid">
     <div class="card">
         <div class="card-label">鴻勁 <span>7769:TPE</span></div>
-        <iframe class="view-box" src="https://www.google.com/finance/quote/7769:TPE?window=1D"></iframe>
+        <div class="img-container">
+            <img src="https://www.google.com/finance/chart?q=TPE:7769&p=1d&theme=dark" alt="鴻勁 7769">
+        </div>
     </div>
 
     <div class="card">
-        <div class="card-label">台灣加權指數 <span>TSEC:NI225</span></div>
-        <iframe class="view-box" src="https://www.google.com/finance/quote/TWDINDEX:INDEX?window=1D"></iframe>
+        <div class="card-label">台灣加權指數 <span>TWDINDEX</span></div>
+        <div class="img-container">
+            <img src="https://www.google.com/finance/chart?q=TWDINDEX:INDEX&p=1d&theme=dark" alt="加權指數">
+        </div>
     </div>
 
     <div class="card">
         <div class="card-label">元大美債20年 <span>00679B:TPE</span></div>
-        <iframe class="view-box" src="https://www.google.com/finance/quote/00679B:TPE?window=1D"></iframe>
+        <div class="img-container">
+            <img src="https://www.google.com/finance/chart?q=TPE:00679B&p=1d&theme=dark" alt="元大美債">
+        </div>
     </div>
   </div>
 
-  <div class="section-title">🌐 全球核心指標 (TradingView 引擎)</div>
+  <div class="section-title">🌐 全球核心指標 (TradingView)</div>
   <div class="grid">
     <div class="card">
         <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe>
@@ -96,11 +103,11 @@
   <div class="tip-grid">
     <div class="tip-card">
         <div class="tip-head">2025-26 節稅提醒</div>
-        <div class="tip-body">• 綜所稅 5 月申報，注意列舉扣除。<br>• 股利所得選合併或分開計稅。</div>
+        <div class="tip-body">• 綜所稅 5 月申報。<br>• 股利所得 8.5% 抵減稅額建議。</div>
     </div>
     <div class="tip-card">
-        <div class="tip-head">投資策略備忘</div>
-        <div class="tip-body">• 監控 7769 鴻勁趨勢。<br>• 美債 ETF 分批佈局，注意匯率風險。</div>
+        <div class="tip-head">投資觀察</div>
+        <div class="tip-body">• 鴻勁 (7769) 設備訂單動向。<br>• 美債分批佈局邏輯。</div>
     </div>
   </div>
 </div>
