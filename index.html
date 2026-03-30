@@ -3,155 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v5</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+<meta name="referrer" content="no-referrer">
+<title>每日財經儀表板 Pro v5.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#0a0c10;
-  --card:#111318;
-  --text:#e8eaf0;
-  --muted:#6b7280;
-  --gold:#f5c842;
-}
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0;
+    --text-muted: #6b7280;
+    --gold: #f5c842;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; }
+  .container { max-width:1200px; margin:0 auto; }
+  
+  header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .logo { font-family:'Space Mono',monospace; font-size:0.9rem; font-weight:700; color:var(--gold); }
+  .clock { font-family:'Space Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:5px 10px; border-radius:20px; }
 
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Noto Sans TC',sans-serif;
-  padding:15px;
-}
+  .section-title { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin:25px 0 12px; display:flex; align-items:center; gap:10px; }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
-.container{max-width:1200px;margin:auto}
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  
+  .card { 
+    background: var(--surface); 
+    border: 1px solid var(--border); 
+    border-radius: 12px; 
+    height: 200px; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
-.header{
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;
-}
+  .card-label { padding: 12px 15px 8px; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
+  .card-label span { color: var(--text-muted); font-size: 0.6rem; margin-left: 5px; }
 
-.title{color:var(--gold);font-weight:700}
+  /* Yahoo 圖表容器自定義 */
+  .chart-container { flex: 1; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .chart-container img { width: 100%; height: 100%; object-fit: cover; filter: invert(0.9) hue-rotate(180deg) contrast(1.2); } /* 反轉顏色以符合黑金主題 */
+  
+  iframe { border: none !important; width: 100%; height: 100%; }
 
-.clock{
-  font-size:12px;
-  background:var(--card);
-  padding:6px 10px;
-  border-radius:20px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:12px;
-}
-
-.card{
-  background:var(--card);
-  border-radius:12px;
-  height:200px;
-  overflow:hidden;
-}
-
-iframe{width:100%;height:100%;border:none}
-
-.section{
-  margin-top:25px;
-  font-size:12px;
-  color:var(--muted);
-}
-
-.tip{
-  background:var(--card);
-  padding:15px;
-  border-radius:10px;
-  font-size:13px;
-  line-height:1.6;
-}
+  .tip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+  @media (max-width: 600px) { .tip-grid { grid-template-columns: 1fr; } }
+  .tip-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:15px; }
+  .tip-head { color: var(--gold); font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; }
+  .tip-body { font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; }
 </style>
 </head>
-
 <body>
+
 <div class="container">
+  <header>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產監控 v5.1</span></div>
+    <div class="clock" id="clock">--:--:--</div>
+  </header>
 
-<div class="header">
-  <div class="title">MY DAILY BRIEF v5</div>
-  <div class="clock" id="clock"></div>
-</div>
+  <div class="section-title">🚀 台股核心追蹤 (Yahoo Finance 引擎)</div>
+  <div class="grid">
+    <div class="card">
+        <div class="card-label">鴻勁 <span>7769.TW</span></div>
+        <div class="chart-container">
+            <img src="https://chart.yahoo.com/z?s=7769.TW&t=1d&q=l&l=on&z=s&p=m50,m200" alt="7769 鴻勁">
+        </div>
+    </div>
 
-<div class="section">🚀 台股核心</div>
-<div class="grid">
+    <div class="card">
+        <div class="card-label">台灣加權指數 <span>^TWII</span></div>
+        <div class="chart-container">
+            <img src="https://chart.yahoo.com/z?s=^TWII&t=1d&q=l&l=on&z=s&p=m50,m200" alt="台股加權">
+        </div>
+    </div>
 
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=TPE%3A7769&locale=zh_TW&theme=dark"></iframe>
-</div>
+    <div class="card">
+        <div class="card-label">元大美債20年 <span>00679B.TW</span></div>
+        <div class="chart-container">
+            <img src="https://chart.yahoo.com/z?s=00679B.TW&t=1d&q=l&l=on&z=s&p=m50,m200" alt="00679B ETF">
+        </div>
+    </div>
+  </div>
 
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=TWSE%3ATAIEX&locale=zh_TW&theme=dark"></iframe>
-</div>
+  <div class="section-title">🌐 全球核心指標 (TradingView)</div>
+  <div class="grid">
+    <div class="card">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark"></iframe>
+    </div>
+    <div class="card">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark"></iframe>
+    </div>
+    <div class="card">
+        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark"></iframe>
+    </div>
+  </div>
 
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=TPE%3A00679B&locale=zh_TW&theme=dark"></iframe>
-</div>
-
-</div>
-
-<div class="section">🌐 全球市場</div>
-<div class="grid">
-
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=FX_IDC%3AUSDTWD&theme=dark"></iframe>
-</div>
-
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=OANDA%3AXAUUSD&theme=dark"></iframe>
-</div>
-
-<div class="card">
-<iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=NASDAQ%3ATLT&theme=dark"></iframe>
-</div>
-
-</div>
-
-<div class="section">📊 籌碼 / 數據（外部）</div>
-<div class="grid">
-
-<div class="card">
-<iframe src="https://goodinfo.tw/tw/StockDetail.asp?STOCK_ID=7769"></iframe>
-</div>
-
-<div class="card">
-<iframe src="https://www.twse.com.tw/zh/trading/fund/BFI82U"></iframe>
-</div>
-
-<div class="card">
-<iframe src="https://www.twse.com.tw/zh/trading/margin/TWT72U"></iframe>
-</div>
-
-</div>
-
-<div class="section">💡 投資備忘</div>
-<div class="grid">
-<div class="tip">
-• 留意台積電/設備股訂單循環
-• 美債殖利率趨勢影響股市
-• 黃金 = 避險資產觀察
-</div>
-
-<div class="tip">
-• 外資買賣超方向
-• 融資增減（散戶情緒）
-• 借券賣出（放空力道）
-</div>
-</div>
-
+  <div class="section-title">💡 財經備忘錄</div>
+  <div class="tip-grid">
+    <div class="tip-card">
+        <div class="tip-head">系統說明</div>
+        <div class="tip-body">• 台股標的使用 Yahoo 靜態圖表避免網域阻擋。<br>• 全球指標採用 TradingView 即時數據。</div>
+    </div>
+    <div class="tip-card">
+        <div class="tip-head">資產備註</div>
+        <div class="tip-body">• 鴻勁 (7769) 長期觀察。<br>• 美債 (00679B) 分期投入策略。</div>
+    </div>
+  </div>
 </div>
 
 <script>
-function updateClock(){
-  const now=new Date();
-  document.getElementById('clock').innerText=
-    now.toLocaleTimeString('zh-TW',{hour12:false});
-}
-setInterval(updateClock,1000);
-updateClock();
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', { hour12: false }) + ' ' + 
+    (now.getMonth()+1).toString().padStart(2,'0') + '/' + now.getDate().toString().padStart(2,'0');
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 </script>
 
 </body>
