@@ -3,129 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>市場核心監控 v1.8.1</title>
+    <title>市場核心監控 v1.8.2</title>
     <style>
-        :root { --up: #48bb78; --down: #ff4d4d; --bg: #000; --card: #0a0a0a; --accent: #222; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; padding-bottom: 120px; } /* 為底部的 Log 留空間 */
-        .ver { width: 100%; text-align: right; font-size: 10px; color: #333; margin-bottom: 10px; font-weight: bold; }
-        
+        :root { --up: #48bb78; --down: #ff4d4d; --bg: #000; --card: #0c0c0c; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 150px; }
+        .ver { text-align: right; font-size: 10px; color: #222; margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: var(--card); border: 1px solid #151515; border-radius: 16px; padding: 20px; text-align: left; }
+        .card { background: var(--card); border: 1px solid #1a1a1a; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         .full { grid-column: span 2; }
-        
-        .label { font-size: 10px; color: #555; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px; display: block; }
-        .price { font-size: 2.4rem; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+        .label { font-size: 10px; color: #444; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; display: block; }
+        .price { font-size: 2.5rem; font-weight: 900; line-height: 1; }
         .change { font-size: 1rem; font-weight: bold; margin-top: 10px; display: flex; align-items: center; }
-        .up { color: var(--up); } .up::before { content: '▲'; margin-right: 4px; font-size: 0.8rem; }
-        .down { color: var(--down); } .down::before { content: '▼'; margin-right: 4px; font-size: 0.8rem; }
-
-        /* CNN 特殊樣式 */
+        .up { color: var(--up); } .up::before { content: '▲ '; }
+        .down { color: var(--down); } .down::before { content: '▼ '; }
         .cnn-val { font-size: 3.5rem; font-weight: 900; color: #ff4d4d; line-height: 1; }
-        .cnn-label { font-size: 12px; color: #444; margin-top: 5px; font-weight: bold; }
-
-        /* 強化後的 Debug Panel */
-        #debug-panel { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: rgba(5, 5, 5, 0.95); border-top: 1px solid #222;
-            padding: 12px; font-size: 10px; max-height: 100px; overflow-y: auto;
-            z-index: 100; backdrop-filter: blur(10px);
-        }
-        .log-line { margin-bottom: 4px; border-left: 2px solid #333; padding-left: 6px; }
-        .log-err { border-left-color: var(--down); color: var(--down); }
-        .log-ok { border-left-color: var(--up); color: var(--up); }
+        #debug-panel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,5,0.9); padding: 10px; font-size: 10px; height: 100px; overflow-y: auto; border-top: 1px solid #222; backdrop-filter: blur(5px); }
+        .log-line { margin-bottom: 2px; } .err { color: var(--down); } .ok { color: var(--up); }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="ver">SYSTEM CORE v1.8.1</div>
+    <div class="ver">SYSTEM CORE v1.8.2</div>
     <div class="grid">
-        <div class="card full" style="border-top: 4px solid #ff4d4d;">
-            <span class="label">Sentiment / CNN Fear & Greed</span>
-            <div id="p-cnn" class="cnn-val">--</div>
-            <div id="m-cnn" class="cnn-label">BOOTING...</div>
-        </div>
-        
-        <div class="card">
-            <span class="label">Volatility / VIX US</span>
-            <div id="p-vix" class="price" style="color: #f0c040;">--</div>
-            <div id="c-vix" class="change">--</div>
-        </div>
-
-        <div class="card">
-            <span class="label">Volatility / VIX TW</span>
-            <div id="p-vtw" class="price" style="color: #40a0f0;">--</div>
-            <div id="c-vtw" class="change">--</div>
-        </div>
-
-        <div class="card full">
-            <span class="label">FX / USD-TWD</span>
-            <div id="p-twd" class="price" style="color: #a084ff;">--</div>
-            <div id="c-twd" class="change">--</div>
-        </div>
-
-        <div class="card full">
-            <span class="label">Equity / 7769.TW</span>
-            <div id="p-7769" class="price" style="color: #48bb78;">--</div>
-            <div id="c-7769" class="change">--</div>
-        </div>
+        <div class="card full" style="border-left: 4px solid #ff4d4d;"><span class="label">CNN Fear & Greed</span><div id="p-cnn" class="cnn-val">--</div><div id="m-cnn" style="font-size:12px; color:#333; font-weight:bold;">LOADING...</div></div>
+        <div class="card"><span class="label">VIX US</span><div id="p-vix" class="price" style="color: #f0c040;">--</div><div id="c-vix" class="change">--</div></div>
+        <div class="card"><span class="label">VIX TW</span><div id="p-vtw" class="price" style="color: #40a0f0;">--</div><div id="c-vtw" class="change">--</div></div>
+        <div class="card full"><span class="label">USD / TWD</span><div id="p-twd" class="price" style="color: #a084ff;">--</div><div id="c-twd" class="change">--</div></div>
+        <div class="card full"><span class="label">7769.TW 鴻勁</span><div id="p-7769" class="price" style="color: #48bb78;">--</div><div id="c-7769" class="change">--</div></div>
     </div>
 </div>
-
-<div id="debug-panel">
-    <div style="color: #666; margin-bottom: 5px; font-weight: bold;">[CONSOLE LOG]</div>
-    <div id="log-content">Initializing kernel...</div>
-</div>
-
+<div id="debug-panel"><div id="log-content"></div></div>
 <script>
     const API = "https://dashboard.jou0914.workers.dev";
-    const logEl = document.getElementById('log-content');
-    
-    function addLog(msg, isErr = false) {
-        const line = document.createElement('div');
-        line.className = `log-line ${isErr ? 'log-err' : 'log-ok'}`;
-        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        logEl.prepend(line);
-    }
-
+    const addLog = (m, e=false) => { 
+        const l = document.getElementById('log-content');
+        l.innerHTML = `<div class="log-line ${e?'err':'ok'}">[${new Date().toLocaleTimeString()}] ${m}</div>` + l.innerHTML;
+    };
     async function refresh() {
-        const fetchItem = async (path, id, fix = 2) => {
+        const update = async (path, id, fix=2) => {
             try {
-                const res = await fetch(`${API}${path}`);
-                const d = await res.json();
-                
+                const r = await fetch(API + path);
+                const d = await r.json();
                 if (path === "/cnn") {
                     document.getElementById("p-cnn").textContent = d.price;
                     document.getElementById("m-cnn").textContent = d.label;
-                    addLog("CNN Load Success");
-                    return;
-                }
-
-                const pEl = document.getElementById(`p-${id}`);
-                const cEl = document.getElementById(`c-${id}`);
-
-                if (d.price !== null) {
-                    pEl.textContent = (id === '7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
-                    cEl.textContent = `${d.isUp ? '+' : ''}${d.change.toFixed(2)}%`;
+                } else if (d.price) {
+                    document.getElementById(`p-${id}`).textContent = (id === '7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
+                    const cEl = document.getElementById(`c-${id}`);
+                    cEl.textContent = `${d.change.toFixed(2)}%`;
                     cEl.className = `change ${d.isUp ? 'up' : 'down'}`;
-                    addLog(`${id.toUpperCase()} Updated`);
-                } else {
-                    addLog(`${id.toUpperCase()} Fail: ${d.error || 'Empty'}`, true);
                 }
-            } catch (e) { addLog(`${id.toUpperCase()} Critical Error`, true); }
+                addLog(`${id} OK`);
+            } catch (e) { addLog(`${id} ERROR`, true); }
         };
-
-        await Promise.all([
-            fetchItem('/cnn', 'cnn'),
-            fetchItem('/vix', 'vix'),
-            fetchItem('/vixtw', 'vtw'),
-            fetchItem('/twd', 'twd', 3),
-            fetchItem('/7769', '7769')
-        ]);
+        await update('/cnn', 'cnn'); await update('/vix', 'vix'); await update('/vixtw', 'vtw'); await update('/twd', 'twd', 3); await update('/7769', '7769');
     }
-
-    refresh();
-    setInterval(refresh, 60000);
+    refresh(); setInterval(refresh, 60000);
 </script>
 </body>
 </html>
