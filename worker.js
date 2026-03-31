@@ -3,41 +3,54 @@ export default {
     const url = new URL(request.url);
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
       "Content-Type": "application/json"
     };
 
     if (url.pathname === "/vix") {
       try {
-        // 台灣期交所 VIX 頁面
+        // 抓取台灣期交所 VIX 彙總頁面
         const targetUrl = "https://www.taifex.com.tw/cht/7/vixSummary";
-        
-        // 模擬瀏覽器請求，避免被擋
         const res = await fetch(targetUrl, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+          headers: { 
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html"
+          }
         });
         const html = await res.text();
 
-        // 使用簡單的正規表達式從 HTML 表格中提取第一個 VIX 數值 (最新)
-        // 台灣期交所的結構通常是 <td>數值</td>
-        const regex = /<td class="center">(\d+\.\d+)<\/td>/g;
+        // --- 改進的解析邏輯 ---
+        // 期交所最新一筆 VIX 通常位在第一個 <td class="center"> 標籤中
+        // 我們先過濾掉換行與多餘空白，增加匹配成功率
+        const cleanHtml = html.replace(/\s+/g, ' ');
+        const regex = /<td class="center">([\d.]+)\s*<\/td>/g;
+        
         let matches = [];
         let m;
-        while ((m = regex.exec(html)) !== null) {
+        while ((m = regex.exec(cleanHtml)) !== null) {
           matches.push(parseFloat(m[1]));
         }
 
-        // 假設第一筆就是最新的 VIX
-        const currentPrice = matches[0] || 0;
+        // 如果 Regex 還是抓不到，嘗試備用的字串尋找法
+        let currentPrice = matches.length > 0 ? matches[0] : 0;
         
-        // 構造回傳格式 (因官網歷史資料需分頁，此處先回傳當前值)
+        if (currentPrice === 0) {
+            // 尋找「指數值」欄位後的關鍵字
+            const marker = 'class="center">';
+            const index = html.indexOf(marker);
+            if (index !== -1) {
+                const subStr = html.substring(index + marker.length, index + marker.length + 10);
+                const fallbackMatch = subStr.match(/[\d.]+/);
+                if (fallbackMatch) currentPrice = parseFloat(fallbackMatch[0]);
+            }
+        }
+
         return new Response(
           JSON.stringify({
             type: "taiwan_vix",
             price: currentPrice,
-            time: new Date().toISOString(),
-            // 這裡可以放入你模擬或抓到的歷史數據
-            history: matches.slice(0, 10).map((v, i) => ({ index: i, price: v })) 
+            time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
+            // 這裡回傳前 10 筆作為歷史參考
+            history: matches.slice(0, 10) 
           }),
           { headers: corsHeaders }
         );
@@ -49,6 +62,6 @@ export default {
         });
       }
     }
-    return new Response("Worker is running");
+    return new Response("Taiwan VIX Proxy is Online");
   }
 };
