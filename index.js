@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
 
     // =========================
-    // 📊 API：VIX（改用美股 ^VIX）
+    // 📊 API：VIX（美股 ^VIX + 防 null）
     // =========================
     if (url.pathname === "/api/vixtw") {
       try {
@@ -21,13 +21,19 @@ export default {
           throw new Error("無數據");
         }
 
-        const latest = json.data[json.data.length - 1];
+        // ✅ 關鍵：找最後一筆有效 close（避免 null）
+        const validData = json.data
+          .slice()
+          .reverse()
+          .find(d => d.close !== null && d.close !== undefined);
+
+        if (!validData) throw new Error("無有效數據");
 
         return new Response(
           JSON.stringify({
             status: "success",
-            price: parseFloat(latest.close),
-            date: latest.date,
+            price: parseFloat(validData.close),
+            date: validData.date,
           }),
           {
             headers: {
@@ -70,7 +76,7 @@ function generateHTML() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>核心資產監控 v7</title>
+<title>核心資產監控 v7.1</title>
 
 <style>
 :root {
@@ -125,7 +131,7 @@ body {
   bottom:0;
   left:0;
   width:100%;
-  height:100px;
+  height:110px;
   background:rgba(0,0,0,0.9);
   color:#00ff00;
   font-family:monospace;
@@ -141,7 +147,7 @@ body {
 
 <div class="header">
   <div style="font-weight:bold;">MY DAILY BRIEF</div>
-  <div style="color:var(--yellow); font-size:12px;">v7 Cloudflare 穩定版</div>
+  <div style="color:var(--yellow); font-size:12px;">v7.1 穩定版</div>
 </div>
 
 <div class="grid">
@@ -172,9 +178,6 @@ function log(msg, error=false) {
   box.scrollTop = box.scrollHeight;
 }
 
-// =========================
-// 🚀 主流程
-// =========================
 async function load() {
 
   // =========================
@@ -192,13 +195,18 @@ async function load() {
 
     if (!json.data || json.data.length === 0) throw new Error();
 
-    const latest = json.data[json.data.length - 1];
+    const validData = json.data
+      .slice()
+      .reverse()
+      .find(d => d.close !== null && d.close !== undefined);
+
+    if (!validData) throw new Error();
 
     document.getElementById('p-7769').textContent =
-      parseFloat(latest.close).toLocaleString();
+      parseFloat(validData.close).toLocaleString();
 
     document.getElementById('m-7769').textContent =
-      "更新：" + latest.date;
+      "更新：" + validData.date;
 
     log("7769 成功");
 
@@ -207,7 +215,7 @@ async function load() {
   }
 
   // =========================
-  // 📊 VIX（走 Worker）
+  // 📊 VIX
   // =========================
   try {
     log("請求 /api/vixtw ...");
