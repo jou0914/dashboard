@@ -1,102 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>核心資產監控 v6.8</title>
-    <style>
-        :root { 
-            --bg: #0a0a0a; --card: #161616; --border: #262626; 
-            --text: #ffffff; --muted: #888888; --accent: #f6ad55; 
-            --red: #f56565; --green: #48bb78; 
-        }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            padding: 20px; margin: 0; line-height: 1.5;
-        }
-        .header { 
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px;
-        }
-        .version { color: var(--accent); font-size: 12px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .card { 
-            background: var(--card); border: 1px solid var(--border); 
-            border-radius: 12px; padding: 20px; transition: transform 0.2s;
-        }
-        .label { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-        .price { font-size: 32px; font-weight: bold; color: var(--accent); font-variant-numeric: tabular-nums; }
-        .meta { font-size: 12px; color: var(--muted); margin-top: 10px; }
-        #debug { 
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; 
-            background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; 
-            font-size: 10px; padding: 10px; overflow-y: auto; border-top: 1px solid #333;
-            box-sizing: border-box; opacity: 0.8; pointer-events: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>全球波動率監控</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background: #0f0f0f; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    .container { max-width: 800px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .card { background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+    h1 { font-size: 0.9rem; color: #888; margin: 0 0 10px 0; }
+    .price { font-size: 2.5rem; font-weight: bold; }
+    .vix-us { color: #f0c040; } /* 美股金黃色 */
+    .vix-tw { color: #40a0f0; } /* 台股藍色 */
+    .time { font-size: 0.75rem; color: #555; margin-top: 8px; }
+    canvas { max-width: 800px; width: 100%; background: #1a1a1a; border-radius: 12px; padding: 10px; border: 1px solid #333; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div style="font-size: 18px; font-weight: bold;">MY DAILY BRIEF</div>
-        <div class="version">v6.8 雙指標整合</div>
+
+  <div class="container">
+    <div class="card">
+      <h1>CBOE VIX (美股)</h1>
+      <div id="p-us" class="price vix-us">--</div>
+      <div id="t-us" class="time">載入中...</div>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <div class="label">鴻勁 (7769:TPE)</div>
-            <div id="p-7769" class="price">--</div>
-            <div id="m-7769" class="meta">載入中...</div>
-        </div>
-
-        <div class="card">
-            <div class="label">台股波動率 (VIXTWN)</div>
-            <div id="p-vix" class="price">--</div>
-            <div id="m-vix" class="meta">等待數據更新...</div>
-        </div>
+    <div class="card">
+      <h1>VIXTWN (台股)</h1>
+      <div id="p-tw" class="price vix-tw">--</div>
+      <div id="t-tw" class="time">等待數據...</div>
     </div>
+  </div>
 
-    <div id="debug"><div>[SYSTEM] 啟動監控模組...</div></div>
+  <canvas id="vixChart"></canvas>
+  
+<script>
+  const WORKER_URL = "https://dashboard.jou0914.workers.dev";
+  const ctx = document.getElementById("vixChart").getContext("2d");
 
-    <script>
-        // 設定您的 Cloudflare Worker 網址
-        const WORKER_URL = "https://dashboard.jou0914.workers.dev";
+  // 初始化圖表 (僅顯示美股 VIX 歷史)
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "CBOE VIX 歷史軌跡",
+        data: [],
+        borderColor: "#f0c040",
+        backgroundColor: "rgba(240,192,64,0.05)",
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: { plugins: { legend: { display: false } } }
+  });
 
-        function log(m, isError = false) {
-            const container = document.getElementById('debug');
-            const entry = document.createElement('div');
-            if (isError) entry.style.color = '#f56565';
-            entry.textContent = "[" + new Date().toLocaleTimeString() + "] " + m;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
-        }
+  async function fetchData() {
+    // 1. 抓取美股 VIX
+    try {
+      const resUs = await fetch(`${WORKER_URL}/vix`);
+      const dataUs = await resUs.json();
+      document.getElementById("p-us").textContent = dataUs.price.toFixed(2);
+      document.getElementById("t-us").textContent = "更新：" + dataUs.time;
+      
+      // 更新圖表
+      chart.data.labels = dataUs.history.map(d => d.date);
+      chart.data.datasets[0].data = dataUs.history.map(d => d.price);
+      chart.update();
+    } catch (e) { console.error("US VIX Error", e); }
 
-        async function updateData(symbol, elementId, metaId) {
-            log(`正在抓取 ${symbol}...`);
-            try {
-                // 呼叫 Worker 的 API 路由
-                const response = await fetch(`${WORKER_URL}/api/data?symbol=${symbol}`);
-                const data = await response.json();
-                
-                if (data.price && data.price > 0) {
-                    const displayPrice = (symbol === 'VIXTW') ? data.price.toFixed(2) : data.price.toLocaleString();
-                    document.getElementById(elementId).textContent = displayPrice;
-                    document.getElementById(metaId).textContent = "最後更新：" + data.date;
-                    log(`${symbol} 更新成功: ${displayPrice}`);
-                } else {
-                    throw new Error("數據格式錯誤");
-                }
-            } catch (e) {
-                log(`${symbol} 抓取失敗: ${e.message}`, true);
-                document.getElementById(metaId).textContent = "暫時無法取得數據";
-            }
-        }
+    // 2. 抓取台股 VIX
+    try {
+      const resTw = await fetch(`${WORKER_URL}/vixtw`);
+      const dataTw = await resTw.json();
+      document.getElementById("p-tw").textContent = dataTw.price.toFixed(2);
+      document.getElementById("t-tw").textContent = "更新：" + dataTw.time;
+    } catch (e) { console.error("TW VIX Error", e); }
+  }
 
-        // 頁面載入後立即執行
-        window.onload = () => {
-            updateData('7769', 'p-7769', 'm-7769');
-            updateData('VIXTW', 'p-vix', 'm-vix');
-        };
-    </script>
+  fetchData();
+</script>
 </body>
 </html>
