@@ -4,39 +4,48 @@ export default async function handler(req, res) {
 
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "text/csv,application/xhtml+xml",
+        "Referer": "https://www.taifex.com.tw/cht/3/vix",
+        "Connection": "keep-alive",
       },
     });
 
     let text = await response.text();
 
-    // 🔥 清 BOM
+    // ❗ 如果還是 HTML → 直接回報
+    if (text.includes("<HTML")) {
+      return res.status(200).json({
+        error: "被期交所擋了",
+        hint: "需要代理或快取",
+        preview: text.slice(0, 100),
+      });
+    }
+
     text = text.replace(/^\uFEFF/, "");
 
     const rows = text.split(/\r?\n/);
 
     const parsed = rows
       .slice(1)
-      .map(row => row.trim())
-      .filter(row => row.length > 0)
-      .map(row => {
-        const cols = row.split(",");
+      .map(r => r.trim())
+      .filter(r => r)
+      .map(r => {
+        const [date, raw] = r.split(",");
 
-        // 🔥 清掉奇怪符號
-        const date = cols[0]?.trim();
-        const priceRaw = cols[1]?.replace(/[^0-9.]/g, "");
-
-        const price = parseFloat(priceRaw);
+        const price = parseFloat(
+          (raw || "").replace(/[^0-9.]/g, "")
+        );
 
         return { date, price };
       })
-      .filter(d => d.date && !isNaN(d.price) && d.price > 0);
+      .filter(d => d.date && d.price);
 
     if (parsed.length < 2) {
       return res.status(200).json({
         price: 0,
         status: "無有效資料",
-        debug: parsed, // 🔥 看實際解析結果
+        debug: parsed,
       });
     }
 
@@ -52,8 +61,6 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(error);
-
     res.status(200).json({
       error: "抓取失敗",
       detail: error.message,
