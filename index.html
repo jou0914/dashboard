@@ -124,7 +124,7 @@
         <div class="time" id="clock">--:--:-- 03/31</div>
     </header>
 
-    <div class="section-title">🚀 核心追蹤</div>
+    <div class="section-title">🚀 核心追蹤 (含 7769 鴻勁)</div>
     <div class="grid">
         <div class="card">
             <div class="card-header"><span>鴻勁 7769:TPE</span></div>
@@ -138,7 +138,7 @@
         </div>
         <div class="card">
             <div class="card-header"><span>元大美債20年 00679B</span></div>
-            <div class="price-large" style="color: var(--green);">27.19</div>
+            <div id="price-00679B" class="price-large" style="color: var(--green);">27.19</div>
             <div class="change-tag" style="color: var(--green);">+0.11 (+0.41%)</div>
         </div>
     </div>
@@ -188,13 +188,13 @@
     <div class="memo-grid">
         <div class="memo-card">
             <div class="memo-title">2025-26 節稅提醒</div>
-            [span_2](start_span)<div class="memo-item">· 綜所稅 5 月申報，注意列舉扣除額[span_2](end_span)。</div>
-            [span_3](start_span)<div class="memo-item">· 股利所得選合併 (8.5% 抵減) 或分開計稅[span_3](end_span)。</div>
+            <div class="memo-item">· 綜所稅 5 月申報，注意列舉扣除額。</div>
+            <div class="memo-item">· 股利所得選合併 (8.5% 抵減) 或分開計稅。</div>
         </div>
         <div class="memo-card">
             <div class="memo-title">投資策略備忘</div>
-            [span_4](start_span)<div class="memo-item">· 監控 7769 鴻勁趨勢[span_4](end_span)。</div>
-            [span_5](start_span)<div class="memo-item">· 美債 ETF 分批佈局，注意匯率風險[span_5](end_span)。</div>
+            <div class="memo-item">· 監控 7769 鴻勁趨勢。</div>
+            <div class="memo-item">· 美債 ETF 分批佈局，注意匯率風險。</div>
         </div>
     </div>
 
@@ -211,35 +211,38 @@
         function getVixStatus(val) {
             if (val < 15) return { lbl: "極度平靜", col: "#48bb78" };
             if (val < 20) return { lbl: "常態波動", col: "#a0aec0" };
-            if (val < 28) return { lbl: "警戒區間", col: "#f6ad55" };
+            if (val < 30) return { lbl: "警戒區間", col: "#f6ad55" };
             return { lbl: "高度恐慌", col: "#f56565" };
         }
 
         async function fetchVIXTW() {
             try {
+                // 指向 Cloudflare Functions 的路徑
                 const response = await fetch('/api/vixtw');
                 if (!response.ok) throw new Error();
                 const data = await response.json();
                 
-                if (data.status === "success") {
-                    const price = data.price;
-                    const status = getVixStatus(price);
-                    
-                    document.getElementById('vixtw-num').textContent = price.toFixed(2);
-                    document.getElementById('vixtw-num').style.color = status.col;
-                    document.getElementById('vixtw-status').textContent = status.lbl;
-                    document.getElementById('vixtw-status').style.color = status.col;
-                    
-                    const pos = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
-                    document.getElementById('vixtw-needle').style.left = pos + '%';
-                }
+                // 確保對接後端回傳的 price 欄位
+                const price = data.price;
+                const status = getVixStatus(price);
+                
+                document.getElementById('vixtw-num').textContent = price.toFixed(2);
+                document.getElementById('vixtw-num').style.color = status.col;
+                document.getElementById('vixtw-status').textContent = status.lbl;
+                document.getElementById('vixtw-status').style.color = status.col;
+                
+                const pos = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
+                document.getElementById('vixtw-needle').style.left = pos + '%';
+                
             } catch (e) {
                 document.getElementById('vixtw-status').textContent = "等待有效數據";
+                document.getElementById('vixtw-status').style.color = "#888";
             }
         }
 
+        updateClock();
         fetchVIXTW();
-        setInterval(fetchVIXTW, 300000);
+        setInterval(fetchVIXTW, 300000); 
     </script>
 </body>
 </html>
