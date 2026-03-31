@@ -15,15 +15,24 @@ export default {
         const json = await res.json();
 
         const dataPoints = json.data;
-        const last = dataPoints[dataPoints.length - 1];
+
+        // 取最後 90 筆
+        const recent = dataPoints.slice(-90);
+
+        const last = recent[recent.length - 1];
         const price = parseFloat(last.close);
-        const date = last.date;
+
+        const history = recent.map(d => ({
+          date: d.date,
+          price: parseFloat(d.close)
+        }));
 
         return new Response(
           JSON.stringify({
             type: "vix",
             price: price,
-            time: date
+            time: last.date,
+            history: history
           }),
           { headers: corsHeaders }
         );
