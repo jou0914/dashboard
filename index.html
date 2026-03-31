@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -130,7 +129,7 @@ async function fetchYahoo(sym){
     throw new Error('yahoo failed');
 }
 
-// TW stocks
+[span_1](start_span)// 核心台股與指數[span_1](end_span)
 const TW=[{id:'7769',name:'鴻勁 7769:TPE'},{id:'TAIEX',name:'台灣加權指數 TAIEX'},{id:'00679B',name:'元大美債20年 00679B'}];
 const twGrid=document.getElementById('tw-grid');
 TW.forEach(s=>{
@@ -142,10 +141,8 @@ TW.forEach(s=>{
     }).catch(()=>{document.getElementById('c-'+s.id).textContent='載入失敗';});
 });
 
-// Global
+// 全球指標匯率與商品
 const gGrid=document.getElementById('global-grid');
-
-// USD/TWD via FinMind
 gGrid.appendChild(makeCard('usdtwd','USD/TWD 美元/台幣'));
 fetchFM('TaiwanForexPrice','USD').then(rows=>{
     rows=rows.slice(-60);
@@ -155,7 +152,6 @@ fetchFM('TaiwanForexPrice','USD').then(rows=>{
     setCard('usdtwd',c,c-pc,(c-pc)/pc*100,`更新：${l.date}`,prices,3);
 }).catch(()=>{document.getElementById('c-usdtwd').textContent='載入失敗';});
 
-// Gold via Yahoo
 gGrid.appendChild(makeCard('xauusd','XAU/USD 黃金現貨'));
 fetchYahoo('GC=F').then(data=>{
     const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
@@ -163,7 +159,6 @@ fetchYahoo('GC=F').then(data=>{
     setCard('xauusd',price,price-prev,(price-prev)/prev*100,'來源：Yahoo Finance',closes.slice(-60),2);
 }).catch(()=>{document.getElementById('c-xauusd').textContent='載入失敗';});
 
-// TLT via Yahoo
 gGrid.appendChild(makeCard('tlt','TLT 美國公債 ETF'));
 fetchYahoo('TLT').then(data=>{
     const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
@@ -171,7 +166,7 @@ fetchYahoo('TLT').then(data=>{
     setCard('tlt',price,price-prev,(price-prev)/prev*100,'來源：Yahoo Finance',closes.slice(-60),2);
 }).catch(()=>{document.getElementById('c-tlt').textContent='載入失敗';});
 
-// F&G
+// 恐懼與貪婪 F&G
 const FGB=[[0,24,'極度恐慌','#f56565'],[25,44,'恐慌','#f97316'],[45,55,'中立','#f6ad55'],[56,74,'貪婪','#48bb78'],[75,100,'極度貪婪','#38a169']];
 function fgM(v){for(const[lo,hi,l,c]of FGB)if(v>=lo&&v<=hi)return{l,c};return{l:'--',c:'#888'};}
 fetch('https://api.alternative.me/fng/?limit=1&format=json').then(r=>r.json()).then(j=>{
@@ -182,7 +177,7 @@ fetch('https://api.alternative.me/fng/?limit=1&format=json').then(r=>r.json()).t
     document.getElementById('fg-needle').style.left=val+'%';
 }).catch(()=>{document.getElementById('fg-lbl').textContent='載入失敗';});
 
-// VIX via Yahoo
+// 美股 VIX
 function cVIX(v){if(v<15)return{l:'極度平靜',c:'#48bb78'};if(v<20)return{l:'常態波動',c:'#a0aec0'};if(v<25)return{l:'警戒區間',c:'#f6ad55'};if(v<35)return{l:'高度恐慌',c:'#f56565'};return{l:'極度恐慌',c:'#e53e3e'};}
 fetchYahoo('^VIX').then(data=>{
     const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
@@ -193,19 +188,28 @@ fetchYahoo('^VIX').then(data=>{
     document.getElementById('vix-needle').style.left=Math.min(price/60*100,100)+'%';
 }).catch(()=>{document.getElementById('vix-lbl').textContent='載入失敗';});
 
-// VIXTW via FinMind
+// 台股 VIXTW 透過 Cloudflare API 抓取
 function cVIXTW(v){if(v<15)return{l:'極度平靜',c:'#48bb78'};if(v<20)return{l:'常態波動',c:'#a0aec0'};if(v<30)return{l:'警戒區間',c:'#f6ad55'};return{l:'高度恐慌',c:'#f56565'};}
-fetchFM('TaiwanStockPrice','VIXTW').then(rows=>{
-    let idx=-1;for(let i=rows.length-1;i>=0;i--){if(parseFloat(rows[i].close)>0){idx=i;break;}}
-    if(idx<1)throw new Error('no valid');
-    const l=rows[idx],p=rows[idx-1];const price=parseFloat(l.close),ppc=parseFloat(p.close);
-    const chg=price-ppc,pct=chg/ppc*100,up=chg>=0;const{l:lbl,c:col}=cVIXTW(price);
-    document.getElementById('vixtw-num').textContent=price.toFixed(2);document.getElementById('vixtw-num').style.color=col;
-    document.getElementById('vixtw-lbl').textContent=`${lbl}　${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;document.getElementById('vixtw-lbl').style.color=col;
-    document.getElementById('vixtw-needle').style.left=Math.min(Math.max((price-10)/30*100,0),100)+'%';
-    document.getElementById('vixtw-meta').textContent=`更新：${l.date}`;
-}).catch(()=>{document.getElementById('vixtw-lbl').textContent='等待有效數據';});
+async function fetchMyVIXTW() {
+    try {
+        const r = await fetch('/api/vixtw'); // 對接 Cloudflare Functions
+        const d = await r.json();
+        if (d.status === "success") {
+            const { price, change, pct, date } = d;
+            const { l: lbl, c: col } = cVIXTW(price);
+            const up = change >= 0;
+            document.getElementById('vixtw-num').textContent = price.toFixed(2);
+            document.getElementById('vixtw-num').style.color = col;
+            document.getElementById('vixtw-lbl').textContent = `${lbl}　${up?'+':''}${change.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;
+            document.getElementById('vixtw-lbl').style.color = col;
+            const pos = Math.min(Math.max((price-10)/30*100,0),100);
+            document.getElementById('vixtw-needle').style.left = pos + '%';
+            document.getElementById('vixtw-meta').textContent = `更新：${date}`;
+        }
+    } catch (e) { document.getElementById('vixtw-lbl').textContent = '等待有效數據'; }
+}
+fetchMyVIXTW();
+setInterval(fetchMyVIXTW, 300000);
 </script>
-
 </body>
 </html>
