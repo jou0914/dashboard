@@ -4,83 +4,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v5.6</title>
+<title>每日財經儀表板 Pro v5.7</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --border: rgba(255,255,255,0.07);
-    --text: #e8eaf0;
-    --text-muted: #6b7280;
-    --gold: #f5c842;
-    --gold-dim: rgba(245,200,66,0.12);
-    --green: #22c55e;
-    --red: #ef4444;
-    --blue: #60a5fa;
-    --purple: #a78bfa;
+    --bg:#0a0c10; --surface:#111318; --border:rgba(255,255,255,0.07);
+    --text:#e8eaf0; --muted:#6b7280; --gold:#f5c842; --gold-dim:rgba(245,200,66,0.12);
+    --green:#22c55e; --red:#ef4444; --blue:#60a5fa; --purple:#a78bfa;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Noto Sans TC',sans-serif; padding:15px; min-height:100vh; }
-  body::before {
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;padding:15px;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
-                     linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
-    background-size:40px 40px;
-  }
-  .container { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+    linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;}
+  .container{max-width:1200px;margin:0 auto;position:relative;z-index:1;}
 
-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(–border); }
-.logo { font-family:‘Space Mono’,monospace; font-size:0.85rem; font-weight:700; color:var(–gold); }
-.logo span { color:var(–text-muted); font-weight:400; }
-.badge { font-size:0.55rem; font-family:‘Space Mono’,monospace; background:var(–gold-dim); color:var(–gold); border:1px solid rgba(245,200,66,0.3); padding:2px 7px; border-radius:4px; margin-left:8px; vertical-align:middle; }
-.clock { font-family:‘Space Mono’,monospace; font-size:0.72rem; color:var(–text-muted); background:var(–surface); border:1px solid var(–border); padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px; }
-.clock-dot { width:6px; height:6px; border-radius:50%; background:var(–green); animation:blink 2s infinite; }
-@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(–border);}
+.logo{font-family:‘Space Mono’,monospace;font-size:0.85rem;font-weight:700;color:var(–gold);}
+.logo span{color:var(–muted);font-weight:400;}
+.badge{font-size:0.55rem;font-family:‘Space Mono’,monospace;background:var(–gold-dim);color:var(–gold);border:1px solid rgba(245,200,66,0.3);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+.clock{font-family:‘Space Mono’,monospace;font-size:0.72rem;color:var(–muted);background:var(–surface);border:1px solid var(–border);padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(–green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-.section-title { font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em; color:var(–text-muted); margin:28px 0 14px; display:flex; align-items:center; gap:10px; }
-.section-title::after { content:’’; flex:1; height:1px; background:var(–border); }
+.sec{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(–muted);margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
+.sec::after{content:’’;flex:1;height:1px;background:var(–border);}
 
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
 
-/* ── tw-card ── */
-.tw-card { background:var(–surface); border:1px solid var(–border); border-radius:14px; padding:14px 16px 12px; display:flex; flex-direction:column; gap:6px; transition:all 0.2s; min-height:155px; }
-.tw-card:hover { border-color:rgba(245,200,66,0.3); box-shadow:0 0 20px rgba(245,200,66,0.05); }
-.tw-card-header { display:flex; justify-content:space-between; align-items:flex-start; }
-.tw-card-name { font-size:0.72rem; color:var(–gold); font-weight:700; }
-.tw-card-ticker { font-size:0.58rem; font-family:‘Space Mono’,monospace; color:var(–text-muted); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; margin-top:3px; display:inline-block; }
-.tw-card-price { font-family:‘Space Mono’,monospace; font-size:1.55rem; font-weight:700; line-height:1; color:#fff; }
-.tw-card-price.dn { color:var(–red); }
-.tw-card-change { font-size:0.7rem; font-family:‘Space Mono’,monospace; margin-top:3px; }
-.tw-card-change.up { color:var(–green); }
-.tw-card-change.dn { color:var(–red); }
-.tw-card-meta { font-size:0.58rem; color:var(–text-muted); }
-canvas.sparkline { width:100%; height:50px; display:block; border-radius:4px; }
+/* tw-card */
+.tw-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:6px;transition:all .2s;min-height:150px;}
+.tw-card:hover{border-color:rgba(245,200,66,.3);box-shadow:0 0 20px rgba(245,200,66,.05);}
+.tw-hd{display:flex;justify-content:space-between;align-items:flex-start;}
+.tw-name{font-size:.72rem;color:var(–gold);font-weight:700;}
+.tw-tick{font-size:.58rem;font-family:‘Space Mono’,monospace;color:var(–muted);background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block;}
+.tw-price{font-family:‘Space Mono’,monospace;font-size:1.55rem;font-weight:700;line-height:1;color:#fff;}
+.tw-price.dn{color:var(–red);}
+.tw-chg{font-size:.7rem;font-family:‘Space Mono’,monospace;margin-top:3px;}
+.tw-chg.up{color:var(–green);} .tw-chg.dn{color:var(–red);}
+.tw-meta{font-size:.58rem;color:var(–muted);}
+canvas.spark{width:100%;height:50px;display:block;border-radius:4px;}
 
-/* ── TradingView card ── */
-.tv-card { background:var(–surface); border:1px solid var(–border); border-radius:14px; height:210px; overflow:hidden; display:flex; flex-direction:column; transition:border-color 0.2s; }
-.tv-card:hover { border-color:rgba(245,200,66,0.25); }
-.tv-label { padding:10px 14px 8px; font-size:0.72rem; color:var(–gold); font-weight:700; display:flex; align-items:center; gap:6px; border-bottom:1px solid var(–border); flex-shrink:0; }
-.tv-ticker { font-size:0.58rem; font-family:‘Space Mono’,monospace; color:var(–text-muted); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; }
-.tv-wrap { flex:1; overflow:hidden; }
-.tv-wrap iframe { border:none; width:100%; height:100%; display:block; }
+/* gauge card */
+.gauge-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:150px;}
+.gauge-title{font-size:.72rem;color:var(–gold);font-weight:700;display:flex;align-items:center;gap:6px;}
+.gauge-body{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;justify-content:center;}
+.gauge-num{font-family:‘Space Mono’,monospace;font-size:2.2rem;font-weight:700;line-height:1;}
+.gauge-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;}
+.bar-track{width:100%;height:8px;border-radius:4px;background:linear-gradient(90deg,#ef4444,#f97316,#eab308,#22c55e,#16a34a);position:relative;}
+.bar-needle{position:absolute;top:-4px;width:3px;height:16px;background:#fff;border-radius:2px;transform:translateX(-50%);transition:left .8s ease;box-shadow:0 0 6px rgba(255,255,255,.6);}
+.bar-range{display:flex;justify-content:space-between;font-size:.57rem;color:var(–muted);margin-top:3px;}
+.gauge-src{font-size:.57rem;color:var(–muted);text-align:center;}
 
-/* ── Fear & Greed card (自繪) ── */
-.fg-card { background:var(–surface); border:1px solid var(–border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; min-height:160px; }
-.fg-gauge-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; justify-content:center; }
-.fg-score { font-family:‘Space Mono’,monospace; font-size:2.4rem; font-weight:700; line-height:1; }
-.fg-label-text { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; }
-.fg-bar-track { width:100%; height:8px; border-radius:4px; background:linear-gradient(90deg,#ef4444,#f97316,#eab308,#22c55e,#16a34a); overflow:hidden; position:relative; }
-.fg-bar-needle { position:absolute; top:-3px; width:3px; height:14px; background:#fff; border-radius:2px; transform:translateX(-50%); transition:left 0.8s ease; box-shadow:0 0 6px rgba(255,255,255,0.6); }
-.fg-range { display:flex; justify-content:space-between; font-size:0.58rem; color:var(–text-muted); margin-top:2px; }
-.fg-source { font-size:0.58rem; color:var(–text-muted); text-align:center; }
+/* tv-card */
+.tv-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;height:210px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;}
+.tv-card:hover{border-color:rgba(245,200,66,.25);}
+.tv-lbl{padding:10px 14px 8px;font-size:.72rem;color:var(–gold);font-weight:700;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(–border);flex-shrink:0;}
+.tv-tick{font-size:.58rem;font-family:‘Space Mono’,monospace;color:var(–muted);background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;}
+.tv-wrap{flex:1;overflow:hidden;}
+.tv-wrap iframe{border:none;width:100%;height:100%;display:block;}
 
-.tip-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
-@media(max-width:600px){ .tip-grid{ grid-template-columns:1fr; } }
-.tip-card { background:var(–surface); border:1px solid var(–border); border-radius:10px; padding:14px 16px; }
-.tip-head { color:var(–gold); font-size:0.68rem; font-weight:700; margin-bottom:8px; }
-.tip-body { font-size:0.72rem; color:var(–text-muted); line-height:1.7; }
-.tip-body strong { color:var(–text); }
+.tip-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+@media(max-width:600px){.tip-grid{grid-template-columns:1fr;}}
+.tip-card{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px 16px;}
+.tip-head{color:var(–gold);font-size:.68rem;font-weight:700;margin-bottom:8px;}
+.tip-body{font-size:.72rem;color:var(–muted);line-height:1.7;}
+.tip-body strong{color:var(–text);}
 </style>
 
 </head>
@@ -88,80 +77,83 @@ canvas.sparkline { width:100%; height:50px; display:block; border-radius:4px; }
 <div class="container">
 
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 核心資產與情緒監控</span><span class="badge">v5.6</span></div>
-    <div class="clock"><span class="clock-dot"></span><span id="clock">--:--:-- --/--</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產與情緒監控</span><span class="badge">v5.7</span></div>
+    <div class="clock"><span class="dot"></span><span id="clock">--:--:-- --/--</span></div>
   </header>
 
-  <!-- ── 台股 ── -->
+  <!-- 台股 -->
 
-  <div class="section-title">🚀 台股核心追蹤 (FinMind)</div>
+  <div class="sec">🚀 台股核心追蹤 (FinMind)</div>
   <div class="grid" id="tw-grid"></div>
 
-  <!-- ── 情緒 ── -->
+  <!-- 情緒 -->
 
-  <div class="section-title">🎭 市場情緒指標</div>
+  <div class="sec">🎭 市場情緒指標</div>
   <div class="grid">
 
 ```
-<!-- CNN F&G 自繪 gauge -->
-<div class="fg-card">
-  <div class="tv-label" style="padding:0 0 8px;border:none;">CNN 恐慌貪婪指數 <span class="tv-ticker">F&amp;G</span></div>
-  <div class="fg-gauge-wrap">
-    <div class="fg-score" id="fg-score">--</div>
-    <div class="fg-label-text" id="fg-label" style="color:var(--text-muted)">載入中...</div>
+<!-- Fear & Greed -->
+<div class="gauge-card">
+  <div class="gauge-title">CNN 恐慌貪婪指數 <span class="tv-tick">F&amp;G</span></div>
+  <div class="gauge-body">
+    <div class="gauge-num" id="fg-num">--</div>
+    <div class="gauge-label" id="fg-lbl" style="color:var(--muted)">載入中…</div>
     <div style="width:100%">
-      <div class="fg-bar-track"><div class="fg-bar-needle" id="fg-needle" style="left:50%"></div></div>
-      <div class="fg-range"><span>恐慌</span><span>中立</span><span>貪婪</span></div>
+      <div class="bar-track"><div class="bar-needle" id="fg-needle" style="left:50%"></div></div>
+      <div class="bar-range"><span>恐慌</span><span>中立</span><span>貪婪</span></div>
     </div>
   </div>
-  <div class="fg-source" id="fg-date">資料來源：Alternative.me API</div>
+  <div class="gauge-src" id="fg-src">資料來源：Alternative.me</div>
 </div>
 
-<!-- VIX via TradingView -->
-<div class="tv-card">
-  <div class="tv-label">美股波動率指數 <span class="tv-ticker">VIX</span></div>
-  <div class="tv-wrap">
-    <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=CBOE%3AVIX&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(239%2C68%2C68%2C0.25)&trendLineColor=rgba(239%2C68%2C68%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
+<!-- VIX 自繪 gauge via Yahoo Finance -->
+<div class="gauge-card">
+  <div class="gauge-title">美股波動率指數 <span class="tv-tick">VIX</span></div>
+  <div class="gauge-body">
+    <div class="gauge-num" id="vix-num">--</div>
+    <div class="gauge-label" id="vix-lbl" style="color:var(--muted)">載入中…</div>
+    <div style="width:100%">
+      <!-- VIX bar: 0–15 低，15–25 中，25–40 高，40+ 極高 -->
+      <div class="bar-track" style="background:linear-gradient(90deg,#22c55e,#eab308,#f97316,#ef4444)">
+        <div class="bar-needle" id="vix-needle" style="left:30%"></div>
+      </div>
+      <div class="bar-range"><span>平靜</span><span>警戒</span><span>恐慌</span></div>
+    </div>
   </div>
+  <div class="gauge-src" id="vix-src">資料來源：Yahoo Finance</div>
 </div>
 ```
 
   </div>
 
-  <!-- ── 全球 ── -->
+  <!-- 全球 -->
 
-  <div class="section-title">🌐 全球核心指標 (TradingView)</div>
+  <div class="sec">🌐 全球核心指標 (TradingView)</div>
   <div class="grid">
     <div class="tv-card">
-      <div class="tv-label">美元/台幣 <span class="tv-ticker">USDTWD</span></div>
-      <div class="tv-wrap">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-      </div>
+      <div class="tv-lbl">美元/台幣 <span class="tv-tick">USDTWD</span></div>
+      <div class="tv-wrap"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=FX_IDC%3AUSDTWD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(96%2C165%2C250%2C0.3)&trendLineColor=rgba(96%2C165%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe></div>
     </div>
     <div class="tv-card">
-      <div class="tv-label">黃金現貨 <span class="tv-ticker">XAUUSD</span></div>
-      <div class="tv-wrap">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-      </div>
+      <div class="tv-lbl">黃金現貨 <span class="tv-tick">XAUUSD</span></div>
+      <div class="tv-wrap"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=OANDA%3AXAUUSD&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(245%2C200%2C66%2C0.3)&trendLineColor=rgba(245%2C200%2C66%2C1)&theme=dark&autosize=true" loading="lazy"></iframe></div>
     </div>
     <div class="tv-card">
-      <div class="tv-label">美國公債ETF <span class="tv-ticker">TLT</span></div>
-      <div class="tv-wrap">
-        <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe>
-      </div>
+      <div class="tv-lbl">美國公債ETF <span class="tv-tick">TLT</span></div>
+      <div class="tv-wrap"><iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=zh_TW&symbol=NASDAQ%3ATLT&gridLineColor=rgba(240%2C243%2C250%2C0.06)&fontColor=rgba(209%2C212%2C212%2C1)&underLineColor=rgba(167%2C139%2C250%2C0.3)&trendLineColor=rgba(167%2C139%2C250%2C1)&theme=dark&autosize=true" loading="lazy"></iframe></div>
     </div>
   </div>
 
-  <!-- ── 備忘錄 ── -->
+  <!-- 備忘 -->
 
-  <div class="section-title">💡 財經備忘錄</div>
+  <div class="sec">💡 財經備忘錄</div>
   <div class="tip-grid">
     <div class="tip-card">
       <div class="tip-head">⚖️ 指標說明</div>
       <div class="tip-body">
-        • <strong>F&G &lt; 25</strong> 極度恐慌，歷史上通常是買點。<br>
-        • <strong>VIX &gt; 30</strong> 市場劇烈波動，需注意風險。<br>
-        • 加權指數使用 <strong>TSE001</strong> (FinMind 正確代號)。
+        • <strong>F&G &lt; 25</strong> 極度恐慌，歷史上常見底部訊號。<br>
+        • <strong>VIX &gt; 30</strong> 市場劇烈波動；<strong>&gt; 40</strong> 為恐慌頂峰。<br>
+        • 台灣加權使用 FinMind <strong>TAIEX</strong> dataset。
       </div>
     </div>
     <div class="tip-card">
@@ -169,7 +161,7 @@ canvas.sparkline { width:100%; height:50px; display:block; border-radius:4px; }
       <div class="tip-body">
         • <strong>鴻勁 (7769)</strong> 長期觀察。<br>
         • <strong>元大美債 (00679B)</strong> 分期投入策略。<br>
-        • VIX 飆升時檢視持倉風險。
+        • VIX 飆升時檢視持倉保證金水位。
       </div>
     </div>
   </div>
@@ -178,148 +170,163 @@ canvas.sparkline { width:100%; height:50px; display:block; border-radius:4px; }
 
 <script>
 // ── Clock ──
-function updateClock() {
-  const n = new Date();
-  const t = n.toLocaleTimeString('zh-TW',{hour12:false});
-  const d = (n.getMonth()+1).toString().padStart(2,'0')+'/'+n.getDate().toString().padStart(2,'0');
-  document.getElementById('clock').textContent = t+' '+d;
+function updateClock(){
+  const n=new Date();
+  const t=n.toLocaleTimeString('zh-TW',{hour12:false});
+  const d=(n.getMonth()+1).toString().padStart(2,'0')+'/'+n.getDate().toString().padStart(2,'0');
+  document.getElementById('clock').textContent=t+' '+d;
 }
 setInterval(updateClock,1000); updateClock();
 
-// ── Taiwan stocks ──
-// FinMind 正確代號：
-//   台灣加權 → TSE001 (dataset TaiwanStockPrice)
-//   00679B   → 00679B (正確)
-//   7769     → 7769 (正確)
-const TW_STOCKS = [
-  { id:'7769',   name:'鴻勁',        color:'#f5c842', fill:'rgba(245,200,66,0.15)' },
-  { id:'TSE001', name:'台灣加權指數', color:'#60a5fa', fill:'rgba(96,165,250,0.15)' },
-  { id:'00679B', name:'元大美債20年', color:'#a78bfa', fill:'rgba(167,139,250,0.15)' },
-];
-
-function toDateStr(d){ return d.toISOString().split('T')[0]; }
-function nDaysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return toDateStr(d); }
-
-function drawSparkline(canvas, prices, color, fill) {
-  const dpr = window.devicePixelRatio||1;
-  const w = canvas.offsetWidth, h = canvas.offsetHeight;
-  canvas.width = w*dpr; canvas.height = h*dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  if (!prices||prices.length<2) return;
-  const min=Math.min(...prices), max=Math.max(...prices);
-  const range=max-min||1;
-  const pl=4,pr=4,pt=6,pb=6;
-  const cw=w-pl-pr, ch=h-pt-pb;
-  const pts=prices.map((p,i)=>({
-    x: pl+(i/(prices.length-1))*cw,
-    y: pt+ch-((p-min)/range)*ch
-  }));
-  // fill
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, h-pb);
+// ── Sparkline ──
+function drawSpark(canvas,prices,color,fill){
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.offsetWidth, h=canvas.offsetHeight;
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  if(!prices||prices.length<2) return;
+  const mn=Math.min(...prices), mx=Math.max(...prices), rng=mx-mn||1;
+  const pl=4,pr=4,pt=6,pb=6, cw=w-pl-pr, ch=h-pt-pb;
+  const pts=prices.map((p,i)=>({x:pl+(i/(prices.length-1))*cw, y:pt+ch-((p-mn)/rng)*ch}));
+  ctx.beginPath(); ctx.moveTo(pts[0].x,h-pb);
   pts.forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.lineTo(pts[pts.length-1].x, h-pb);
-  ctx.closePath();
+  ctx.lineTo(pts[pts.length-1].x,h-pb); ctx.closePath();
   ctx.fillStyle=fill; ctx.fill();
-  // line
-  ctx.beginPath();
-  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.beginPath(); pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
   ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke();
-  // dot
   const last=pts[pts.length-1];
-  ctx.beginPath(); ctx.arc(last.x,last.y,3,0,Math.PI*2);
-  ctx.fillStyle=color; ctx.fill();
+  ctx.beginPath(); ctx.arc(last.x,last.y,3,0,Math.PI*2); ctx.fillStyle=color; ctx.fill();
 }
 
-function renderCard(stock) {
-  const div = document.createElement('div');
-  div.className='tw-card'; div.id='card-'+stock.id;
+// ── TW stocks ──
+// TAIEX = FinMind 正確加權指數代號 (dataset TaiwanStockPrice)
+// 若失敗則 fallback 到 TaiwanStockPrice dataset=TaiwanVariousIndicators
+const TW_STOCKS=[
+  {id:'7769',   name:'鴻勁',        color:'#f5c842', fill:'rgba(245,200,66,0.15)',  dataset:'TaiwanStockPrice'},
+  {id:'TAIEX',  name:'台灣加權指數', color:'#60a5fa', fill:'rgba(96,165,250,0.15)', dataset:'TaiwanStockPrice'},
+  {id:'00679B', name:'元大美債20年', color:'#a78bfa', fill:'rgba(167,139,250,0.15)',dataset:'TaiwanStockPrice'},
+];
+
+function toDateStr(d){return d.toISOString().split('T')[0];}
+function nAgo(n){const d=new Date();d.setDate(d.getDate()-n);return toDateStr(d);}
+
+function renderCard(s){
+  const div=document.createElement('div'); div.className='tw-card'; div.id='card-'+s.id;
   div.innerHTML=`
-    <div class="tw-card-header">
-      <div>
-        <div class="tw-card-name">${stock.name}</div>
-        <span class="tw-card-ticker">${stock.id}</span>
-      </div>
+    <div class="tw-hd">
+      <div><div class="tw-name">${s.name}</div><span class="tw-tick">${s.id}</span></div>
       <div style="text-align:right">
-        <div class="tw-card-price" id="price-${stock.id}">---</div>
-        <div class="tw-card-change" id="chg-${stock.id}">載入中…</div>
+        <div class="tw-price" id="p-${s.id}">---</div>
+        <div class="tw-chg" id="c-${s.id}">載入中…</div>
       </div>
     </div>
-    <canvas class="sparkline" id="spark-${stock.id}" style="height:50px"></canvas>
-    <div class="tw-card-meta" id="meta-${stock.id}"></div>
-  `;
+    <canvas class="spark" id="sp-${s.id}" style="height:50px"></canvas>
+    <div class="tw-meta" id="m-${s.id}"></div>`;
   return div;
 }
 
-async function fetchStock(stock) {
-  const url=`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stock.id}&start_date=${nDaysAgo(100)}&end_date=${toDateStr(new Date())}`;
-  const r=await fetch(url);
-  const j=await r.json();
+async function fetchTW(s){
+  // Try primary dataset
+  const url=`https://api.finmindtrade.com/api/v4/data?dataset=${s.dataset}&data_id=${s.id}&start_date=${nAgo(100)}&end_date=${toDateStr(new Date())}`;
+  let r=await fetch(url); let j=await r.json();
+
+  // If TAIEX fails on TaiwanStockPrice, try TaiwanStockStatistics
+  if((!j.data||j.data.length===0) && s.id==='TAIEX'){
+    const url2=`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanVariousIndicators5Seconds&data_id=TAIEX&start_date=${nAgo(5)}&end_date=${toDateStr(new Date())}`;
+    r=await fetch(url2); j=await r.json();
+  }
+
   if(!j.data||j.data.length===0) throw new Error('no data');
   const rows=j.data.slice(-60);
-  const prices=rows.map(r=>parseFloat(r.close));
-  const latest=rows[rows.length-1];
-  const prev=rows[rows.length-2];
-  const close=parseFloat(latest.close);
-  const chg=close-parseFloat(prev.close);
-  const pct=chg/parseFloat(prev.close)*100;
-  const up=chg>=0;
-  const priceEl=document.getElementById('price-'+stock.id);
-  priceEl.textContent=close.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
-  priceEl.className='tw-card-price'+(up?'':' dn');
-  const chgEl=document.getElementById('chg-'+stock.id);
-  chgEl.textContent=`${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;
-  chgEl.className='tw-card-change '+(up?'up':'dn');
-  document.getElementById('meta-'+stock.id).textContent=`更新：${latest.date}`;
-  const cv=document.getElementById('spark-'+stock.id);
-  requestAnimationFrame(()=>drawSparkline(cv,prices,stock.color,stock.fill));
+  const prices=rows.map(r=>parseFloat(r.close||r.price||r.value));
+  const latest=rows[rows.length-1], prev=rows[rows.length-2];
+  const close=parseFloat(latest.close||latest.price||latest.value);
+  const pclose=parseFloat(prev.close||prev.price||prev.value);
+  const chg=close-pclose, pct=chg/pclose*100, up=chg>=0;
+  document.getElementById('p-'+s.id).textContent=close.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('p-'+s.id).className='tw-price'+(up?'':' dn');
+  document.getElementById('c-'+s.id).textContent=`${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;
+  document.getElementById('c-'+s.id).className='tw-chg '+(up?'up':'dn');
+  document.getElementById('m-'+s.id).textContent=`更新：${latest.date}`;
+  const cv=document.getElementById('sp-'+s.id);
+  requestAnimationFrame(()=>drawSpark(cv,prices,s.color,s.fill));
 }
 
 const grid=document.getElementById('tw-grid');
-TW_STOCKS.forEach(stock=>{
-  grid.appendChild(renderCard(stock));
-  fetchStock(stock).catch(()=>{
-    document.getElementById('chg-'+stock.id).textContent='載入失敗';
-    document.getElementById('price-'+stock.id).textContent='N/A';
+TW_STOCKS.forEach(s=>{
+  grid.appendChild(renderCard(s));
+  fetchTW(s).catch(()=>{
+    document.getElementById('c-'+s.id).textContent='載入失敗';
+    document.getElementById('p-'+s.id).textContent='N/A';
   });
 });
 
-// ── CNN Fear & Greed — Alternative.me (CORS-free) ──
-const FG_LABELS=[
-  [0,24,'極度恐慌','#ef4444'],
-  [25,44,'恐慌','#f97316'],
-  [45,55,'中立','#eab308'],
-  [56,74,'貪婪','#22c55e'],
-  [75,100,'極度貪婪','#16a34a'],
+// ── Fear & Greed ──
+const FG=[
+  [0,24,'極度恐慌','#ef4444'],[25,44,'恐慌','#f97316'],
+  [45,55,'中立','#eab308'],[56,74,'貪婪','#22c55e'],[75,100,'極度貪婪','#16a34a']
 ];
-function getFgMeta(v){
-  for(const [lo,hi,label,color] of FG_LABELS){
-    if(v>=lo&&v<=hi) return {label,color};
-  }
-  return {label:'未知',color:'#6b7280'};
-}
+function fgMeta(v){for(const[lo,hi,l,c]of FG)if(v>=lo&&v<=hi)return{l,c}; return{l:'--',c:'#6b7280'};}
 
-async function fetchFearGreed(){
+async function fetchFG(){
   try{
-    // Alternative.me provides CNN F&G equivalent, CORS-friendly
     const r=await fetch('https://api.alternative.me/fng/?limit=1&format=json');
     const j=await r.json();
     const val=parseInt(j.data[0].value);
     const ts=new Date(parseInt(j.data[0].timestamp)*1000).toLocaleDateString('zh-TW');
-    const {label,color}=getFgMeta(val);
-    document.getElementById('fg-score').textContent=val;
-    document.getElementById('fg-score').style.color=color;
-    document.getElementById('fg-label').textContent=label;
-    document.getElementById('fg-label').style.color=color;
-    document.getElementById('fg-needle').style.left=(val)+'%';
-    document.getElementById('fg-date').textContent=`更新：${ts}　來源：Alternative.me (加密市場情緒)`;
-  } catch(e){
-    document.getElementById('fg-score').textContent='--';
-    document.getElementById('fg-label').textContent='載入失敗';
+    const {l,c}=fgMeta(val);
+    document.getElementById('fg-num').textContent=val;
+    document.getElementById('fg-num').style.color=c;
+    document.getElementById('fg-lbl').textContent=l;
+    document.getElementById('fg-lbl').style.color=c;
+    document.getElementById('fg-needle').style.left=val+'%';
+    document.getElementById('fg-src').textContent=`更新：${ts}　來源：Alternative.me（加密市場情緒）`;
+  }catch(e){
+    document.getElementById('fg-lbl').textContent='載入失敗';
   }
 }
-fetchFearGreed();
+fetchFG();
+
+// ── VIX via Yahoo Finance (CORS proxy) ──
+// Use allorigins.win as CORS proxy for Yahoo Finance quote
+async function fetchVIX(){
+  try{
+    // Yahoo Finance v8 quote endpoint
+    const yurl='https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=3mo';
+    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(yurl);
+    const r=await fetch(proxy);
+    const outer=await r.json();
+    const j=JSON.parse(outer.contents);
+    const meta=j.chart.result[0].meta;
+    const closes=j.chart.result[0].indicators.quote[0].close.filter(Boolean);
+    const val=meta.regularMarketPrice||closes[closes.length-1];
+    const prev=closes[closes.length-2]||val;
+    const chg=val-prev, pct=chg/prev*100, up=chg>=0;
+
+    // VIX classification
+    let lbl,col;
+    if(val<15){lbl='極度平靜';col='#22c55e';}
+    else if(val<20){lbl='低波動';col='#86efac';}
+    else if(val<25){lbl='正常';col='#eab308';}
+    else if(val<30){lbl='警戒';col='#f97316';}
+    else if(val<40){lbl='高恐慌';col='#ef4444';}
+    else{lbl='極度恐慌';col='#dc2626';}
+
+    // needle: map 0–60 → 0–100%
+    const needlePct=Math.min(val/60*100,100);
+
+    document.getElementById('vix-num').textContent=val.toFixed(2);
+    document.getElementById('vix-num').style.color=col;
+    document.getElementById('vix-lbl').textContent=lbl+`  ${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;
+    document.getElementById('vix-lbl').style.color=col;
+    document.getElementById('vix-needle').style.left=needlePct+'%';
+    document.getElementById('vix-src').textContent='來源：Yahoo Finance　即時數據';
+  }catch(e){
+    document.getElementById('vix-lbl').textContent='載入失敗';
+    document.getElementById('vix-num').textContent='--';
+  }
+}
+fetchVIX();
 </script>
 
 </body>
