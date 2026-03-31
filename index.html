@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>交易儀表板 v3</title>
     <style>
         :root { --bg: #000; --card: #1c1c1e; --border: #2c2c2e; --text: #fff; --green: #30d158; --red: #ff453a; --gray: #8e8e93; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 100px; }
-        .container { max-width: 480px; margin: auto; padding: 20px; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; }
+        .container { max-width: 480px; margin: auto; padding: 20px; padding-bottom: 120px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .sentiment-tag { font-size: 16px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: #2c2c2e; }
         .up { color: var(--green); background: rgba(48, 209, 88, 0.15); }
@@ -16,102 +16,69 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .label { color: var(--gray); font-size: 13px; margin-bottom: 8px; display: block; }
         .value { font-size: 22px; font-weight: 700; }
-        
-        /* 強化的 Debug Log */
-        #log { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: rgba(0, 0, 0, 0.9); color: #00ff00; 
-            font-size: 11px; font-family: monospace; padding: 10px;
-            max-height: 80px; overflow-y: auto; border-top: 1px solid #333; z-index: 1000;
-        }
+        #log { position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #0f0; font-size: 10px; padding: 10px; max-height: 80px; overflow-y: auto; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1 style="font-size:24px;">交易儀表板</h1>
-            <div id="sent" class="sentiment-tag">--</div>
-        </div>
-
+        <div class="header"><h1>交易儀表板</h1><div id="sent" class="sentiment-tag">--</div></div>
         <div class="grid">
-            <div class="card">
-                <span class="label">CNN 恐慌指數</span>
-                <div id="cnn" class="value">--</div>
-            </div>
-            <div class="card">
-                <span class="label">美股 VIX</span>
-                <div id="vix" class="value">--</div>
-            </div>
+            <div class="card"><span class="label">CNN 恐慌指數</span><div id="cnn" class="value">--</div></div>
+            <div class="card"><span class="label">美股 VIX</span><div id="vix" class="value">--</div></div>
         </div>
-
         <div class="card">
             <div style="display:flex; justify-content:space-between;">
                 <div><span class="label">USD / TWD</span><div id="twd" class="value">--</div></div>
                 <div style="text-align:right;"><span class="label">台指 VIX</span><div id="vixtw" class="value">--</div></div>
             </div>
         </div>
-
         <div class="grid">
-            <div class="card">
-                <span class="label">融資變化 (億)</span>
-                <div id="m" class="value">--</div>
-            </div>
-            <div class="card">
-                <span class="label">融券變化 (張)</span>
-                <div id="s" class="value">--</div>
-            </div>
+            <div class="card"><span class="label">融資變化 (億)</span><div id="m" class="value">--</div></div>
+            <div class="card"><span class="label">融券變化 (張)</span><div id="s" class="value">--</div></div>
         </div>
     </div>
-
-    <div id="log">系統啟動中...</div>
+    <div id="log">系統初始化...</div>
 
     <script>
-        const API_BASE = "https://dashboard.jou0914.workers.dev"; [span_3](start_span)//[span_3](end_span)
+        const API_BASE = "https://dashboard.jou0914.workers.dev"; 
 
         function log(msg) {
-            const box = document.getElementById("log");
-            box.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + box.innerHTML;
+            const l = document.getElementById("log");
+            l.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + l.innerHTML;
         }
 
         async function update() {
-            const t0 = performance.now();
+            log("正在抓取數據...");
             try {
-                // 確保路徑拼接沒有多餘的斜線
-                const res = await fetch(`${API_BASE}/market`); [span_4](start_span)//[span_4](end_span)
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                
+                const res = await fetch(`${API_BASE}/market`);
                 const d = await res.json();
-
-                // 更新畫面
-                document.getElementById("cnn").textContent = d.cnn ?? [span_5](start_span)"--";[span_5](end_span)
-                document.getElementById("vix").textContent = d.vix?.toFixed(2) ?? [span_6](start_span)"--";[span_6](end_span)
+                
+                document.getElementById("cnn").textContent = d.cnn ?? "--";
+                document.getElementById("vix").textContent = d.vix?.toFixed(2) ?? "--";
                 document.getElementById("vixtw").textContent = d.vixtw?.toFixed(2) ?? "--";
-                document.getElementById("twd").textContent = d.twd?.toFixed(2) ?? [span_7](start_span)"--";[span_7](end_span)
+                document.getElementById("twd").textContent = d.twd?.toFixed(2) ?? "--";
 
-                if (d.marginChange !== undefined) {
-                    const mVal = d.marginChange / 100000000;
-                    const mEl = document.getElementById("m");
-                    mEl.textContent = (mVal > 0 ? "+" : "") + mVal.toFixed(2);
-                    mEl.style.color = mVal > 0 ? "var(--green)" : "var(--red)";
+                if (d.marginChange) {
+                    const m = d.marginChange / 100000000;
+                    document.getElementById("m").textContent = (m > 0 ? "+" : "") + m.toFixed(2);
+                    document.getElementById("m").style.color = m > 0 ? "var(--green)" : "var(--red)";
+                }
+                if (d.shortChange) {
+                    document.getElementById("s").textContent = (d.shortChange > 0 ? "+" : "") + d.shortChange.toLocaleString();
                 }
 
-                if (d.shortChange !== undefined) {
-                    const sEl = document.getElementById("s");
-                    sEl.textContent = (d.shortChange > 0 ? "+" : "") + d.shortChange.toLocaleString();
-                }
-
-                const sentEl = document.getElementById("sent");
-                sentEl.textContent = d.sentiment || [span_8](start_span)"中性";[span_8](end_span)
-                sentEl.className = "sentiment-tag " + (d.sentiment === "偏多" ? "up" : d.sentiment === "偏空" ? "down" : "");
-
-                log(`OK (${Math.round(performance.now()-t0)}ms)`);
+                const s = document.getElementById("sent");
+                s.textContent = d.sentiment || "中性";
+                s.className = "sentiment-tag " + (d.sentiment === "偏多" ? "up" : (d.sentiment === "偏空" ? "down" : ""));
+                
+                log("更新成功");
             } catch (e) {
-                log(`ERR: ${e.message}`);
+                log("錯誤: " + e.message);
             }
         }
 
         update();
-        setInterval(update, 30000);
+        setInterval(update, 60000); // 建議改為 1 分鐘，避免 Alpha Vantage 免費版次數用光
     </script>
 </body>
 </html>
