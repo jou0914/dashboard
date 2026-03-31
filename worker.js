@@ -3,52 +3,52 @@ export default {
     const url = new URL(request.url);
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json;charset=UTF-8"
+      "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
+      "Content-Type": "application/json"
     };
 
-    // --- 僅測試 VIXTWN ---
-    if (url.pathname === "/vixtw") {
+    if (url.pathname === "/vix") {
       try {
-        // 使用 Yahoo Finance v6 接口，這對 ^VIXTW 指數較穩定
-        const yUrl = `https://query2.finance.yahoo.com/v6/finance/quote?symbols=%5EVIXTW`;
-        const res = await fetch(yUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
-        const json = await res.json();
+        // 台灣期交所 VIX 頁面
+        const targetUrl = "https://www.taifex.com.tw/cht/7/vixSummary";
         
-        const result = json.quoteResponse.result[0];
-        const price = result ? result.regularMarketPrice : null;
+        // 模擬瀏覽器請求，避免被擋
+        const res = await fetch(targetUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+        });
+        const html = await res.text();
 
-        if (price !== null) {
-          return new Response(JSON.stringify({
-            status: "success",
-            price: parseFloat(price.toFixed(2)),
-            time: new Date(result.regularMarketTime * 1000).toLocaleString('zh-TW')
-          }), { headers: corsHeaders });
-        } else {
-          throw new Error("No Price Data");
+        // 使用簡單的正規表達式從 HTML 表格中提取第一個 VIX 數值 (最新)
+        // 台灣期交所的結構通常是 <td>數值</td>
+        const regex = /<td class="center">(\d+\.\d+)<\/td>/g;
+        let matches = [];
+        let m;
+        while ((m = regex.exec(html)) !== null) {
+          matches.push(parseFloat(m[1]));
         }
+
+        // 假設第一筆就是最新的 VIX
+        const currentPrice = matches[0] || 0;
+        
+        // 構造回傳格式 (因官網歷史資料需分頁，此處先回傳當前值)
+        return new Response(
+          JSON.stringify({
+            type: "taiwan_vix",
+            price: currentPrice,
+            time: new Date().toISOString(),
+            // 這裡可以放入你模擬或抓到的歷史數據
+            history: matches.slice(0, 10).map((v, i) => ({ index: i, price: v })) 
+          }),
+          { headers: corsHeaders }
+        );
+
       } catch (e) {
-        return new Response(JSON.stringify({ 
-          status: "error", 
-          message: "無法取得數據，請檢查指數代碼",
-          debug: e.message
-        }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 500,
+          headers: corsHeaders
+        });
       }
     }
-
-    // --- 保留美股 VIX 供圖表使用 ---
-    if (url.pathname === "/vix") {
-      const res = await fetch("https://cdn.cboe.com/api/global/delayed_quotes/charts/historical/_VIX.json");
-      const json = await res.json();
-      const recent = json.data.slice(-90);
-      return new Response(JSON.stringify({
-        price: parseFloat(recent[recent.length-1].close),
-        time: recent[recent.length-1].date,
-        history: recent.map(d => ({ date: d.date, price: parseFloat(d.close) }))
-      }), { headers: corsHeaders });
-    }
-
-    return new Response("VIX Tester Running");
+    return new Response("Worker is running");
   }
 };
