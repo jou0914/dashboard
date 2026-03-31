@@ -39,9 +39,7 @@ body {
   border: 1px solid #222;
 }
 
-.full {
-  grid-column: span 2;
-}
+.full { grid-column: span 2; }
 
 .label {
   font-size: 11px;
@@ -66,6 +64,32 @@ body {
   font-size: 3rem;
   color: #ff5252;
 }
+
+/* 🔥 Debug Pro */
+.debug {
+  margin-top: 20px;
+  background: #0a0a0a;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 10px;
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 11px;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.log-line { margin-bottom: 2px; }
+
+.ok { color: #00e676; }
+.err { color: #ff5252; }
+.warn { color: #ffd740; }
+.info { color: #40c4ff; }
 </style>
 </head>
 
@@ -103,12 +127,63 @@ body {
     </div>
 
   </div>
+
+  <!-- 🔥 Debug Panel -->
+  <div class="debug">
+    <div class="debug-header">
+      <span>⚡ SYSTEM LOG</span>
+      <span id="stat"></span>
+    </div>
+    <div id="log"></div>
+  </div>
+
 </div>
 
 <script>
-const API = "https://你的worker網址.workers.dev";
+const API = "https://dashboard.jou0914.workers.dev";
 
 const set = (id, val) => document.getElementById(id).textContent = val;
+
+function log(msg, type = "ok") {
+  const el = document.getElementById("log");
+  const time = new Date().toLocaleTimeString();
+
+  el.innerHTML =
+    `<div class="log-line ${type}">[${time}] ${msg}</div>` +
+    el.innerHTML;
+}
+
+const statEl = document.getElementById("stat");
+
+async function fetchWithDebug(path, retry = 1) {
+  const start = performance.now();
+
+  try {
+    const res = await fetch(API + path);
+    const t = Math.round(performance.now() - start);
+
+    if (!res.ok) throw new Error(res.status);
+
+    const cache = res.headers.get("cf-cache-status");
+
+    const data = await res.json();
+
+    log(`${path} ${t}ms ${cache || "LIVE"}`, "info");
+    statEl.textContent = `${t} ms`;
+
+    return data;
+
+  } catch (e) {
+    log(`${path} FAIL (${e.message})`, "err");
+
+    if (retry > 0) {
+      log(`${path} retry...`, "warn");
+      return await fetchWithDebug(path, retry - 1);
+    }
+
+    return null;
+  }
+}
 
 const render = (id, cId, d) => {
   set(id, d.price.toFixed(2));
@@ -117,37 +192,30 @@ const render = (id, cId, d) => {
   el.className = "change " + (d.isUp ? "up" : "down");
 };
 
-async function fetchData(path) {
-  try {
-    const r = await fetch(API + path);
-    return await r.json();
-  } catch {
-    return null;
-  }
-}
-
 async function update() {
-  const cnn = await fetchData("/cnn");
+
+  const cnn = await fetchWithDebug("/cnn");
   if (cnn) {
     set("cnn", cnn.price);
     set("cnn-label", cnn.label);
   }
 
-  const vix = await fetchData("/vix");
+  const vix = await fetchWithDebug("/vix");
   if (vix) render("vix", "vix-c", vix);
 
-  const vtw = await fetchData("/vixtw");
+  const vtw = await fetchWithDebug("/vixtw");
   if (vtw) render("vtw", "vtw-c", vtw);
 
-  const twd = await fetchData("/twd");
+  const twd = await fetchWithDebug("/twd");
   if (twd) set("twd", twd.price.toFixed(3));
 
-  const s = await fetchData("/7769");
+  const s = await fetchWithDebug("/7769");
   if (s) render("s", "s-c", s);
 }
 
 update();
 setInterval(update, 30000);
 </script>
+
 </body>
 </html>
