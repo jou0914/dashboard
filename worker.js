@@ -8,62 +8,54 @@ export default {
 
     if (url.pathname === "/vix") {
       try {
-        const targetUrl = "https://www.taifex.com.tw/cht/7/vixSummary";
+        // 改抓 Yahoo 股市的台指 VIX 頁面
+        const targetUrl = "https://tw.stock.yahoo.com/quote/%5EVIXTWN";
+        
         const res = await fetch(targetUrl, {
           headers: { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Accept": "text/html"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           }
         });
         
-        // 取得原始 HTML
         const html = await res.text();
 
-        // --- 終極解析邏輯：區塊定位法 ---
-        // 1. 先找到表格的主體區域，避免抓到網頁其他的無關數字
-        const tableStart = html.indexOf('class="table_f">');
-        if (tableStart === -1) throw new Error("找不到資料表格");
+        // Yahoo 股市的價格通常會放在 Fz(32px) 或特定的價格 Class 中
+        // 我們使用更寬鬆的正規表達式來抓取當前股價
+        // 尋找符合 "rt-text C($c-trend-down) Fz(32px)" 或類似結構的數字
+        const priceRegex = /"realtimePrice":"([\d.]+)"/;
+        const match = html.match(priceRegex);
         
-        const tableHtml = html.substring(tableStart);
-
-        // 2. 尋找所有符合 <td class="center">...</td> 的內容
-        // 台灣期交所的格式通常是：
-        // <td class="center">
-        //                15.40
-        // </td>
-        const regex = /<td class="center">[\s\n]*([\d.]+)\s*<\/td>/g;
-        let matches = [];
-        let m;
-        
-        while ((m = regex.exec(tableHtml)) !== null) {
-          const val = parseFloat(m[1]);
-          if (!isNaN(val) && val > 0) {
-            matches.push(val);
-          }
+        let currentPrice = 0;
+        if (match && match[1]) {
+          currentPrice = parseFloat(match[1]);
+        } else {
+          // 備案：如果 JSON 格式抓不到，抓取 HTML 標籤內的數字
+          const htmlPriceRegex = /Fz\(32px\)[^>]*>([\d.]+)</;
+          const htmlMatch = html.match(htmlPriceRegex);
+          if (htmlMatch) currentPrice = parseFloat(htmlMatch[1]);
         }
 
-        // 3. 檢查結果
-        // 第一筆通常是「最新指數值」，第二筆是「變動點數」
-        const currentPrice = matches.length > 0 ? matches[0] : 0;
+        if (currentPrice === 0) {
+            throw new Error("無法從 Yahoo 取得價格資料");
+        }
 
         return new Response(
           JSON.stringify({
             type: "taiwan_vix",
             price: currentPrice,
-            time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
-            all_values: matches.slice(0, 5), // 抓出前幾筆檢查是否有抓對
-            debug_info: matches.length > 0 ? "Success" : "No match found"
+            source: "Yahoo Finance",
+            time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })
           }),
           { headers: corsHeaders }
         );
 
       } catch (e) {
-        return new Response(JSON.stringify({ error: e.message }), {
+        return new Response(JSON.stringify({ error: e.message, note: "請檢查目標網頁是否變更結構" }), {
           status: 500,
           headers: corsHeaders
         });
       }
     }
-    return new Response("Taiwan VIX Proxy is Online");
+    return new Response("VIX Monitor Worker is Online");
   }
 };
