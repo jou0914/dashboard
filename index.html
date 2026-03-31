@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>每日財經儀表板 Pro v5.8</title>
+<title>每日財經儀表板 Pro v5.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0a0c10;--surface:#111318;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#6b7280;--gold:#f5c842;--gold-dim:rgba(245,200,66,0.12);--green:#22c55e;--red:#ef4444;--blue:#60a5fa;--purple:#a78bfa;}
@@ -12,16 +12,18 @@
   body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;padding:15px;min-height:100vh;}
   body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;}
   .container{max-width:1200px;margin:0 auto;position:relative;z-index:1;}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);}
-  .logo{font-family:'Space Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--gold);}
-  .logo span{color:var(--muted);font-weight:400;}
-  .badge{font-size:0.55rem;font-family:'Space Mono',monospace;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:middle;}
-  .clock{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .sec{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
-  .sec::after{content:'';flex:1;height:1px;background:var(--border);}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(–border);}
+.logo{font-family:‘Space Mono’,monospace;font-size:0.85rem;font-weight:700;color:var(–gold);}
+.logo span{color:var(–muted);font-weight:400;}
+.badge{font-size:0.55rem;font-family:‘Space Mono’,monospace;background:var(–gold-dim);color:var(–gold);border:1px solid rgba(245,200,66,0.3);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+.clock{font-family:‘Space Mono’,monospace;font-size:0.72rem;color:var(–muted);background:var(–surface);border:1px solid var(–border);padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(–green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.sec{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(–muted);margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
+.sec::after{content:’’;flex:1;height:1px;background:var(–border);}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
 
 /* tw-card */
 .tw-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:6px;transition:all .2s;min-height:150px;}
@@ -42,15 +44,15 @@ canvas.spark{width:100%;height:50px;display:block;border-radius:4px;}
 .g-tick{font-size:.58rem;font-family:‘Space Mono’,monospace;color:var(–muted);background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;}
 .gauge-body{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;justify-content:center;}
 .gauge-num{font-family:‘Space Mono’,monospace;font-size:2.2rem;font-weight:700;line-height:1;}
-.gauge-lbl{font-size:.72rem;font-weight:700;letter-spacing:.06em;}
+.gauge-lbl{font-size:.72rem;font-weight:700;letter-spacing:.05em;}
+.gauge-sub{font-size:.65rem;color:var(–muted);font-family:‘Space Mono’,monospace;}
 .bar-track{width:100%;height:8px;border-radius:4px;position:relative;}
 .bar-needle{position:absolute;top:-4px;width:3px;height:16px;background:#fff;border-radius:2px;transform:translateX(-50%);transition:left .8s ease;box-shadow:0 0 6px rgba(255,255,255,.6);}
 .bar-range{display:flex;justify-content:space-between;font-size:.57rem;color:var(–muted);margin-top:3px;}
 .gauge-src{font-size:.57rem;color:var(–muted);text-align:center;}
 
 /* tv-card */
-.tv-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;height:210px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;}
-.tv-card:hover{border-color:rgba(245,200,66,.25);}
+.tv-card{background:var(–surface);border:1px solid var(–border);border-radius:14px;height:210px;overflow:hidden;display:flex;flex-direction:column;}
 .tv-lbl{padding:10px 14px 8px;font-size:.72rem;color:var(–gold);font-weight:700;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(–border);flex-shrink:0;}
 .tv-tick{font-size:.58rem;font-family:‘Space Mono’,monospace;color:var(–muted);background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;}
 .tv-wrap{flex:1;overflow:hidden;}
@@ -69,7 +71,7 @@ canvas.spark{width:100%;height:50px;display:block;border-radius:4px;}
 <div class="container">
 
   <header>
-    <div class="logo">MY DAILY BRIEF <span>/ 核心資產與情緒監控</span><span class="badge">v5.8</span></div>
+    <div class="logo">MY DAILY BRIEF <span>/ 核心資產與情緒監控</span><span class="badge">v5.9</span></div>
     <div class="clock"><span class="dot"></span><span id="clock">--:--:-- --/--</span></div>
   </header>
 
@@ -106,14 +108,15 @@ canvas.spark{width:100%;height:50px;display:block;border-radius:4px;}
   <div class="gauge-body">
     <div class="gauge-num" id="vix-num">--</div>
     <div class="gauge-lbl" id="vix-lbl" style="color:var(--muted)">載入中…</div>
+    <div class="gauge-sub" id="vix-chg"></div>
     <div style="width:100%">
       <div class="bar-track" style="background:linear-gradient(90deg,#22c55e,#eab308,#f97316,#ef4444)">
-        <div class="bar-needle" id="vix-needle" style="left:30%"></div>
+        <div class="bar-needle" id="vix-needle" style="left:25%"></div>
       </div>
       <div class="bar-range"><span>平靜</span><span>警戒</span><span>恐慌</span></div>
     </div>
   </div>
-  <div class="gauge-src" id="vix-src">資料來源：Yahoo Finance</div>
+  <div class="gauge-src" id="vix-src">資料來源：Yahoo Finance (via /api/vix)</div>
 </div>
 ```
 
@@ -158,7 +161,7 @@ canvas.spark{width:100%;height:50px;display:block;border-radius:4px;}
     </div>
   </div>
 
-</div><!-- /container -->
+</div>
 
 <script>
 // ── Clock ──
@@ -262,70 +265,39 @@ async function fetchFG(){
 }
 fetchFG();
 
-// ── VIX — try multiple CORS-friendly approaches ──
+// ── VIX via Vercel /api/vix ──
 function classifyVIX(v){
-  if(v<15) return{lbl:'極度平靜',col:'#22c55e'};
-  if(v<20) return{lbl:'低波動',  col:'#86efac'};
-  if(v<25) return{lbl:'正常',    col:'#eab308'};
-  if(v<30) return{lbl:'警戒',    col:'#f97316'};
-  if(v<40) return{lbl:'高恐慌',  col:'#ef4444'};
-  return          {lbl:'極度恐慌',col:'#dc2626'};
+  if(v<15)return{lbl:'極度平靜',col:'#22c55e'};
+  if(v<20)return{lbl:'低波動',  col:'#86efac'};
+  if(v<25)return{lbl:'正常',    col:'#eab308'};
+  if(v<30)return{lbl:'警戒',    col:'#f97316'};
+  if(v<40)return{lbl:'高恐慌',  col:'#ef4444'};
+  return        {lbl:'極度恐慌',col:'#dc2626'};
 }
-function renderVIX(val,chg,pct,src){
-  const up=chg>=0;
-  const {lbl,col}=classifyVIX(val);
-  const needlePct=Math.min(Math.max(val/60*100,0),100);
-  document.getElementById('vix-num').textContent=val.toFixed(2);
-  document.getElementById('vix-num').style.color=col;
-  document.getElementById('vix-lbl').textContent=`${lbl}　${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;
-  document.getElementById('vix-lbl').style.color=col;
-  document.getElementById('vix-needle').style.left=needlePct+'%';
-  document.getElementById('vix-src').textContent=`來源：${src}`;
-}
-
 async function fetchVIX(){
-  // Strategy 1: corsproxy.io
   try{
-    const yurl='https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d';
-    const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(yurl));
+    // 呼叫同源 Vercel serverless function
+    const r=await fetch('/api/vix');
+    if(!r.ok) throw new Error('api error');
     const j=await r.json();
-    const result=j.chart.result[0];
-    const closes=result.indicators.quote[0].close.filter(Boolean);
-    const val=result.meta.regularMarketPrice||closes[closes.length-1];
-    const prev=closes[closes.length-2]||val;
-    renderVIX(val,val-prev,(val-prev)/prev*100,'Yahoo Finance');
-    return;
-  }catch(e){}
-
-  // Strategy 2: cors-anywhere style via codetabs
-  try{
-    const r=await fetch('https://api.codetabs.com/v1/proxy?quest=https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d%26range=5d');
-    const j=await r.json();
-    const result=j.chart.result[0];
-    const closes=result.indicators.quote[0].close.filter(Boolean);
-    const val=result.meta.regularMarketPrice||closes[closes.length-1];
-    const prev=closes[closes.length-2]||val;
-    renderVIX(val,val-prev,(val-prev)/prev*100,'Yahoo Finance');
-    return;
-  }catch(e){}
-
-  // Strategy 3: direct Yahoo Finance (works if no CORS block on this host)
-  try{
-    const r=await fetch('https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d',{mode:'cors'});
-    const j=await r.json();
-    const result=j.chart.result[0];
-    const closes=result.indicators.quote[0].close.filter(Boolean);
-    const val=result.meta.regularMarketPrice||closes[closes.length-1];
-    const prev=closes[closes.length-2]||val;
-    renderVIX(val,val-prev,(val-prev)/prev*100,'Yahoo Finance');
-    return;
-  }catch(e){}
-
-  // Fallback: show static prompt
-  document.getElementById('vix-num').textContent='--';
-  document.getElementById('vix-lbl').textContent='請前往 Yahoo Finance 查看';
-  document.getElementById('vix-lbl').style.color='var(--muted)';
-  document.getElementById('vix-src').innerHTML='<a href="https://finance.yahoo.com/quote/%5EVIX/" target="_blank" style="color:var(--gold)">點此查看 ^VIX</a>';
+    if(j.error) throw new Error(j.error);
+    const {price,change,changePct}=j;
+    const up=change>=0;
+    const {lbl,col}=classifyVIX(price);
+    const needle=Math.min(Math.max(price/60*100,0),100);
+    document.getElementById('vix-num').textContent=price.toFixed(2);
+    document.getElementById('vix-num').style.color=col;
+    document.getElementById('vix-lbl').textContent=lbl;
+    document.getElementById('vix-lbl').style.color=col;
+    document.getElementById('vix-chg').textContent=`${up?'+':''}${change.toFixed(2)} (${up?'+':''}${changePct.toFixed(2)}%)`;
+    document.getElementById('vix-chg').style.color=up?'var(--red)':'var(--green)'; // VIX up = bad
+    document.getElementById('vix-needle').style.left=needle+'%';
+    document.getElementById('vix-src').textContent='來源：Yahoo Finance (via /api/vix)';
+  }catch(e){
+    document.getElementById('vix-num').textContent='--';
+    document.getElementById('vix-lbl').textContent='載入失敗，請確認 /api/vix 已部署';
+    document.getElementById('vix-lbl').style.color='var(--muted)';
+  }
 }
 fetchVIX();
 </script>
