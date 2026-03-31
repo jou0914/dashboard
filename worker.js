@@ -45,6 +45,30 @@ export default {
       }
     }
 
+    // --- 修復後的 VIXTWN 路由 ---
+if (url.pathname === "/vixtw") {
+  try {
+    const yUrl = `https://query2.finance.yahoo.com/v6/finance/quote?symbols=%5EVIXTW`;
+    const res = await fetch(yUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    const json = await res.json();
+    const result = json.quoteResponse.result[0];
+    
+    if (result && result.regularMarketPrice) {
+      return new Response(JSON.stringify({
+        status: "success",
+        price: result.regularMarketPrice,
+        time: new Date(result.regularMarketTime * 1000).toLocaleString('zh-TW')
+      }), { headers: corsHeaders });
+    }
+    throw new Error("No Data");
+  } catch (e) {
+    return new Response(JSON.stringify({ status: "error", price: null }), { headers: corsHeaders });
+  }
+}
+
+
     return new Response("OK");
   }
 };
