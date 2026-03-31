@@ -3,97 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 鴻勁 監控面板 (備案版)</title>
+    <title>7769 鴻勁 監控面板 v1.3</title>
     <style>
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .container { width: 100%; max-width: 400px; }
-        .card { background: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h2 { margin: 0 0 10px 0; font-size: 1.2rem; color: #1a73e8; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .card { background: #fff; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; position: relative; }
+        .version { position: absolute; top: 10px; right: 15px; font-size: 10px; color: #ccc; }
+        h1 { margin: 0; color: #1c1e21; font-size: 1.5rem; }
+        .price { font-size: 3.5rem; font-weight: 800; color: #e74c3c; margin: 15px 0; letter-spacing: -2px; }
+        .status-bar { font-size: 12px; color: #65676b; margin-bottom: 20px; background: #f0f2f5; padding: 5px 10px; border-radius: 10px; }
+        .btn-group { display: grid; gap: 10px; }
+        button { border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-update { background: #007bff; color: white; font-size: 1rem; }
+        .btn-update:active { transform: scale(0.98); }
         
-        /* Google Finance 嵌入樣式 */
-        .finance-widget { width: 100%; height: 180px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-        
-        /* Debug Log 樣式 */
-        .debug-section { background: #202124; color: #34a853; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; }
-        .debug-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; border-bottom: 1px solid #3c4043; padding-bottom: 5px; }
-        #log-content { height: 150px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
-        
-        .btn { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .btn:hover { background: #1557b0; }
-        .btn-copy { background: #5f6368; }
-        
-        .status-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; background: #feefc3; color: #e37400; margin-bottom: 10px; }
+        /* Debug Area */
+        .debug-box { width: 100%; max-width: 350px; margin-top: 20px; background: #1c1e21; border-radius: 12px; padding: 15px; box-sizing: border-box; }
+        .debug-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .debug-header span { color: #fff; font-size: 12px; font-weight: bold; }
+        .btn-copy { background: #4e4f50; color: #fff; font-size: 10px; padding: 4px 8px; }
+        #log-output { color: #00ff00; font-family: monospace; font-size: 11px; height: 120px; overflow-y: auto; white-space: pre-wrap; text-align: left; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card">
-        <h2>7769 鴻勁 (即時行情備案)</h2>
-        <div class="status-tag">Google Finance 數據源 (無需 API)</div>
-        <div class="finance-widget">
-            <iframe 
-                src="https://www.google.com/finance/quote/7769:TPE" 
-                style="width:100%; height:100%; border:none; transform: scale(1); transform-origin: 0 0;"
-                title="Google Finance">
-            </iframe>
-        </div>
-        <p style="font-size: 12px; color: #666; margin-top: 8px;">※ 若上方空白，請點擊下方按鈕另開視窗</p>
-        <button class="btn" onclick="window.open('https://www.google.com/finance/quote/7769:TPE')">開啟詳細圖表</button>
-    </div>
-
-    <div class="debug-section">
-        <div class="debug-header">
-            <span>API Debug Log</span>
-            <div>
-                <button class="btn btn-copy" onclick="copyLog()">一鍵複製 Log</button>
-                <button class="btn btn-copy" onclick="clearLog()" style="margin-left:5px">清除</button>
-            </div>
-        </div>
-        <div id="log-content">等待 API 請求紀錄...</div>
+<div class="card">
+    <div class="version">v1.3.20260401</div>
+    <h1>鴻勁 (7769)</h1>
+    <div id="price-display" class="price">---.--</div>
+    <div id="status-text" class="status-bar">準備讀取 Yahoo Finance...</div>
+    
+    <div class="btn-group">
+        <button class="btn-update" onclick="refreshData()">立即更新行情</button>
+        <button style="background:#eee; color:#333; font-size:12px;" onclick="window.open('https://tw.stock.yahoo.com/quote/7769.TW')">查看 Yahoo 網頁版</button>
     </div>
 </div>
 
+<div class="debug-box">
+    <div class="debug-header">
+        <span>DEBUG LOG</span>
+        <button class="btn-copy" onclick="copyLog()">一鍵複製 Log</button>
+    </div>
+    <div id="log-output">初始化中...</div>
+</div>
+
 <script>
-    const API_KEY = '12F9YHGH3T1063OB';
-    const SYMBOL = '7769.TPE';
-    const logContent = document.getElementById('log-content');
+    const logOutput = document.getElementById('log-output');
+    const priceDisplay = document.getElementById('price-display');
+    const statusText = document.getElementById('status-text');
 
     function addLog(msg) {
-        const time = new Date().toLocaleTimeString();
-        logContent.innerHTML = `[${time}] ${msg}\n` + logContent.innerHTML;
+        const now = new Date().toLocaleTimeString();
+        logOutput.innerHTML = `[${now}] ${msg}\n` + logOutput.innerHTML;
     }
 
-    async function fetchAlphaVantage() {
-        addLog(`正在嘗試抓取 Alpha Vantage: ${SYMBOL}...`);
+    async function refreshData() {
+        addLog("開始嘗試抓取 7769.TW...");
+        statusText.innerText = "連線中...";
+        
+        // 使用 Yahoo Finance 的公開 API (透過 query2 介面)
+        const symbol = "7769.TW"; 
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+
         try {
-            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${SYMBOL}&apikey=${API_KEY}`;
             const response = await fetch(url);
             const data = await response.json();
             
-            addLog(`回傳數據: ${JSON.stringify(data)}`);
-            
-            if (data["Global Quote"] && Object.keys(data["Global Quote"]).length === 0) {
-                addLog("⚠️ 警訊: Alpha Vantage 資料庫尚未收錄此代碼。");
+            addLog(`API 回傳狀態: ${response.status}`);
+            addLog(`數據快照: ${JSON.stringify(data).substring(0, 100)}...`);
+
+            const result = data.chart.result[0];
+            const meta = result.meta;
+            const currentPrice = meta.regularMarketPrice;
+            const prevClose = meta.previousClose;
+
+            if (currentPrice) {
+                priceDisplay.innerText = currentPrice.toFixed(2);
+                // 判斷顏色
+                priceDisplay.style.color = currentPrice >= prevClose ? "#e74c3c" : "#2ecc71";
+                statusText.innerText = `最後更新：${new Date().toLocaleTimeString()}`;
+                addLog(`✅ 成功取得價格: ${currentPrice}`);
+            } else {
+                throw new Error("欄位解析失敗");
             }
-        } catch (e) {
-            addLog(`❌ 錯誤: ${e.message}`);
+
+        } catch (err) {
+            addLog(`❌ 失敗: ${err.message}`);
+            statusText.innerText = "讀取失敗，請稍後再試";
+            
+            // 如果連 Yahoo 都失敗 (CORS 阻擋)，給予手動連結
+            if(err.message.includes("fetch")) {
+                addLog("提示: 可能是瀏覽器 CORS 限制，建議部署到 GitHub Pages 或使用後端代理。");
+            }
         }
     }
 
     function copyLog() {
-        const text = logContent.innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Log 已成功複製到剪貼簿！");
-        });
+        const text = logOutput.innerText;
+        navigator.clipboard.writeText(text).then(() => alert("Log 已複製"));
     }
 
-    function clearLog() {
-        logContent.innerText = "已清除紀錄";
-    }
-
-    // 執行檢測
-    fetchAlphaVantage();
+    // 自動執行一次
+    refreshData();
 </script>
 
 </body>
