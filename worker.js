@@ -1,20 +1,20 @@
 export default {
   async fetch(request, env, ctx) {
-    const corsHeaders = {
+    const headers = {
       "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json;charset=UTF-8",
-      "Cache-Control": "max-age=30"
+      "Content-Type": "application/json",
+      "Cache-Control": "max-age=20"
     };
 
     const cache = caches.default;
 
     const safeFetch = async (url) => {
       try {
-        const res = await fetch(url, {
+        const r = await fetch(url, {
           headers: { "User-Agent": "Mozilla/5.0" }
         });
-        if (!res.ok) throw new Error(res.status);
-        return await res.json();
+        if (!r.ok) throw new Error(r.status);
+        return await r.json();
       } catch (e) {
         return { error: e.message };
       }
@@ -23,76 +23,85 @@ export default {
     const handle = async () => {
       const path = new URL(request.url).pathname;
 
-      // CNN
-      if (path === "/cnn") {
-        const j = await safeFetch("https://api.alternative.me/fng/");
-        if (!j.error) {
-          return {
-            price: parseInt(j.data[0].value),
-            label: j.data[0].value_classification
-          };
-        }
-      }
+      // 🔥 市場總覽（核心）
+      if (path === "/market") {
 
-      // Yahoo
-      if (["/vix", "/vixtw", "/twd"].includes(path)) {
-        const sym =
-          path === "/vix"
-            ? "%5EVIX"
-            : path === "/vixtw"
-            ? "%5EVIXTW"
-            : "TWD=X";
+        // VIX
+        const vix = await safeFetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EVIX");
 
-        const j = await safeFetch(
-          `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${sym}`
+        // 匯率
+        const fx = await safeFetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols=TWD=X");
+
+        // CNN
+        const cnn = await safeFetch("https://api.alternative.me/fng/");
+
+        // 融資融券（FinMind）
+        const margin = await safeFetch(
+          "https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMarginPurchaseShortSale&data_id=TAIEX&start_date=2026-03-01"
         );
 
-        if (j.quoteResponse?.result?.[0]) {
-          const r = j.quoteResponse.result[0];
-          return {
-            price: r.regularMarketPrice,
-            change: r.regularMarketChangePercent || 0,
-            isUp: (r.regularMarketChangePercent || 0) >= 0
-          };
+        let result = {};
+
+        // VIX
+        if (vix.quoteResponse?.result?.[0]) {
+          const r = vix.quoteResponse.result[0];
+          result.vix = r.regularMarketPrice;
         }
+
+        // 匯率
+        if (fx.quoteResponse?.result?.[0]) {
+          result.twd = fx.quoteResponse.result[0].regularMarketPrice;
+        }
+
+        // CNN
+        if (!cnn.error) {
+          result.cnn = parseInt(cnn.data[0].value);
+        }
+
+        // 融資融券
+        if (margin.data?.length >= 2) {
+          const last = margin.data.at(-1);
+          const prev = margin.data.at(-2);
+
+          result.marginChange = last.MarginPurchaseBalance - prev.MarginPurchaseBalance;
+          result.shortChange = last.ShortSaleBalance - prev.ShortSaleBalance;
+        }
+
+        // 🔥 AI 判讀（重點）
+        let score = 0;
+
+        if (result.vix > 25) score -= 2;
+        else if (result.vix < 15) score += 1;
+
+        if (result.cnn < 30) score += 1;
+        if (result.cnn > 70) score -= 1;
+
+        if (result.marginChange > 0) score += 1;
+        if (result.shortChange > 0) score -= 1;
+
+        let sentiment = "中性";
+        if (score >= 2) sentiment = "偏多";
+        if (score <= -2) sentiment = "偏空";
+
+        result.sentiment = sentiment;
+
+        return result;
       }
 
-      // 股票 7769
-      if (path === "/7769") {
-        const j = await safeFetch(
-          "https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=2026-03-20"
-        );
-
-        if (j.data?.length >= 2) {
-          const last = j.data.at(-1);
-          const prev = j.data.at(-2);
-          const chg = ((last.close - prev.close) / prev.close) * 100;
-
-          return {
-            price: last.close,
-            change: chg,
-            isUp: chg >= 0
-          };
-        }
-      }
-
-      return { error: "No Data" };
+      return { error: "No route" };
     };
 
-    // 🔥 Cache（30秒）
     const cacheKey = new Request(request.url);
-    let response = await cache.match(cacheKey);
+    let res = await cache.match(cacheKey);
 
-    if (!response) {
+    if (!res) {
       const data = await handle();
 
-      response = new Response(JSON.stringify(data), {
-        headers: corsHeaders
-      });
+      res = new Response(JSON.stringify(data), { headers });
 
-      ctx.waitUntil(cache.put(cacheKey, response.clone()));
+      ctx.waitUntil(cache.put(cacheKey, res.clone()));
     }
 
-    return response;
+    return res;
   }
 };
