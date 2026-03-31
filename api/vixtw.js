@@ -1,7 +1,8 @@
 export default async function handler(req, res) {
   try {
     const now = new Date();
-    const endDate = now.toISOString().split('T')[0];
+    // 取得台灣時間 (UTC+8) 的日期格式
+    const endDate = new Date(now.getTime() + 8 * 3600000).toISOString().split('T')[0];
     const startDate = new Date(now.getTime() - 30 * 86400000).toISOString().split('T')[0];
     
     const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=VIXTW&start_date=${startDate}&end_date=${endDate}`;
@@ -9,11 +10,16 @@ export default async function handler(req, res) {
     const response = await fetch(url);
     const result = await response.json();
 
-    // 過濾掉 close 為 0 的異常資料，並取最後兩筆有效值
-    const validData = (result.data || []).filter(d => d.close > 0);
+    // 關鍵修正：過濾掉數值為 0 或 null 的無效資料
+    const validData = (result.data || []).filter(d => d.close && d.close > 0);
 
     if (validData.length < 2) {
-      return res.status(200).json({ price: 0, change: 0, status: "數據源更新中" });
+      return res.status(200).json({ 
+        price: 0, 
+        change: 0, 
+        status: "數據源尚未產出有效值",
+        debug: "收到的有效資料筆數不足" 
+      });
     }
 
     const latest = validData[validData.length - 1];
@@ -27,6 +33,6 @@ export default async function handler(req, res) {
       status: "success"
     });
   } catch (error) {
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "伺服器內部錯誤" });
   }
 }
