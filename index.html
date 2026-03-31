@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MY DAILY BRIEF | 核心資產監控 v6.3.1</title>
+    <title>MY DAILY BRIEF | 核心資產監控 v6.4</title>
     <style>
         :root { --bg:#0a0a0a; --card:#161616; --border:#262626; --text:#ffffff; --muted:#888888; --red:#f56565; --green:#48bb78; --yellow:#f6ad55; }
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -12,13 +12,13 @@
         .logo{font-weight:bold;letter-spacing:1px;} .logo span{color:var(--yellow);}
         .time{color:var(--muted);font-size:0.9rem;font-family:monospace;}
         .sec{font-size:0.75rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em;}
-        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px, 1fr));gap:16px;margin-bottom:32px;min-height: 50px;}
-        .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;display: block;}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px, 1fr));gap:16px;margin-bottom:32px;}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;}
         .card-hd{font-size:0.8rem;color:var(--muted);margin-bottom:8px;}
         .price{font-size:2rem;font-weight:bold;margin:8px 0;}
         .chg{font-size:0.9rem;font-weight:500;} .meta{font-size:0.7rem;color:var(--muted);margin-top:8px;}
         canvas.spark{width:100%;height:45px;display:block;margin-top:10px;border-radius:4px;}
-        .gauge-wrap{height:4px;border-radius:2px;margin:12px 0 4px;position:relative;}
+        .gauge-wrap{height:4px;border-radius:2px;margin:12px 0 4px;position:relative;background:linear-gradient(to right,var(--green),var(--yellow),var(--red));}
         .needle{width:4px;height:12px;background:white;position:absolute;top:-4px;border-radius:2px;transition:left 0.5s ease;}
         .memo-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
         @media(max-width:600px){.memo-grid{grid-template-columns:1fr;}}
@@ -29,11 +29,11 @@
 </head>
 <body>
 <header>
-    [span_0](start_span)<div class="logo">MY DAILY BRIEF / <span>核心資產監控系統 v6.3.1</span>[span_0](end_span)</div>
+    <div class="logo">MY DAILY BRIEF / <span>核心資產監控系統 v6.4</span></div>
     <div class="time" id="clock">--:--:-- --/--</div>
 </header>
 
-<div class="sec">🚀 核心追蹤 (FinMind 即時)</div>
+<div class="sec">🚀 核心追蹤 (含鴻勁 7769)</div>
 <div class="grid" id="tw-grid"></div>
 
 <div class="sec">🌎 全球核心指標</div>
@@ -45,25 +45,19 @@
         <div class="card-hd">加密恐懼貪婪 F&G</div>
         <div id="fg-num" class="price">--</div>
         <div id="fg-lbl" class="chg">載入中…</div>
-        <div class="gauge-wrap" style="background:linear-gradient(to right,#f56565,#f6ad55,#48bb78)">
-            <div id="fg-needle" class="needle" style="left:50%"></div>
-        </div>
+        <div class="gauge-wrap"><div id="fg-needle" class="needle" style="left:50%"></div></div>
     </div>
     <div class="card">
         <div class="card-hd">美股波動率 VIX</div>
         <div id="vix-num" class="price">--</div>
         <div id="vix-lbl" class="chg">載入中…</div>
-        <div class="gauge-wrap" style="background:linear-gradient(to right,#48bb78,#f6ad55,#f56565)">
-            <div id="vix-needle" class="needle" style="left:30%"></div>
-        </div>
+        <div class="gauge-wrap"><div id="vix-needle" class="needle" style="left:30%"></div></div>
     </div>
     <div class="card">
         <div class="card-hd">台股波動率 VIXTW</div>
         <div id="vixtw-num" class="price">--</div>
         <div id="vixtw-lbl" class="chg">載入中…</div>
-        <div class="gauge-wrap" style="background:linear-gradient(to right,#48bb78,#f6ad55,#f56565)">
-            <div id="vixtw-needle" class="needle" style="left:50%"></div>
-        </div>
+        <div class="gauge-wrap"><div id="vixtw-needle" class="needle" style="left:50%"></div></div>
         <div id="vixtw-meta" class="meta"></div>
     </div>
 </div>
@@ -71,134 +65,88 @@
 <div class="sec">💡 財經備忘錄</div>
 <div class="memo-grid">
     <div class="memo">
-        [span_1](start_span)<div class="memo-title">2025-26 節稅提醒[span_1](end_span)</div>
-        [span_2](start_span)<div class="memo-item">· 綜所稅 5 月申報，注意列舉扣除額。[span_2](end_span)</div>
-        [span_3](start_span)<div class="memo-item">· 股利所得選合併 (8.5% 抵減) 或分開計稅。[span_3](end_span)</div>
+        <div class="memo-title">2025-26 節稅提醒</div>
+        <div class="memo-item">· 綜所稅 5 月申報，注意列舉扣除額。</div>
+        <div class="memo-item">· 股利所得選合併 (8.5% 抵減) 或分開計稅。</div>
     </div>
     <div class="memo">
-        [span_4](start_span)<div class="memo-title">投資策略備忘[span_4](end_span)</div>
-        [span_5](start_span)<div class="memo-item">· 監控 7769 鴻勁趨勢。[span_5](end_span)</div>
-        [span_6](start_span)<div class="memo-item">· 美債 ETF 分批佈局，注意匯率風險。[span_6](end_span)</div>
+        <div class="memo-title">投資策略備忘</div>
+        <div class="memo-item">· 監控 7769 鴻勁趨勢。</div>
+        <div class="memo-item">· 美債 ETF 分批佈局，注意匯率風險。</div>
     </div>
 </div>
 
 <script>
+// 時鐘功能
 function updateClock(){
     const n=new Date();
-    const t=n.toLocaleTimeString('zh-TW',{hour12:false});
-    const d=(n.getMonth()+1).toString().padStart(2,'0')+'/'+n.getDate().toString().padStart(2,'0');
-    [span_7](start_span)document.getElementById('clock').textContent=t+' '+d;[span_7](end_span)
+    document.getElementById('clock').textContent = n.toLocaleTimeString('zh-TW',{hour12:false})+' '+((n.getMonth()+1).toString().padStart(2,'0'))+'/'+n.getDate().toString().padStart(2,'0');
 }
-setInterval(updateClock,1000);updateClock();
+setInterval(updateClock,1000); updateClock();
 
+// 繪製趨勢圖
 function drawSpark(id,prices,up){
-    const c=document.getElementById('sp-'+id);if(!c||!prices||prices.length<2)return;
-    const dpr=window.devicePixelRatio||1,w=c.offsetWidth,h=c.offsetHeight;
-    c.width=w*dpr;c.height=h*dpr;const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
-    const mn=Math.min(...prices),mx=Math.max(...prices),rng=mx-mn||1;
-    const pl=2,pr=2,pt=4,pb=4,cw=w-pl-pr,ch=h-pt-pb;
-    const pts=prices.map((p,i)=>({x:pl+(i/(prices.length-1))*cw,y:pt+ch-((p-mn)/rng)*ch}));
-    const col=up?'#48bb78':'#f56565',fill=up?'rgba(72,187,120,0.12)':'rgba(245,101,101,0.12)';
-    ctx.beginPath();ctx.moveTo(pts[0].x,h-pb);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,h-pb);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
-    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
+    const c=document.getElementById('sp-'+id); if(!c||!prices||prices.length<2) return;
+    const dpr=window.devicePixelRatio||1, w=c.offsetWidth, h=c.offsetHeight;
+    c.width=w*dpr; c.height=h*dpr; const ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+    const mn=Math.min(...prices), mx=Math.max(...prices), rng=(mx-mn)||1;
+    const pts=prices.map((p,i)=>({x:2+(i/(prices.length-1))*(w-4), y:4+(h-8)-((p-mn)/rng)*(h-8)}));
+    ctx.beginPath(); ctx.strokeStyle=up?'#48bb78':'#f56565'; ctx.lineWidth=1.5;
+    pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
 }
 
 function makeCard(id,title){
-    const div=document.createElement('div');div.className='card';
+    const div=document.createElement('div'); div.className='card';
     div.innerHTML=`<div class="card-hd">${title}</div><div id="p-${id}" class="price">--</div><div id="c-${id}" class="chg">載入中…</div><canvas class="spark" id="sp-${id}"></canvas><div id="m-${id}" class="meta"></div>`;
     return div;
 }
 
 function setCard(id,price,chg,pct,meta,prices,dec=2){
-    const pEl = document.getElementById('p-'+id);
-    const cEl = document.getElementById('c-'+id);
-    if(!pEl || !cEl) return;
-    const up=chg>=0,col=up?'var(--green)':'var(--red)';
-    const fmt=v=>v.toLocaleString('zh-TW',{minimumFractionDigits:dec,maximumFractionDigits:dec});
-    pEl.textContent=fmt(price);pEl.style.color=col;
-    cEl.textContent=`${up?'+':''}${fmt(chg)} (${up?'+':''}${pct.toFixed(2)}%)`;cEl.style.color=col;
-    if(document.getElementById('m-'+id))document.getElementById('m-'+id).textContent=meta;
-    requestAnimationFrame(()=>drawSpark(id,prices,up));
+    const up=chg>=0, col=up?'var(--green)':'var(--red)';
+    const pEl=document.getElementById('p-'+id), cEl=document.getElementById('c-'+id);
+    if(!pEl||!cEl) return;
+    pEl.textContent=price.toLocaleString('zh-TW',{minimumFractionDigits:dec}); pEl.style.color=col;
+    cEl.textContent=`${up?'+':''}${chg.toFixed(dec)} (${up?'+':''}${pct.toFixed(2)}%)`; cEl.style.color=col;
+    if(document.getElementById('m-'+id)) document.getElementById('m-'+id).textContent=meta;
+    if(prices) setTimeout(()=>drawSpark(id,prices,up), 100);
 }
 
-async function fetchFM(dataset,dataId){
-    try {
-        const d = new Date(); d.setDate(d.getDate()-120);
-        const start = d.toISOString().split('T')[0];
-        const r=await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=${dataset}&data_id=${dataId}&start_date=${start}`);
-        const j=await r.json();if(!j.data||j.data.length===0)throw new Error('no data');return j.data;
-    } catch(e) { console.error(dataId, e); throw e; }
+// 數據抓取
+async function fetchFM(dataset,id){
+    const r=await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=${dataset}&data_id=${id}&start_date=${new Date(Date.now()-30*86400000).toISOString().split('T')[0]}`);
+    const j=await r.json(); return j.data;
 }
 
-async function fetchYahoo(sym){
-    try {
-        const r=await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=3mo`);
-        if(!r.ok) throw new Error();
-        return await r.json();
-    } catch(e) {
-        const r2=await fetch(`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=3mo`);
-        return await r2.json();
-    }
-}
-
-// 核心追蹤初始化
-const TW=[{id:'7769',name:'鴻勁 7769:TPE'},{id:'TAIEX',name:'台灣加權指數 TAIEX'},{id:'00679B',name:'元大美債20年 00679B'}];
+// 初始化台股
 const twGrid=document.getElementById('tw-grid');
-TW.forEach(s=>{
+[{id:'7769',name:'鴻勁 7769:TPE'},{id:'TAIEX',name:'加權指數'},{id:'00679B',name:'元大美債20年'}].forEach(s=>{
     twGrid.appendChild(makeCard(s.id,s.name));
-    fetchFM('TaiwanStockPrice',s.id).then(rows=>{
-        const prices=rows.slice(-60).map(r=>parseFloat(r.close));
-        const l=rows[rows.length-1],p=rows[rows.length-2];
-        const c=parseFloat(l.close),pc=parseFloat(p.close);
-        setCard(s.id,c,c-pc,(c-pc)/pc*100,`更新：${l.date}`,prices);
-    }).catch(()=>document.getElementById('c-'+s.id).textContent='載入失敗');
+    fetchFM('TaiwanStockPrice',s.id).then(d=>{
+        const p=d.map(r=>parseFloat(r.close)).slice(-30);
+        const cur=p[p.length-1], pre=p[p.length-2];
+        setCard(s.id,cur,cur-pre,(cur-pre)/pre*100,`更新：${d[d.length-1].date}`,p);
+    }).catch(()=>document.getElementById('c-'+s.id).textContent='連線失敗');
 });
 
-// 全球指標初始化
-const gGrid=document.getElementById('global-grid');
-const globalAssets=[{id:'usdtwd', name:'USD/TWD 美元/台幣'}, {id:'xauusd', name:'XAU/USD 黃金現貨'}, {id:'tlt', name:'TLT 美國公債 ETF'}];
-globalAssets.forEach(a => gGrid.appendChild(makeCard(a.id, a.name)));
-
-fetchFM('TaiwanForexPrice','USD').then(rows=>{
-    const prices=rows.slice(-60).map(r=>parseFloat(r.spot_sell||r.cash_sell));
-    const l=rows[rows.length-1],p=rows[rows.length-2];
-    const c=parseFloat(l.spot_sell),pc=parseFloat(p.spot_sell);
-    setCard('usdtwd',c,c-pc,(c-pc)/pc*100,`更新：${l.date}`,prices,3);
-}).catch(()=>document.getElementById('c-usdtwd').textContent='載入失敗');
-
-fetchYahoo('GC=F').then(j=>{
-    const res=j.chart.result[0]; const closes=res.indicators.quote[0].close.filter(v=>v!=null);
-    const price=res.meta.regularMarketPrice||closes[closes.length-1], prev=closes[closes.length-2];
-    setCard('xauusd',price,price-prev,(price-prev)/prev*100,'Yahoo Finance',closes.slice(-60));
-}).catch(()=>document.getElementById('c-xauusd').textContent='載入失敗');
-
-fetchYahoo('TLT').then(j=>{
-    const res=j.chart.result[0]; const closes=res.indicators.quote[0].close.filter(v=>v!=null);
-    const price=res.meta.regularMarketPrice||closes[closes.length-1], prev=closes[closes.length-2];
-    setCard('tlt',price,price-prev,(price-prev)/prev*100,'Yahoo Finance',closes.slice(-60));
-}).catch(()=>document.getElementById('c-tlt').textContent='載入失敗');
-
-// 情緒指標 - F&G
+// 情緒指標 (F&G, VIX)
 fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json()).then(j=>{
-    const v=parseInt(j.data[0].value); document.getElementById('fg-num').textContent=v;
+    const v=parseInt(j.data[0].value);
+    document.getElementById('fg-num').textContent=v;
     document.getElementById('fg-lbl').textContent=j.data[0].value_classification;
     document.getElementById('fg-needle').style.left=v+'%';
 });
 
-// 情緒指標 - VIXTW (透過 Cloudflare Function)
-async function fetchVIXTW() {
-    try {
-        const r = await fetch('/api/vixtw');
-        if (!r.ok) throw new Error();
-        const d = await r.json();
-        const val = d.price;
-        document.getElementById('vixtw-num').textContent = val.toFixed(2);
-        document.getElementById('vixtw-lbl').textContent = val > 30 ? '高度恐慌' : '正常';
-        document.getElementById('vixtw-needle').style.left = Math.min(Math.max((val-10)/30*100,0),100)+'%';
-        [span_8](start_span)document.getElementById('vixtw-meta').textContent = '更新：' + d.date;[span_8](end_span)
-    } catch(e) { document.getElementById('vixtw-lbl').textContent='等待有效數據'; }
+// VIXTW 透過您的 Cloudflare API
+async function updateVIXTW(){
+    try{
+        const r=await fetch('/api/vixtw'); const d=await r.json();
+        document.getElementById('vixtw-num').textContent=d.price.toFixed(2);
+        document.getElementById('vixtw-lbl').textContent=d.price>25?'警戒':'穩定';
+        document.getElementById('vixtw-needle').style.left=Math.min(Math.max((d.price-10)/30*100,0),100)+'%';
+        document.getElementById('vixtw-meta').textContent='更新：'+d.date;
+    }catch(e){ document.getElementById('vixtw-lbl').textContent='等待有效數據'; }
 }
-fetchVIXTW();
+updateVIXTW();
 </script>
 </body>
 </html>
