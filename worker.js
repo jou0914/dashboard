@@ -8,55 +8,52 @@ export default {
 
     if (url.pathname === "/vix") {
       try {
-        // 使用 Google Finance 抓取台股 VIX (搜尋字串通常包含相關指數)
-        // 這裡我們先示範抓取台股大盤 (TPE: TAIEX) 作為結構測試，
-        // 若要精準 VIX，Google Finance 有時需使用特定代碼
-        const targetUrl = "https://www.google.com/finance/quote/.VIXTW:INDEXTPE";
+        // 使用 iThome 文章推薦的 v7 quote API
+        // ^VIXTWN 是台指 VIX 的代號
+        const targetUrl = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=^VIXTWN";
         
         const res = await fetch(targetUrl, {
           headers: { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept-Language": "zh-TW,zh;q=0.9"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           }
         });
-        
-        const html = await res.text();
 
-        // Google Finance 的價格通常在 data-last-price 屬性中
-        const priceRegex = /data-last-price="([\d.]+)"/;
-        const match = html.match(priceRegex);
+        if (!res.ok) throw new Error(`Yahoo API 響應錯誤: ${res.status}`);
+
+        const data = await res.json();
         
-        let currentPrice = 0;
-        if (match && match[1]) {
-          currentPrice = parseFloat(match[1]);
-        } else {
-          // 備用方案：尋找數值格式
-          const fallbackRegex = /class="YMlKec fxKbKc">([\d.]+)</;
-          const fallbackMatch = html.match(fallbackRegex);
-          if (fallbackMatch) currentPrice = parseFloat(fallbackMatch[1]);
+        // 檢查路徑是否存在
+        if (!data.quoteResponse || !data.quoteResponse.result || data.quoteResponse.result.length === 0) {
+          throw new Error("找不到代號數據，請確認市場是否已開盤或代號正確");
         }
 
-        if (currentPrice === 0) {
-          throw new Error("無法從資料源取得數值");
-        }
+        const result = data.quoteResponse.result[0];
 
+        // 提取關鍵欄位
         return new Response(
           JSON.stringify({
             type: "taiwan_vix",
-            price: currentPrice,
-            time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
-            source: "Google Finance"
+            price: result.regularMarketPrice,           // 當前成交價
+            change: result.regularMarketChange,         // 漲跌
+            changePercent: result.regularMarketChangePercent, // 漲跌幅
+            prevClose: result.regularMarketPreviousClose, // 昨收
+            name: result.shortName,                     // 指數名稱
+            time: new Date(result.regularMarketTime * 1000).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
+            status: result.marketState                  // 市場狀態 (REGULAR/CLOSED)
           }),
           { headers: corsHeaders }
         );
 
       } catch (e) {
-        return new Response(JSON.stringify({ error: e.message }), {
+        return new Response(JSON.stringify({ 
+          error: e.message,
+          tip: "若出現 404/403，可能是 Yahoo 暫時封鎖 Worker IP" 
+        }), {
           status: 500,
           headers: corsHeaders
         });
       }
     }
-    return new Response("Worker Active");
+    return new Response("Taiwan VIX Monitor (v7) is Online");
   }
 };
