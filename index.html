@@ -3,137 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>市場核心監控 Pro v2</title>
+<title>交易儀表板 v3</title>
 
 <style>
-:root {
-  --up: #00c853;
-  --down: #ff3d00;
-  --bg: #000;
-  --card: #111;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont;
-}
-
-.container {
-  max-width: 520px;
-  margin: auto;
-  padding: 20px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
+body { background:#000; color:#fff; font-family:-apple-system; }
+.container { max-width:520px; margin:auto; padding:20px; }
 
 .card {
-  background: var(--card);
-  padding: 18px;
-  border-radius: 14px;
-  border: 1px solid #222;
+  background:#111;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:12px;
+  border:1px solid #222;
 }
 
-.full { grid-column: span 2; }
+.big { font-size:2rem; font-weight:bold; }
 
-.label {
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 8px;
+.up { color:#00e676; }
+.down { color:#ff5252; }
+
+.sentiment {
+  font-size:1.5rem;
+  font-weight:bold;
 }
-
-.price {
-  font-size: 2.2rem;
-  font-weight: bold;
-}
-
-.change {
-  margin-top: 6px;
-  font-size: 14px;
-}
-
-.up { color: var(--up); }
-.down { color: var(--down); }
-
-.cnn {
-  font-size: 3rem;
-  color: #ff5252;
-}
-
-/* 🔥 Debug Pro */
-.debug {
-  margin-top: 20px;
-  background: #0a0a0a;
-  border: 1px solid #222;
-  border-radius: 12px;
-  padding: 10px;
-  max-height: 140px;
-  overflow-y: auto;
-  font-size: 11px;
-}
-
-.debug-header {
-  display: flex;
-  justify-content: space-between;
-  color: #888;
-  margin-bottom: 6px;
-}
-
-.log-line { margin-bottom: 2px; }
-
-.ok { color: #00e676; }
-.err { color: #ff5252; }
-.warn { color: #ffd740; }
-.info { color: #40c4ff; }
 </style>
 </head>
 
 <body>
 <div class="container">
-  <div class="grid">
 
-    <div class="card full">
-      <div class="label">CNN 恐慌貪婪</div>
-      <div id="cnn" class="cnn">--</div>
-      <div id="cnn-label"></div>
-    </div>
-
-    <div class="card">
-      <div class="label">VIX</div>
-      <div id="vix" class="price">--</div>
-      <div id="vix-c" class="change"></div>
-    </div>
-
-    <div class="card">
-      <div class="label">VIX TW</div>
-      <div id="vtw" class="price">--</div>
-      <div id="vtw-c" class="change"></div>
-    </div>
-
-    <div class="card full">
-      <div class="label">USD / TWD</div>
-      <div id="twd" class="price">--</div>
-    </div>
-
-    <div class="card full">
-      <div class="label">7769 鴻勁</div>
-      <div id="s" class="price">--</div>
-      <div id="s-c" class="change"></div>
-    </div>
-
+  <div class="card">
+    <div>市場情緒</div>
+    <div id="sent" class="sentiment">--</div>
   </div>
 
-  <!-- 🔥 Debug Panel -->
-  <div class="debug">
-    <div class="debug-header">
-      <span>⚡ SYSTEM LOG</span>
-      <span id="stat"></span>
-    </div>
+  <div class="card">
+    <div>VIX</div>
+    <div id="vix" class="big">--</div>
+  </div>
+
+  <div class="card">
+    <div>USD/TWD</div>
+    <div id="twd" class="big">--</div>
+  </div>
+
+  <div class="card">
+    <div>融資變化</div>
+    <div id="m"></div>
+  </div>
+
+  <div class="card">
+    <div>融券變化</div>
+    <div id="s"></div>
+  </div>
+
+  <!-- Debug -->
+  <div class="card">
+    <div>LOG</div>
     <div id="log"></div>
   </div>
 
@@ -142,79 +68,35 @@ body {
 <script>
 const API = "https://dashboard.jou0914.workers.dev";
 
-const set = (id, val) => document.getElementById(id).textContent = val;
+function log(t){document.getElementById("log").innerHTML = t+"<br>"+document.getElementById("log").innerHTML;}
 
-function log(msg, type = "ok") {
-  const el = document.getElementById("log");
-  const time = new Date().toLocaleTimeString();
+async function run(){
+  const t0 = performance.now();
 
-  el.innerHTML =
-    `<div class="log-line ${type}">[${time}] ${msg}</div>` +
-    el.innerHTML;
-}
+  try{
+    const r = await fetch(API + "/market");
+    const d = await r.json();
 
-const statEl = document.getElementById("stat");
+    document.getElementById("vix").textContent = d.vix?.toFixed(2);
+    document.getElementById("twd").textContent = d.twd?.toFixed(2);
+    document.getElementById("m").textContent = d.marginChange;
+    document.getElementById("s").textContent = d.shortChange;
 
-async function fetchWithDebug(path, retry = 1) {
-  const start = performance.now();
+    const el = document.getElementById("sent");
+    el.textContent = d.sentiment;
 
-  try {
-    const res = await fetch(API + path);
-    const t = Math.round(performance.now() - start);
+    if(d.sentiment==="偏多") el.className="sentiment up";
+    if(d.sentiment==="偏空") el.className="sentiment down";
 
-    if (!res.ok) throw new Error(res.status);
+    log("OK "+Math.round(performance.now()-t0)+"ms");
 
-    const cache = res.headers.get("cf-cache-status");
-
-    const data = await res.json();
-
-    log(`${path} ${t}ms ${cache || "LIVE"}`, "info");
-    statEl.textContent = `${t} ms`;
-
-    return data;
-
-  } catch (e) {
-    log(`${path} FAIL (${e.message})`, "err");
-
-    if (retry > 0) {
-      log(`${path} retry...`, "warn");
-      return await fetchWithDebug(path, retry - 1);
-    }
-
-    return null;
+  }catch(e){
+    log("ERR");
   }
 }
 
-const render = (id, cId, d) => {
-  set(id, d.price.toFixed(2));
-  const el = document.getElementById(cId);
-  el.textContent = d.change.toFixed(2) + "%";
-  el.className = "change " + (d.isUp ? "up" : "down");
-};
-
-async function update() {
-
-  const cnn = await fetchWithDebug("/cnn");
-  if (cnn) {
-    set("cnn", cnn.price);
-    set("cnn-label", cnn.label);
-  }
-
-  const vix = await fetchWithDebug("/vix");
-  if (vix) render("vix", "vix-c", vix);
-
-  const vtw = await fetchWithDebug("/vixtw");
-  if (vtw) render("vtw", "vtw-c", vtw);
-
-  const twd = await fetchWithDebug("/twd");
-  if (twd) set("twd", twd.price.toFixed(3));
-
-  const s = await fetchWithDebug("/7769");
-  if (s) render("s", "s-c", s);
-}
-
-update();
-setInterval(update, 30000);
+run();
+setInterval(run,20000);
 </script>
 
 </body>
