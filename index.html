@@ -1,103 +1,163 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>交易儀表板 v3</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>交易儀表板 v3</title>
+    <style>
+        :root { 
+            --bg: #000000; 
+            --card: #1c1c1e; 
+            --border: #2c2c2e; 
+            --text: #ffffff; 
+            --green: #30d158; 
+            --red: #ff453a; 
+            --gray: #8e8e93; 
+        }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
+            margin: 0; 
+            display: flex;
+            justify-content: center;
+        }
+        .container { width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { font-size: 24px; margin: 0; font-weight: 700; }
+        
+        .sentiment-tag { 
+            font-size: 16px; font-weight: 600; padding: 6px 14px; border-radius: 20px; 
+            background: #2c2c2e; color: var(--gray);
+        }
+        .sentiment-tag.up { background: rgba(48, 209, 88, 0.15); color: var(--green); }
+        .sentiment-tag.down { background: rgba(255, 69, 58, 0.15); color: var(--red); }
 
-<style>
-body { background:#000; color:#fff; font-family:-apple-system; }
-.container { max-width:520px; margin:auto; padding:20px; }
-
-.card {
-  background:#111;
-  padding:16px;
-  border-radius:12px;
-  margin-bottom:12px;
-  border:1px solid #222;
-}
-
-.big { font-size:2rem; font-weight:bold; }
-
-.up { color:#00e676; }
-.down { color:#ff5252; }
-
-.sentiment {
-  font-size:1.5rem;
-  font-weight:bold;
-}
-</style>
+        .card { 
+            background: var(--card); border: 1px solid var(--border); 
+            border-radius: 16px; padding: 16px; margin-bottom: 12px;
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .label { color: var(--gray); font-size: 13px; font-weight: 500; margin-bottom: 8px; display: block; }
+        .value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        
+        #log { 
+            margin-top: 30px; font-size: 11px; color: #444; font-family: monospace; 
+            max-height: 100px; overflow-y: auto; line-height: 1.5;
+        }
+    </style>
 </head>
-
 <body>
-<div class="container">
+    <div class="container">
+        <div class="header">
+            <h1>交易儀表板</h1>
+            <div id="sent" class="sentiment-tag">--</div>
+        </div>
 
-  <div class="card">
-    <div>市場情緒</div>
-    <div id="sent" class="sentiment">--</div>
-  </div>
+        <div class="grid" style="margin-bottom: 12px;">
+            <div class="card">
+                <span class="label">CNN 恐慌指數</span>
+                <div id="cnn" class="value">--</div>
+            </div>
+            <div class="card">
+                <span class="label">美股 VIX</span>
+                <div id="vix" class="value">--</div>
+            </div>
+        </div>
 
-  <div class="card">
-    <div>VIX</div>
-    <div id="vix" class="big">--</div>
-  </div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <span class="label">USD / TWD</span>
+                    <div id="twd" class="value">--</div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="label">台指 VIX</span>
+                    <div id="vixtw" class="value">--</div>
+                </div>
+            </div>
+        </div>
 
-  <div class="card">
-    <div>USD/TWD</div>
-    <div id="twd" class="big">--</div>
-  </div>
+        <div class="grid">
+            <div class="card">
+                <span class="label">融資變化 (億)</span>
+                <div id="m" class="value">--</div>
+            </div>
+            <div class="card">
+                <span class="label">融券變化 (張)</span>
+                <div id="s" class="value">--</div>
+            </div>
+        </div>
 
-  <div class="card">
-    <div>融資變化</div>
-    <div id="m"></div>
-  </div>
+        <div id="log"></div>
+    </div>
 
-  <div class="card">
-    <div>融券變化</div>
-    <div id="s"></div>
-  </div>
+    <script>
+        const API = "https://dashboard.jou0914.workers.dev"; [span_3](start_span)//[span_3](end_span)
 
-  <!-- Debug -->
-  <div class="card">
-    <div>LOG</div>
-    <div id="log"></div>
-  </div>
+        function updateUI(id, val, isColor = false) {
+            const el = document.getElementById(id);
+            if (val === undefined || val === null) {
+                el.textContent = "--";
+                return;
+            }
+            el.textContent = typeof val === 'number' ? val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : val;
+            
+            if (isColor) {
+                el.style.color = val > 0 ? "var(--green)" : (val < 0 ? "var(--red)" : "var(--text)");
+            }
+        }
 
-</div>
+        function log(msg) {
+            const logBox = document.getElementById("log");
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML = `<div>[${time}] ${msg}</div>` + logBox.innerHTML;
+        }
 
-<script>
-const API = "https://dashboard.jou0914.workers.dev";
+        async function fetchMarketData() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch(`${API}/market`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
 
-function log(t){document.getElementById("log").innerHTML = t+"<br>"+document.getElementById("log").innerHTML;}
+                [span_4](start_span)// 更新數據顯示[span_4](end_span)
+                updateUI("cnn", data.cnn);
+                updateUI("vix", data.vix);
+                updateUI("vixtw", data.vixtw);
+                updateUI("twd", data.twd);
 
-async function run(){
-  const t0 = performance.now();
+                [span_5](start_span)// 籌碼轉換為「億」[span_5](end_span)
+                if (data.marginChange !== undefined) {
+                    const marginValue = data.marginChange / 100000000;
+                    const mEl = document.getElementById("m");
+                    mEl.textContent = (marginValue > 0 ? "+" : "") + marginValue.toFixed(2);
+                    mEl.style.color = marginValue > 0 ? "var(--green)" : "var(--red)";
+                }
 
-  try{
-    const r = await fetch(API + "/market");
-    const d = await r.json();
+                if (data.shortChange !== undefined) {
+                    const sEl = document.getElementById("s");
+                    sEl.textContent = (data.shortChange > 0 ? "+" : "") + data.shortChange.toLocaleString();
+                    sEl.style.color = data.shortChange > 0 ? "var(--green)" : "var(--red)";
+                }
 
-    document.getElementById("vix").textContent = d.vix?.toFixed(2);
-    document.getElementById("twd").textContent = d.twd?.toFixed(2);
-    document.getElementById("m").textContent = d.marginChange;
-    document.getElementById("s").textContent = d.shortChange;
+                [span_6](start_span)// 市場情緒標籤[span_6](end_span)
+                const sentEl = document.getElementById("sent");
+                sentEl.textContent = data.sentiment || "中性";
+                sentEl.className = "sentiment-tag " + (data.sentiment === "偏多" ? "up" : (data.sentiment === "偏空" ? "down" : ""));
 
-    const el = document.getElementById("sent");
-    el.textContent = d.sentiment;
+                log(`同步成功 (${Math.round(performance.now() - startTime)}ms)`);
+            } catch (err) {
+                log(`同步失敗: ${err.message}`);
+            }
+        }
 
-    if(d.sentiment==="偏多") el.className="sentiment up";
-    if(d.sentiment==="偏空") el.className="sentiment down";
-
-    log("OK "+Math.round(performance.now()-t0)+"ms");
-
-  }catch(e){
-    log("ERR");
-  }
-}
-
-run();
-setInterval(run,20000);
-</script>
-
+        // 初始化與定時更新
+        fetchMarketData();
+        setInterval(fetchMarketData, 30000); // 30秒更新一次
+    </script>
 </body>
 </html>
