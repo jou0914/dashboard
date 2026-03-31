@@ -8,53 +8,55 @@ export default {
 
     if (url.pathname === "/vix") {
       try {
-        // 直接請求 Yahoo Finance 的 Chart API (台指 VIX 代碼: ^VIXTWN)
-        // 參數 range=1d 代表取一天內的資料, interval=1m 代表分鐘級距
-        const targetUrl = "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIXTWN?range=1d&interval=1m";
+        // 使用 Google Finance 抓取台股 VIX (搜尋字串通常包含相關指數)
+        // 這裡我們先示範抓取台股大盤 (TPE: TAIEX) 作為結構測試，
+        // 若要精準 VIX，Google Finance 有時需使用特定代碼
+        const targetUrl = "https://www.google.com/finance/quote/.VIXTW:INDEXTPE";
         
         const res = await fetch(targetUrl, {
           headers: { 
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "application/json"
+            "Accept-Language": "zh-TW,zh;q=0.9"
           }
         });
         
-        if (!res.ok) throw new Error(`Yahoo API 回傳錯誤: ${res.status}`);
+        const html = await res.text();
 
-        const data = await res.json();
-
-        // 解析 JSON 結構
-        const result = data.chart.result[0];
-        const meta = result.meta;
-        const indicators = result.indicators.quote[0];
+        // Google Finance 的價格通常在 data-last-price 屬性中
+        const priceRegex = /data-last-price="([\d.]+)"/;
+        const match = html.match(priceRegex);
         
-        // 取得最新的一筆價格 (close)
-        const prices = indicators.close;
-        const currentPrice = prices[prices.length - 1] || meta.regularMarketPrice;
+        let currentPrice = 0;
+        if (match && match[1]) {
+          currentPrice = parseFloat(match[1]);
+        } else {
+          // 備用方案：尋找數值格式
+          const fallbackRegex = /class="YMlKec fxKbKc">([\d.]+)</;
+          const fallbackMatch = html.match(fallbackRegex);
+          if (fallbackMatch) currentPrice = parseFloat(fallbackMatch[1]);
+        }
+
+        if (currentPrice === 0) {
+          throw new Error("無法從資料源取得數值");
+        }
 
         return new Response(
           JSON.stringify({
             type: "taiwan_vix",
-            price: parseFloat(currentPrice.toFixed(2)),
-            prev_close: meta.previousClose,
-            change: parseFloat((currentPrice - meta.previousClose).toFixed(2)),
-            symbol: meta.symbol,
-            time: new Date(meta.regularMarketTime * 1000).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
-            source: "Yahoo Finance API"
+            price: currentPrice,
+            time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
+            source: "Google Finance"
           }),
           { headers: corsHeaders }
         );
 
       } catch (e) {
-        return new Response(JSON.stringify({ 
-          error: e.message,
-          suggestion: "請確認網路連線或稍後再試" 
-        }), {
+        return new Response(JSON.stringify({ error: e.message }), {
           status: 500,
           headers: corsHeaders
         });
       }
     }
-    return new Response("Taiwan VIX API Worker is Active");
+    return new Response("Worker Active");
   }
 };
