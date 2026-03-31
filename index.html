@@ -3,85 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VIX 監控儀表板</title>
+  <title>全球市場波動監控儀表板</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    .container { width: 100%; max-width: 800px; }
-    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    .card { background: #161616; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
-    .label { font-size: 0.9rem; color: #888; margin-bottom: 10px; }
-    .price { font-size: 3rem; font-weight: bold; }
-    .us { color: #f0c040; } /* 美股金色 */
-    .tw { color: #40a0f0; } /* 台股藍色 */
+    /* 黑色主題樣式 */
+    body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+    .container { width: 100%; max-width: 900px; }
+    .header { border-bottom: 1px solid #222; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+    .header h1 { font-size: 1.2rem; color: #888; margin: 0; letter-spacing: 2px; }
     
-    /* 嵌入圖表的容器 */
-    .iframe-container { 
-      width: 100%; 
-      height: 450px; 
-      background: #161616; 
-      border-radius: 12px; 
-      overflow: hidden; 
-      border: 1px solid #222;
-      margin-top: 20px;
-    }
+    /* 三欄數據格 */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .card { background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 20px; text-align: center; transition: 0.3s; }
+    .card:hover { border-color: #444; }
+    
+    .label { font-size: 0.85rem; color: #888; margin-bottom: 8px; font-weight: bold; }
+    .price { font-size: 2.8rem; font-weight: bold; line-height: 1.1; }
+    
+    /* 顏色區分 */
+    .us-vix { color: #f0c040; }    /* 美股金色 */
+    .tw-vix { color: #40a0f0; }    /* 台股藍色 */
+    .stock-7769 { color: #48bb78; } /* 鴻勁綠色 */
+    
+    .meta { font-size: 0.75rem; color: #444; margin-top: 10px; }
+    
+    /* 嵌入圖表容器 */
+    .section-label { font-size: 0.9rem; color: #666; margin: 25px 0 10px 5px; align-self: flex-start; width: 100%; }
+    .iframe-container { width: 100%; height: 500px; background: #161616; border: 1px solid #262626; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
     iframe { width: 100%; height: 100%; border: none; }
     
-    canvas { background: #161616; border-radius: 12px; padding: 10px; border: 1px solid #222; margin-top: 20px; }
+    /* Chart.js 容器 */
+    .chart-container { background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 20px; width: 100%; box-sizing: border-box; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="card-row">
-      <div class="card">
-        <div class="label">CBOE VIX (美股)</div>
-        <div id="p-us" class="price us">--</div>
-      </div>
+<div class="container">
+  <div class="header"><h1>MARKET VOLATILITY MONITOR</h1></div>
 
-      <div class="card">
-        <div class="label">VIXTWN (台股)</div>
-        <div id="p-tw" class="price tw">--</div>
-      </div>
+  <div class="grid">
+    <div class="card">
+      <div class="label">CBOE VIX (美股恐慌指數)</div>
+      <div id="p-us" class="price us-vix">--</div>
+      <div id="m-us" class="meta">載入中...</div>
     </div>
 
-<div class="iframe-container">
-  <iframe src="https://www.wantgoo.com/global/vixtwn?isframe=true" scrolling="no"></iframe>
-</div>
+    <div class="card">
+      <div class="label">VIXTWN (台股波動率)</div>
+      <div id="p-tw" class="price tw-vix">--</div>
+      <div id="m-tw" class="meta">載入中...</div>
+    </div>
 
-    <div class="label" style="margin-top:30px;">美股 VIX 90日趨勢</div>
+    <div class="card">
+      <div class="label">鴻勁 (7769.TW)</div>
+      <div id="p-7769" class="price stock-7769">--</div>
+      <div id="m-7769" class="meta">載入中...</div>
+    </div>
+  </div>
+
+  <div class="section-label">台股 VIX 即時走勢 (來源: 玩股網)</div>
+  <div class="iframe-container">
+    <iframe src="https://www.wantgoo.com/global/vixtwn/chart" scrolling="no"></iframe>
+  </div>
+
+  <div class="section-label">美股 VIX 90日趨勢圖 (CBOE)</div>
+  <div class="chart-container">
     <canvas id="vixChart"></canvas>
   </div>
+</div>
 
 <script>
   const WORKER_URL = "https://dashboard.jou0914.workers.dev";
-  
-  // 1. 更新數值邏輯
-  async function updatePrices() {
-    // 抓美股
-    fetch(`${WORKER_URL}/vix`).then(r => r.json()).then(d => {
-      document.getElementById("p-us").textContent = d.price.toFixed(2);
-      updateChart(d.history);
-    });
-
-    // 抓台股 (我們改用直接呼叫，不再設預設值)
-    fetch(`${WORKER_URL}/vixtw`).then(r => r.json()).then(d => {
-      if(d.price) document.getElementById("p-tw").textContent = d.price.toFixed(2);
-    });
-  }
-
-  // 2. 原本的美股 Chart.js 圖表邏輯 (省略重複代碼)
   const ctx = document.getElementById("vixChart").getContext("2d");
-  const chart = new Chart(ctx, { /* ... 您原本的 chart 配置 ... */ });
-  
-  function updateChart(history) {
-    chart.data.labels = history.map(h => h.date);
-    chart.data.datasets[0].data = history.map(h => h.price);
-    chart.update();
+
+  // 初始化 Chart.js (美股金色走勢圖)
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "VIX",
+        data: [],
+        borderColor: "#f0c040",
+        backgroundColor: "rgba(240,192,64,0.05)",
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#444", maxTicksLimit: 7 }, grid: { display: false } },
+        y: { ticks: { color: "#444" }, grid: { color: "#222" } }
+      }
+    }
+  });
+
+  // 核心數據刷新函數
+  async function refreshAll() {
+    // 1. 抓取美股 VIX
+    fetch(`${WORKER_URL}/vix`).then(r => r.json()).then(data => {
+      if (data.price) {
+        document.getElementById("p-us").textContent = data.price.toFixed(2);
+        document.getElementById("m-us").textContent = "Update: " + data.time;
+        // 更新圖表
+        chart.data.labels = data.history.map(h => h.date);
+        chart.data.datasets[0].data = data.history.map(h => h.price);
+        chart.update();
+      }
+    }).catch(e => console.error("US VIX Fail"));
+
+    // 2. 抓取台股 VIX
+    fetch(`${WORKER_URL}/vixtw`).then(r => r.json()).then(data => {
+      const pTw = document.getElementById("p-tw");
+      const mTw = document.getElementById("m-tw");
+      if (data.price) {
+        pTw.textContent = data.price.toFixed(2);
+        mTw.textContent = "最後更新：" + (data.time || "Real-time");
+      } else {
+        pTw.textContent = "--";
+        mTw.textContent = "暫無即時數據";
+      }
+    }).catch(e => console.error("TW VIX Fail"));
+
+    // 3. 抓取鴻勁 7769
+    fetch(`${WORKER_URL}/7769`).then(r => r.json()).then(data => {
+      const p7769 = document.getElementById("p-7769");
+      const m7769 = document.getElementById("m-7769");
+      if (data.price) {
+        p7769.textContent = data.price.toLocaleString();
+        m7769.textContent = "收盤日期：" + (data.time || "--");
+      }
+    }).catch(e => console.error("7769 Fail"));
   }
 
-  updatePrices();
-  setInterval(updatePrices, 60000); // 每分鐘更新一次
+  // 執行初始化與定時刷新 (每分鐘一次)
+  refreshAll();
+  setInterval(refreshAll, 60000);
 </script>
+
 </body>
 </html>
