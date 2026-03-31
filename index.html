@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>市場全數據監控</title>
+  <title>市場監控儀表板</title>
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
     .container { width: 100%; max-width: 500px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
     .full { grid-column: span 2; }
-    .label { font-size: 0.75rem; color: #666; margin-bottom: 5px; font-weight: bold; }
-    .price { font-size: 2.2rem; font-weight: bold; }
+    .label { font-size: 0.75rem; color: #666; margin-bottom: 8px; font-weight: bold; }
+    .price { font-size: 2.5rem; font-weight: bold; }
     .cnn-c { color: #ff5f5f; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
     .meta { font-size: 0.7rem; color: #333; margin-top: 5px; }
   </style>
@@ -28,11 +28,11 @@
 </div>
 <script>
   const API = "https://dashboard.jou0914.workers.dev";
-  async function update() {
+  async function refresh() {
     const getData = (path, id, fix = 2) => {
       fetch(`${API}${path}`).then(r => r.json()).then(d => {
-        const val = d.price;
-        document.getElementById(id).textContent = (val !== null && val !== undefined) ? (fix === 'auto' ? val.toLocaleString() : val.toFixed(fix)) : "--";
+        const p = d.price;
+        document.getElementById(id).textContent = (p !== null && p !== undefined) ? (id === 'p-7769' ? p.toLocaleString() : p.toFixed(fix)) : "--";
         if(id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label || "--";
       }).catch(() => document.getElementById(id).textContent = "--");
     };
@@ -40,9 +40,10 @@
     getData('/vix', 'p-vix', 2);
     getData('/vixtw', 'p-vtw', 2);
     getData('/twd', 'p-twd', 3);
-    getData('/7769', 'p-7769', 'auto');
+    getData('/7769', 'p-7769');
   }
-  update(); setInterval(update, 60000);
+  refresh();
+  setInterval(refresh, 300000); // 考慮到 API 額度，改為每 5 分鐘刷新一次
 </script>
 </body>
 </html>
