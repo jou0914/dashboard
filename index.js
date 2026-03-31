@@ -2,30 +2,24 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // --- [API 路由] 處理 VIX 數據 (改用 Google Finance 解析) ---
+    // --- [API 路由] 使用 FinMind 抓取台股 VIX ---
     if (url.pathname === "/api/vixtw") {
       try {
-        // 直接抓取 Google Finance 頁面
-        const gUrl = `https://www.google.com/finance/quote/VIXTW:INDEXTPE`;
-        const res = await fetch(gUrl, {
-          headers: { 
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'zh-TW,zh;q=0.9'
-          }
-        });
+        const start = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+        // FinMind 代碼：VIXTW (台股波動率指數)
+        const fmUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockIndexPrice&data_id=VIXTW&start_date=${start}`;
         
-        const text = await res.text();
+        const res = await fetch(fmUrl);
+        const json = await res.json();
         
-        // 使用正則表達式從 HTML 中提取價格
-        const priceMatch = text.match(/data-last-price="([\d\.]+)"/);
-        const latestPrice = priceMatch ? parseFloat(priceMatch[1]) : null;
-
-        if (!latestPrice) throw new Error("數據解析失敗");
-
+        if (!json.data || json.data.length === 0) throw new Error("無數據");
+        
+        const latest = json.data[json.data.length - 1];
+        
         return new Response(JSON.stringify({
           status: "success",
-          price: latestPrice,
-          date: new Date().toLocaleDateString('zh-TW')
+          price: parseFloat(latest.close),
+          date: latest.date
         }), { 
           headers: { 
             "Content-Type": "application/json",
@@ -33,11 +27,7 @@ export default {
           } 
         });
       } catch (e) {
-        return new Response(JSON.stringify({ 
-          error: "數據源更新中", 
-          price: 0, 
-          date: "請稍後再試" 
-        }), { 
+        return new Response(JSON.stringify({ error: "API 維護中", price: 0 }), { 
           status: 200, 
           headers: { "Content-Type": "application/json" } 
         });
@@ -57,107 +47,73 @@ function generateHTML() {
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>核心資產監控 v6.6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心資產監控 v6.7</title>
     <style>
-        :root { 
-            --bg: #0a0a0a; --card: #161616; --border: #262626; 
-            --text: #ffffff; --muted: #888888; --yellow: #f6ad55; 
-            --red: #f56565; --green: #48bb78; 
-        }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            padding: 20px; margin: 0;
-        }
-        .header { 
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px;
-        }
-        .version { color: var(--yellow); font-size: 12px; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        .card { 
-            background: var(--card); border: 1px solid var(--border); 
-            border-radius: 12px; padding: 20px;
-        }
-        .label { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-        .price { font-size: 32px; font-weight: bold; font-variant-numeric: tabular-nums; }
-        .meta { font-size: 12px; color: var(--muted); margin-top: 10px; }
-        #debug { 
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; 
-            background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; 
-            font-size: 11px; padding: 10px; overflow-y: auto; border-top: 1px solid #333;
-            box-sizing: border-box; pointer-events: none; opacity: 0.8;
-        }
+        :root { --bg:#0a0a0a; --card:#161616; --border:#262626; --text:#fff; --muted:#888; --yellow:#f6ad55; }
+        body { background:var(--bg); color:var(--text); font-family:sans-serif; padding:20px; margin:0; }
+        .header { display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:15px; margin-bottom:25px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:15px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+        .label { color:var(--muted); font-size:14px; margin-bottom:10px; }
+        .price { font-size:32px; font-weight:bold; }
+        .meta { font-size:12px; color:var(--muted); margin-top:10px; }
+        #debug { position:fixed; bottom:0; left:0; width:100%; height:80px; background:rgba(0,0,0,0.9); color:#00ff00; font-family:monospace; font-size:11px; padding:10px; overflow-y:auto; border-top:1px solid #333; pointer-events:none; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div style="font-size: 18px; font-weight: bold;">MY DAILY BRIEF</div>
-        <div class="version">v6.6 FINAL</div>
+        <div style="font-weight:bold;">MY DAILY BRIEF</div>
+        <div style="color:var(--yellow); font-size:12px;">v6.7 FinMind 版</div>
     </div>
-
     <div class="grid">
         <div class="card">
             <div class="label">鴻勁 (7769:TPE)</div>
             <div id="p-7769" class="price">--</div>
             <div id="m-7769" class="meta">載入中...</div>
         </div>
-
         <div class="card">
             <div class="label">台股波動率 VIXTW</div>
             <div id="p-vix" class="price">--</div>
             <div id="m-vix" class="meta">等待數據...</div>
         </div>
     </div>
-
-    <div id="debug"><div>[SYSTEM] 初始化環境中...</div></div>
-
+    <div id="debug"><div>[SYSTEM] 初始化...</div></div>
     <script>
-        function log(m, isError = false) {
-            const container = document.getElementById('debug');
-            const entry = document.createElement('div');
-            if (isError) entry.style.color = '#f56565';
-            entry.textContent = "[" + new Date().toLocaleTimeString() + "] " + m;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
+        function log(m, e=false) {
+            const b = document.getElementById('debug');
+            const d = document.createElement('div'); if(e) d.style.color='#f56565';
+            d.textContent = "[" + new Date().toLocaleTimeString() + "] " + m;
+            b.appendChild(d); b.scrollTop = b.scrollHeight;
         }
-
-        async function fetchStock() {
-            log("正在抓取個股 7769...");
+        async function load() {
+            // 抓取 7769
             try {
-                const start = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-                const res = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=' + start);
-                const json = await res.json();
-                const latest = json.data[json.data.length - 1];
-                
-                document.getElementById('p-7769').textContent = parseFloat(latest.close).toLocaleString();
-                document.getElementById('m-7769').textContent = "更新時間：" + latest.date;
-                log("7769 數據載入成功");
-            } catch (e) {
-                log("7769 載入失敗", true);
-            }
-        }
+                const s = new Date(Date.now()-604800000).toISOString().split('T')[0];
+                const r = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=' + s);
+                const j = await r.json();
+                const l = j.data[j.data.length-1];
+                document.getElementById('p-7769').textContent = parseFloat(l.close).toLocaleString();
+                document.getElementById('m-7769').textContent = "更新：" + l.date;
+                log("7769 成功");
+            } catch { log("7769 失敗", true); }
 
-        async function fetchVIX() {
+            // 抓取 VIXTW
             log("請求 /api/vixtw...");
             try {
-                const res = await fetch('/api/vixtw');
-                const data = await res.json();
-                
-                if (data.error || data.price === 0) throw new Error(data.error || "無數據");
-                
-                document.getElementById('p-vix').textContent = data.price.toFixed(2);
-                document.getElementById('m-vix').textContent = "更新日期：" + data.date;
-                log("VIX 載入成功");
-            } catch (e) {
-                log("VIX 失敗：" + e.message, true);
-                document.getElementById('m-vix').textContent = "來源端連線異常";
+                const r = await fetch('/api/vixtw');
+                const d = await r.json();
+                if(d.price > 0) {
+                    document.getElementById('p-vix').textContent = d.price.toFixed(2);
+                    document.getElementById('m-vix').textContent = "更新：" + d.date;
+                    log("VIX 成功");
+                } else throw new Error();
+            } catch {
+                log("VIX 失敗", true);
+                document.getElementById('m-vix').textContent = "數據源暫時離線";
             }
         }
-
-        fetchStock();
-        fetchVIX();
+        load();
     </script>
 </body>
 </html>
