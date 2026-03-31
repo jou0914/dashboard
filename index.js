@@ -3,67 +3,73 @@ export default {
     const url = new URL(request.url);
 
     // =========================
-    // 📊 API：VIX（美股 ^VIX + 防 null）
+    // 📊 API：即時 VIX（1分鐘）
     // =========================
     if (url.pathname === "/api/vixtw") {
       try {
-        const start = new Date(Date.now() - 7 * 86400000)
-          .toISOString()
-          .split("T")[0];
+        const api =
+          "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1m&range=1d";
 
-        const fmUrl =
-          `https://api.finmindtrade.com/api/v4/data?dataset=USStockPrice&data_id=^VIX&start_date=${start}`;
-
-        const res = await fetch(fmUrl);
+        const res = await fetch(api);
         const json = await res.json();
 
-        if (!json.data || json.data.length === 0) {
-          throw new Error("無數據");
+        const result = json.chart.result[0];
+        const closes = result.indicators.quote[0].close;
+        const timestamps = result.timestamp;
+
+        let price = null;
+        let time = null;
+
+        // ✅ 找最後有效值（避免 null）
+        for (let i = closes.length - 1; i >= 0; i--) {
+          if (closes[i] !== null) {
+            price = closes[i];
+            time = new Date(timestamps[i] * 1000)
+              .toLocaleString("zh-TW");
+            break;
+          }
         }
 
-        // ✅ 關鍵：找最後一筆有效 close（避免 null）
-        const validData = json.data
-          .slice()
-          .reverse()
-          .find(d => d.close !== null && d.close !== undefined);
-
-        if (!validData) throw new Error("無有效數據");
+        if (!price) throw new Error("無即時資料");
 
         return new Response(
           JSON.stringify({
             status: "success",
-            price: parseFloat(validData.close),
-            date: validData.date,
+            type: "realtime",
+            price: price,
+            time: time
           }),
           {
             headers: {
               "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
+              "Access-Control-Allow-Origin": "*"
+            }
           }
         );
+
       } catch (e) {
         return new Response(
           JSON.stringify({
             status: "error",
             price: 0,
-            message: "VIX API 失敗",
+            message: "即時 VIX 失敗",
+            debug: e.toString()
           }),
           {
             status: 200,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" }
           }
         );
       }
     }
 
     // =========================
-    // 🌐 預設：回傳前端頁面
+    // 🌐 前端頁面
     // =========================
     return new Response(generateHTML(), {
-      headers: { "Content-Type": "text/html;charset=UTF-8" },
+      headers: { "Content-Type": "text/html;charset=UTF-8" }
     });
-  },
+  }
 };
 
 // =========================
@@ -76,45 +82,28 @@ function generateHTML() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>核心資產監控 v7.1</title>
+<title>核心資產監控 v8（即時版）</title>
 
 <style>
-:root {
-  --bg:#0a0a0a;
-  --card:#161616;
-  --border:#262626;
-  --text:#fff;
-  --muted:#888;
-  --yellow:#f6ad55;
-}
 body {
-  background:var(--bg);
-  color:var(--text);
+  background:#0a0a0a;
+  color:#fff;
   font-family:sans-serif;
   padding:20px;
   margin:0;
 }
-.header {
-  display:flex;
-  justify-content:space-between;
-  border-bottom:1px solid var(--border);
-  padding-bottom:15px;
-  margin-bottom:25px;
-}
 .grid {
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:15px;
 }
 .card {
-  background:var(--card);
-  border:1px solid var(--border);
+  background:#161616;
   border-radius:12px;
   padding:20px;
 }
 .label {
-  color:var(--muted);
-  font-size:14px;
+  color:#888;
   margin-bottom:10px;
 }
 .price {
@@ -123,45 +112,38 @@ body {
 }
 .meta {
   font-size:12px;
-  color:var(--muted);
-  margin-top:10px;
+  color:#888;
 }
 #debug {
   position:fixed;
   bottom:0;
   left:0;
   width:100%;
-  height:110px;
-  background:rgba(0,0,0,0.9);
-  color:#00ff00;
-  font-family:monospace;
+  height:120px;
+  background:#000;
+  color:#0f0;
   font-size:11px;
-  padding:10px;
-  overflow-y:auto;
-  border-top:1px solid #333;
+  overflow:auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div style="font-weight:bold;">MY DAILY BRIEF</div>
-  <div style="color:var(--yellow); font-size:12px;">v7.1 穩定版</div>
-</div>
+<h2>MY DAILY BRIEF v8（即時版）</h2>
 
 <div class="grid">
 
   <div class="card">
-    <div class="label">鴻勁 (7769:TPE)</div>
-    <div id="p-7769" class="price">--</div>
-    <div id="m-7769" class="meta">載入中...</div>
+    <div class="label">鴻勁 7769</div>
+    <div id="p1" class="price">--</div>
+    <div id="m1" class="meta">載入中</div>
   </div>
 
   <div class="card">
-    <div class="label">市場恐慌指標 (VIX)</div>
-    <div id="p-vix" class="price">--</div>
-    <div id="m-vix" class="meta">等待數據...</div>
+    <div class="label">VIX 即時恐慌指標</div>
+    <div id="p2" class="price">--</div>
+    <div id="m2" class="meta">載入中</div>
   </div>
 
 </div>
@@ -169,85 +151,77 @@ body {
 <div id="debug"></div>
 
 <script>
-function log(msg, error=false) {
+function log(msg, err=false){
   const box = document.getElementById('debug');
-  const line = document.createElement('div');
-  line.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
-  if(error) line.style.color = "#f56565";
-  box.appendChild(line);
+  const el = document.createElement('div');
+  el.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
+  if(err) el.style.color = "red";
+  box.appendChild(el);
   box.scrollTop = box.scrollHeight;
 }
 
-async function load() {
+async function load(){
 
   // =========================
-  // 📈 7769
+  // 📈 7769（仍是日資料）
   // =========================
   try {
-    log("抓取 7769...");
-    const start = new Date(Date.now()-604800000).toISOString().split('T')[0];
+    log("抓 7769...");
+    const s = new Date(Date.now()-7*86400000).toISOString().split('T')[0];
 
-    const res = await fetch(
-      'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=' + start
+    const r = await fetch(
+      'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=' + s
     );
 
-    const json = await res.json();
+    const j = await r.json();
 
-    if (!json.data || json.data.length === 0) throw new Error();
+    const v = j.data.reverse().find(d => d.close != null);
 
-    const validData = json.data
-      .slice()
-      .reverse()
-      .find(d => d.close !== null && d.close !== undefined);
+    document.getElementById('p1').textContent = v.close;
+    document.getElementById('m1').textContent = "更新：" + v.date;
 
-    if (!validData) throw new Error();
+    log("7769 OK");
 
-    document.getElementById('p-7769').textContent =
-      parseFloat(validData.close).toLocaleString();
-
-    document.getElementById('m-7769').textContent =
-      "更新：" + validData.date;
-
-    log("7769 成功");
-
-  } catch (e) {
-    log("7769 失敗", true);
+  } catch {
+    log("7769 fail", true);
   }
 
   // =========================
-  // 📊 VIX
+  // 📊 VIX 即時
   // =========================
   try {
-    log("請求 /api/vixtw ...");
+    log("抓 VIX 即時...");
 
-    const res = await fetch('/api/vixtw');
-    const data = await res.json();
+    const r = await fetch('/api/vixtw');
+    const d = await r.json();
 
-    log("VIX 回傳：" + JSON.stringify(data));
+    log(JSON.stringify(d));
 
-    if (data.price > 0) {
-      document.getElementById('p-vix').textContent =
-        data.price.toFixed(2);
+    if (d.price > 0) {
+      document.getElementById('p2').textContent =
+        d.price.toFixed(2);
 
-      document.getElementById('m-vix').textContent =
-        "更新：" + data.date;
+      document.getElementById('m2').textContent =
+        "即時：" + d.time;
 
-      log("VIX 成功");
+      log("VIX OK");
     } else {
       throw new Error();
     }
 
-  } catch (e) {
-    log("VIX 失敗", true);
-    document.getElementById('m-vix').textContent =
-      "資料來源異常";
+  } catch {
+    log("VIX fail", true);
   }
 }
 
+// 🚀 初始載入
 load();
+
+// 🔥 每30秒更新（即時）
+setInterval(load, 30000);
 </script>
 
 </body>
 </html>
-  `;
+`;
 }
