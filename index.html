@@ -25,7 +25,6 @@
             padding: 20px;
         }
 
-        /* Header */
         header {
             display: flex;
             justify-content: space-between;
@@ -39,7 +38,6 @@
         .logo span { color: var(--yellow); }
         .time { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
 
-        /* Grid System */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -57,7 +55,6 @@
             text-transform: uppercase;
         }
 
-        /* Card Style */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -87,10 +84,8 @@
             font-weight: 500;
         }
 
-        /* Gauge for VIX */
         .gauge-container {
             height: 4px;
-            background: #333;
             border-radius: 2px;
             margin: 12px 0;
             position: relative;
@@ -107,7 +102,6 @@
             transition: left 0.5s ease;
         }
 
-        /* Footer Memo */
         .memo-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -129,7 +123,7 @@
 
     <header>
         <div class="logo">MY DAILY BRIEF / <span>核心資產監控系統 v6.1</span></div>
-        <div class="time" id="clock">--:--:-- 03/31</div>
+        <div class="time" id="clock">--:--:--</div>
     </header>
 
     <div class="section-title">🚀 核心追蹤 (含 7769 鴻勁)</div>
@@ -161,7 +155,7 @@
         </div>
         <div class="card">
             <div class="card-header"><span>美股波動率 VIX</span></div>
-            <div class="price-large" style="color: var(--red);">30.61</div>
+            <div id="vix-us-num" class="price-large" style="color: var(--red);">30.61</div>
             <div class="change-tag">高度恐慌</div>
             <div class="gauge-container"><div class="needle" style="left: 70%;"></div></div>
         </div>
@@ -188,7 +182,6 @@
     </div>
 
     <script>
-        // 更新時鐘
         function updateClock() {
             const now = new Date();
             const timeStr = now.toTimeString().split(' ')[0] + " " + 
@@ -198,7 +191,6 @@
         }
         setInterval(updateClock, 1000);
 
-        // VIX 狀態判斷
         function getVixStatus(val) {
             if (val < 15) return { lbl: "極度平靜", col: "#48bb78" };
             if (val < 20) return { lbl: "常態波動", col: "#a0aec0" };
@@ -206,32 +198,35 @@
             return { lbl: "高度恐慌", col: "#f56565" };
         }
 
-        // 呼叫你新增的後端 API
+        // 修改後的 API 呼叫函數，直接呼叫您的 Worker 網址
         async function fetchVIXTW() {
             try {
-                const response = await fetch('/api/vixtw');
-                if (!response.ok) throw new Error();
+                // 指向您的 Cloudflare Worker 網址
+                const response = await fetch('https://dashboard.jou0914.workers.dev');
+                if (!response.ok) throw new Error("API 請求失敗");
                 const data = await response.json();
                 
-                const { price, changePct } = data;
-                const status = getVixStatus(price);
-                
-                // 更新 UI
-                document.getElementById('vixtw-num').textContent = price.toFixed(2);
-                document.getElementById('vixtw-num').style.color = status.col;
-                document.getElementById('vixtw-status').textContent = status.lbl;
-                document.getElementById('vixtw-status').style.color = status.col;
-                
-                // 指針位置 (VIX 10~40 區間)
-                const pos = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
-                document.getElementById('vixtw-needle').style.left = pos + '%';
-                
+                if (data.status === "success") {
+                    const price = data.price;
+                    const status = getVixStatus(price);
+                    
+                    document.getElementById('vixtw-num').textContent = price.toFixed(2);
+                    document.getElementById('vixtw-num').style.color = status.col;
+                    document.getElementById('vixtw-status').textContent = status.lbl;
+                    document.getElementById('vixtw-status').style.color = status.col;
+                    
+                    const pos = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
+                    document.getElementById('vixtw-needle').style.left = pos + '%';
+                } else {
+                    throw new Error(data.status || "資料異常");
+                }
             } catch (e) {
+                console.error("VIXTW 載入失敗:", e);
                 document.getElementById('vixtw-status').textContent = "API 載入失敗";
+                document.getElementById('vixtw-status').style.color = "#f56565";
             }
         }
 
-        // 初始化
         fetchVIXTW();
         setInterval(fetchVIXTW, 300000); // 5分鐘更新一次
     </script>
