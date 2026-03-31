@@ -3,71 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>市場核心監控 v1.8.0</title>
+    <title>市場核心監控 v1.8.1</title>
     <style>
-        :root { --up: #48bb78; --down: #ff4d4d; --bg: #000; --card: #0a0a0a; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; }
-        .ver { width: 100%; text-align: right; font-size: 10px; color: #222; margin-bottom: 8px; }
+        :root { --up: #48bb78; --down: #ff4d4d; --bg: #000; --card: #0a0a0a; --accent: #222; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; padding-bottom: 120px; } /* 為底部的 Log 留空間 */
+        .ver { width: 100%; text-align: right; font-size: 10px; color: #333; margin-bottom: 10px; font-weight: bold; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: var(--card); border: 1px solid #151515; border-radius: 16px; padding: 20px; text-align: left; position: relative; overflow: hidden; }
+        .card { background: var(--card); border: 1px solid #151515; border-radius: 16px; padding: 20px; text-align: left; }
         .full { grid-column: span 2; }
         
-        .label { font-size: 10px; color: #555; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+        .label { font-size: 10px; color: #555; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px; display: block; }
         .price { font-size: 2.4rem; font-weight: 900; line-height: 1; letter-spacing: -1px; }
-        .change { font-size: 0.9rem; font-weight: bold; margin-top: 8px; display: flex; align-items: center; }
-        .change::before { content: ''; display: inline-block; width: 0; height: 0; margin-right: 5px; }
-        .up { color: var(--up); } .up::before { border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--up); }
-        .down { color: var(--down); } .down::before { border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--down); }
+        .change { font-size: 1rem; font-weight: bold; margin-top: 10px; display: flex; align-items: center; }
+        .up { color: var(--up); } .up::before { content: '▲'; margin-right: 4px; font-size: 0.8rem; }
+        .down { color: var(--down); } .down::before { content: '▼'; margin-right: 4px; font-size: 0.8rem; }
 
-        /* CNN Gauge */
-        .cnn-val { font-size: 3rem; font-weight: 900; color: #ff4d4d; }
-        .cnn-label { font-size: 12px; color: #444; margin-top: -5px; }
+        /* CNN 特殊樣式 */
+        .cnn-val { font-size: 3.5rem; font-weight: 900; color: #ff4d4d; line-height: 1; }
+        .cnn-label { font-size: 12px; color: #444; margin-top: 5px; font-weight: bold; }
 
-        #debug-panel { margin-top: 20px; font-size: 9px; color: #1a1a1a; width: 100%; }
+        /* 強化後的 Debug Panel */
+        #debug-panel { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: rgba(5, 5, 5, 0.95); border-top: 1px solid #222;
+            padding: 12px; font-size: 10px; max-height: 100px; overflow-y: auto;
+            z-index: 100; backdrop-filter: blur(10px);
+        }
+        .log-line { margin-bottom: 4px; border-left: 2px solid #333; padding-left: 6px; }
+        .log-err { border-left-color: var(--down); color: var(--down); }
+        .log-ok { border-left-color: var(--up); color: var(--up); }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="ver">TERMINAL v1.8.0</div>
+    <div class="ver">SYSTEM CORE v1.8.1</div>
     <div class="grid">
-        <div class="card full" style="border-left: 4px solid #ff4d4d;">
-            <div class="label">Sentiment / CNN Fear & Greed</div>
+        <div class="card full" style="border-top: 4px solid #ff4d4d;">
+            <span class="label">Sentiment / CNN Fear & Greed</span>
             <div id="p-cnn" class="cnn-val">--</div>
-            <div id="m-cnn" class="cnn-label">LOADING...</div>
+            <div id="m-cnn" class="cnn-label">BOOTING...</div>
         </div>
         
         <div class="card">
-            <div class="label">VIX Index (US)</div>
+            <span class="label">Volatility / VIX US</span>
             <div id="p-vix" class="price" style="color: #f0c040;">--</div>
             <div id="c-vix" class="change">--</div>
         </div>
 
         <div class="card">
-            <div class="label">VIX Index (TW)</div>
+            <span class="label">Volatility / VIX TW</span>
             <div id="p-vtw" class="price" style="color: #40a0f0;">--</div>
             <div id="c-vtw" class="change">--</div>
         </div>
 
         <div class="card full">
-            <div class="label">Forex / USD to TWD</div>
+            <span class="label">FX / USD-TWD</span>
             <div id="p-twd" class="price" style="color: #a084ff;">--</div>
             <div id="c-twd" class="change">--</div>
         </div>
 
         <div class="card full">
-            <div class="label">Equity / 7769.TW 鴻勁</div>
+            <span class="label">Equity / 7769.TW</span>
             <div id="p-7769" class="price" style="color: #48bb78;">--</div>
             <div id="c-7769" class="change">--</div>
         </div>
     </div>
-    <div id="debug-panel"><div id="log-content"></div></div>
+</div>
+
+<div id="debug-panel">
+    <div style="color: #666; margin-bottom: 5px; font-weight: bold;">[CONSOLE LOG]</div>
+    <div id="log-content">Initializing kernel...</div>
 </div>
 
 <script>
     const API = "https://dashboard.jou0914.workers.dev";
+    const logEl = document.getElementById('log-content');
     
+    function addLog(msg, isErr = false) {
+        const line = document.createElement('div');
+        line.className = `log-line ${isErr ? 'log-err' : 'log-ok'}`;
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.prepend(line);
+    }
+
     async function refresh() {
         const fetchItem = async (path, id, fix = 2) => {
             try {
@@ -77,26 +97,31 @@
                 if (path === "/cnn") {
                     document.getElementById("p-cnn").textContent = d.price;
                     document.getElementById("m-cnn").textContent = d.label;
+                    addLog("CNN Load Success");
                     return;
                 }
 
                 const pEl = document.getElementById(`p-${id}`);
                 const cEl = document.getElementById(`c-${id}`);
 
-                if (d.price) {
+                if (d.price !== null) {
                     pEl.textContent = (id === '7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
-                    const sign = d.isUp ? '+' : '';
-                    cEl.textContent = `${sign}${d.change.toFixed(2)}%`;
+                    cEl.textContent = `${d.isUp ? '+' : ''}${d.change.toFixed(2)}%`;
                     cEl.className = `change ${d.isUp ? 'up' : 'down'}`;
+                    addLog(`${id.toUpperCase()} Updated`);
+                } else {
+                    addLog(`${id.toUpperCase()} Fail: ${d.error || 'Empty'}`, true);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { addLog(`${id.toUpperCase()} Critical Error`, true); }
         };
 
-        await fetchItem('/cnn', 'cnn');
-        await fetchItem('/vix', 'vix');
-        await fetchItem('/vixtw', 'vtw');
-        await fetchItem('/twd', 'twd', 3);
-        await fetchItem('/7769', '7769');
+        await Promise.all([
+            fetchItem('/cnn', 'cnn'),
+            fetchItem('/vix', 'vix'),
+            fetchItem('/vixtw', 'vtw'),
+            fetchItem('/twd', 'twd', 3),
+            fetchItem('/7769', '7769')
+        ]);
     }
 
     refresh();
