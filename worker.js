@@ -3,54 +3,56 @@ export default {
     const url = new URL(request.url);
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json; charset=utf-8"
     };
 
     if (url.pathname === "/vix") {
       try {
-        // 抓取台灣期交所 VIX 彙總頁面
         const targetUrl = "https://www.taifex.com.tw/cht/7/vixSummary";
         const res = await fetch(targetUrl, {
           headers: { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             "Accept": "text/html"
           }
         });
+        
+        // 取得原始 HTML
         const html = await res.text();
 
-        // --- 改進的解析邏輯 ---
-        // 期交所最新一筆 VIX 通常位在第一個 <td class="center"> 標籤中
-        // 我們先過濾掉換行與多餘空白，增加匹配成功率
-        const cleanHtml = html.replace(/\s+/g, ' ');
-        const regex = /<td class="center">([\d.]+)\s*<\/td>/g;
+        // --- 終極解析邏輯：區塊定位法 ---
+        // 1. 先找到表格的主體區域，避免抓到網頁其他的無關數字
+        const tableStart = html.indexOf('class="table_f">');
+        if (tableStart === -1) throw new Error("找不到資料表格");
         
+        const tableHtml = html.substring(tableStart);
+
+        // 2. 尋找所有符合 <td class="center">...</td> 的內容
+        // 台灣期交所的格式通常是：
+        // <td class="center">
+        //                15.40
+        // </td>
+        const regex = /<td class="center">[\s\n]*([\d.]+)\s*<\/td>/g;
         let matches = [];
         let m;
-        while ((m = regex.exec(cleanHtml)) !== null) {
-          matches.push(parseFloat(m[1]));
+        
+        while ((m = regex.exec(tableHtml)) !== null) {
+          const val = parseFloat(m[1]);
+          if (!isNaN(val) && val > 0) {
+            matches.push(val);
+          }
         }
 
-        // 如果 Regex 還是抓不到，嘗試備用的字串尋找法
-        let currentPrice = matches.length > 0 ? matches[0] : 0;
-        
-        if (currentPrice === 0) {
-            // 尋找「指數值」欄位後的關鍵字
-            const marker = 'class="center">';
-            const index = html.indexOf(marker);
-            if (index !== -1) {
-                const subStr = html.substring(index + marker.length, index + marker.length + 10);
-                const fallbackMatch = subStr.match(/[\d.]+/);
-                if (fallbackMatch) currentPrice = parseFloat(fallbackMatch[0]);
-            }
-        }
+        // 3. 檢查結果
+        // 第一筆通常是「最新指數值」，第二筆是「變動點數」
+        const currentPrice = matches.length > 0 ? matches[0] : 0;
 
         return new Response(
           JSON.stringify({
             type: "taiwan_vix",
             price: currentPrice,
             time: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
-            // 這裡回傳前 10 筆作為歷史參考
-            history: matches.slice(0, 10) 
+            all_values: matches.slice(0, 5), // 抓出前幾筆檢查是否有抓對
+            debug_info: matches.length > 0 ? "Success" : "No match found"
           }),
           { headers: corsHeaders }
         );
