@@ -3,77 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>市場核心監控</title>
+  <title>市場全數據監控</title>
   <style>
-    body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; }
-    .container { width: 100%; max-width: 600px; }
-    .card { background: #161616; border: 1px solid #262626; border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 20px; }
-    .label { font-size: 1rem; color: #888; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; }
-    .price { font-size: 3.5rem; font-weight: bold; line-height: 1; }
-    .us { color: #f0c040; } /* 金色 */
-    .tw { color: #40a0f0; } /* 藍色 */
-    .stock { color: #48bb78; } /* 綠色 */
-    .meta { font-size: 0.8rem; color: #444; margin-top: 15px; }
+    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 800px; }
+    .header { text-align: center; color: #444; font-size: 0.8rem; margin-bottom: 20px; letter-spacing: 2px; }
+    
+    /* 網格佈局 */
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
+    .full-width { grid-column: span 2; } /* CNN 佔滿整行 */
+
+    .label { font-size: 0.8rem; color: #777; margin-bottom: 8px; font-weight: bold; }
+    .price { font-size: 2.2rem; font-weight: bold; }
+    
+    /* 顏色定義 */
+    .cnn-color { color: #ff5f5f; }
+    .vix-color { color: #f0c040; }
+    .tw-color { color: #40a0f0; }
+    .twd-color { color: #a084ff; }
+    .stock-color { color: #48bb78; }
+    
+    .meta { font-size: 0.7rem; color: #333; margin-top: 8px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="card">
-    <div class="label">CBOE VIX (美股)</div>
-    <div id="p-us" class="price us">--</div>
-    <div id="m-us" class="meta">載入中...</div>
-  </div>
+  <div class="header">DASHBOARD LIVE</div>
 
-  <div class="card">
-    <div class="label">VIXTWN (台股)</div>
-    <div id="p-tw" class="price tw">--</div>
-    <div id="m-tw" class="meta">載入中...</div>
-  </div>
+  <div class="grid">
+    <div class="card full-width">
+      <div class="label">CNN FEAR & GREED</div>
+      <div id="p-cnn" class="price cnn-color">--</div>
+      <div id="m-cnn" class="meta">LOADING</div>
+    </div>
 
-  <div class="card">
-    <div class="label">鴻勁 (7769)</div>
-    <div id="p-7769" class="price stock">--</div>
-    <div id="m-7769" class="meta">載入中...</div>
+    <div class="card">
+      <div class="label">VIX (US)</div>
+      <div id="p-us" class="price vix-color">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label">VIX (TW)</div>
+      <div id="p-tw" class="price tw-color">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label">USD / TWD</div>
+      <div id="p-twd" class="price twd-color">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label">7769 (鴻勁)</div>
+      <div id="p-7769" class="price stock-color">--</div>
+    </div>
   </div>
 </div>
 
 <script>
-  const WORKER = "https://dashboard.jou0914.workers.dev";
+  const API = "https://dashboard.jou0914.workers.dev";
 
-  async function refresh() {
-    // 抓取美股 VIX
-    fetch(`${WORKER}/vix`).then(r => r.json()).then(d => {
-      if(d.price) {
-        document.getElementById("p-us").textContent = d.price.toFixed(2);
-        document.getElementById("m-us").textContent = "Update: " + d.time;
-      }
-    });
+  async function update() {
+    const fetchAPI = (path, id, isLocale = false, fixed = 2) => {
+      fetch(`${API}${path}`).then(r => r.json()).then(d => {
+        const el = document.getElementById(id);
+        if (d.price !== null) {
+          el.textContent = isLocale ? d.price.toLocaleString() : d.price.toFixed(fixed);
+          if (id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label;
+        } else {
+          el.textContent = "--";
+        }
+      }).catch(() => document.getElementById(id).textContent = "--");
+    };
 
-    // 抓取台股 VIX
-    fetch(`${WORKER}/vixtw`).then(r => r.json()).then(d => {
-      const pTw = document.getElementById("p-tw");
-      if(d.price) {
-        pTw.textContent = d.price.toFixed(2);
-        document.getElementById("m-tw").textContent = "最後數據: " + d.time;
-      } else {
-        // 如果 API 沒數據，嘗試給一個備用的最後已知點位
-        pTw.textContent = "37.15"; 
-        document.getElementById("m-tw").textContent = "盤後參考值";
-      }
-    });
-
-    // 抓取鴻勁
-    fetch(`${WORKER}/7769`).then(r => r.json()).then(d => {
-      if(d.price) {
-        document.getElementById("p-7769").textContent = d.price.toLocaleString();
-        document.getElementById("m-7769").textContent = "收盤日: " + d.time;
-      }
-    });
+    fetchAPI('/cnn', 'p-cnn', false, 0);
+    fetchAPI('/vix', 'p-us');
+    fetchAPI('/vixtw', 'p-tw');
+    fetchAPI('/twd', 'p-twd', false, 3);
+    fetchAPI('/7769', 'p-7769', true);
   }
 
-  refresh();
-  setInterval(refresh, 60000);
+  update();
+  setInterval(update, 60000);
 </script>
+
 </body>
 </html>
