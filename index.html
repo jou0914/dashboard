@@ -26,72 +26,65 @@
   <div id="p2">--</div>
   <div id="m2">載入中...</div>
   <canvas id="vixChart"></canvas>
+  
+<script>
+  const ctx = document.getElementById("vixChart").getContext("2d");
 
-  <script>
-    const ctx = document.getElementById("vixChart").getContext("2d");
-
-    const chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: [],
-        datasets: [{
-          label: "VIX",
-          data: [],
-          borderColor: "#f0c040",
-          backgroundColor: "rgba(240,192,64,0.08)",
-          borderWidth: 2,
-          pointRadius: 2,
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        animation: false,
-        scales: {
-          x: {
-            ticks: { color: "#888", maxTicksLimit: 8 },
-            grid: { color: "#222" }
-          },
-          y: {
-            ticks: { color: "#888" },
-            grid: { color: "#222" }
-          }
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "VIX",
+        data: [],
+        borderColor: "#f0c040",
+        backgroundColor: "rgba(240,192,64,0.08)",
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      animation: false,
+      scales: {
+        x: {
+          ticks: { color: "#888", maxTicksLimit: 8 },
+          grid: { color: "#222" }
         },
-        plugins: {
-          legend: { display: false }
+        y: {
+          ticks: { color: "#888" },
+          grid: { color: "#222" }
         }
-      }
-    });
-
-    async function fetchVix() {
-      try {
-        const res = await fetch("https://dashboard.jou0914.workers.dev/vix");
-        const data = await res.json();
-
-        if (data.price) {
-          // 更新數字顯示
-          document.getElementById("p2").textContent = data.price.toFixed(2);
-          document.getElementById("m2").textContent = "即時：" + data.time;
-
-          // 加入圖表（最多保留 100 筆）
-          chart.data.labels.push(data.time);
-          chart.data.datasets[0].data.push(data.price);
-
-          if (chart.data.labels.length > 100) {
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
-          }
-
-          chart.update();
-        }
-      } catch (e) {
-        document.getElementById("m2").textContent = "連線失敗";
+      },
+      plugins: {
+        legend: { display: false }
       }
     }
+  });
 
-    fetchVix();
-    setInterval(fetchVix, 30000);
-  </script>
+  async function fetchVix() {
+    try {
+      const res = await fetch("https://dashboard.jou0914.workers.dev/vix");
+      const data = await res.json();
+
+      if (data.price) {
+        document.getElementById("p2").textContent = data.price.toFixed(2);
+        document.getElementById("m2").textContent = "即時：" + data.time;
+
+        // 載入歷史資料
+        chart.data.labels = data.history.map(d => d.date);
+        chart.data.datasets[0].data = data.history.map(d => d.price);
+        chart.update();
+      }
+    } catch (e) {
+      document.getElementById("m2").textContent = "連線失敗";
+    }
+  }
+
+  fetchVix();
+  setInterval(fetchVix, 30000);
+</script>
 
 </body>
 </html>
