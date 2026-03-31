@@ -2,21 +2,21 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // --- [API 路由] 處理 VIX 數據 (使用 Google Finance 備援) ---
+    // --- [API 路由] 處理 VIX 數據 (改用 Google Finance 解析) ---
     if (url.pathname === "/api/vixtw") {
       try {
-        // 直接抓取 Google Finance 台股 VIX 頁面
+        // 直接抓取 Google Finance 頁面
         const gUrl = `https://www.google.com/finance/quote/VIXTW:INDEXTPE`;
         const res = await fetch(gUrl, {
           headers: { 
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7'
+            'Accept-Language': 'zh-TW,zh;q=0.9'
           }
         });
         
         const text = await res.text();
         
-        // 使用正則表達式精準定位 Google Finance 的最後收盤價標籤
+        // 使用正則表達式從 HTML 中提取價格
         const priceMatch = text.match(/data-last-price="([\d\.]+)"/);
         const latestPrice = priceMatch ? parseFloat(priceMatch[1]) : null;
 
@@ -33,7 +33,6 @@ export default {
           } 
         });
       } catch (e) {
-        // 若 Google 也失敗，回傳模擬參考值確保介面不跳錯
         return new Response(JSON.stringify({ 
           error: "數據源更新中", 
           price: 0, 
@@ -69,7 +68,7 @@ function generateHTML() {
         body { 
             background: var(--bg); color: var(--text); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            padding: 20px; margin: 0; line-height: 1.5;
+            padding: 20px; margin: 0;
         }
         .header { 
             display: flex; justify-content: space-between; align-items: center;
@@ -127,7 +126,6 @@ function generateHTML() {
         async function fetchStock() {
             log("正在抓取個股 7769...");
             try {
-                // 使用 FinMind 抓取鴻勁數據
                 const start = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
                 const res = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=' + start);
                 const json = await res.json();
@@ -154,7 +152,7 @@ function generateHTML() {
                 log("VIX 載入成功");
             } catch (e) {
                 log("VIX 失敗：" + e.message, true);
-                document.getElementById('m-vix').textContent = "來源端限制中";
+                document.getElementById('m-vix').textContent = "來源端連線異常";
             }
         }
 
