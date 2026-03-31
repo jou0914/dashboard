@@ -1,0 +1,22 @@
+<div id="p2">--</div>
+<div id="m2">載入中...</div>
+
+<script>
+async function fetchVix() {
+  try {
+    const res = await fetch("https://vix-worker.你的帳號.workers.dev/vix");
+    const data = await res.json();
+
+    if (data.price) {
+      document.getElementById("p2").textContent = data.price.toFixed(2);
+      document.getElementById("m2").textContent = "即時：" + data.time;
+    }
+  } catch (e) {
+    document.getElementById("m2").textContent = "連線失敗";
+  }
+}
+
+// 立即執行一次，之後每30秒更新
+fetchVix();
+setInterval(fetchVix, 30000);
+</script>
