@@ -3,7 +3,7 @@ export default {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Content-Type": "application/json;charset=UTF-8",
-      "Cache-Control": "no-store"
+      "Cache-Control": "max-age=30"
     };
 
     const cache = caches.default;
@@ -11,9 +11,7 @@ export default {
     const safeFetch = async (url) => {
       try {
         const res = await fetch(url, {
-          headers: {
-            "User-Agent": "Mozilla/5.0"
-          }
+          headers: { "User-Agent": "Mozilla/5.0" }
         });
         if (!res.ok) throw new Error(res.status);
         return await res.json();
@@ -23,8 +21,6 @@ export default {
     };
 
     const handle = async () => {
-      let data = { price: 0, change: 0, isUp: true };
-
       const path = new URL(request.url).pathname;
 
       // CNN
@@ -38,7 +34,7 @@ export default {
         }
       }
 
-      // Yahoo 即時
+      // Yahoo
       if (["/vix", "/vixtw", "/twd"].includes(path)) {
         const sym =
           path === "/vix"
@@ -61,7 +57,7 @@ export default {
         }
       }
 
-      // 股票（FinMind + fallback）
+      // 股票 7769
       if (path === "/7769") {
         const j = await safeFetch(
           "https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=7769&start_date=2026-03-20"
@@ -83,12 +79,13 @@ export default {
       return { error: "No Data" };
     };
 
-    // 🔥 Cloudflare Cache（30秒）
+    // 🔥 Cache（30秒）
     const cacheKey = new Request(request.url);
     let response = await cache.match(cacheKey);
 
     if (!response) {
       const data = await handle();
+
       response = new Response(JSON.stringify(data), {
         headers: corsHeaders
       });
