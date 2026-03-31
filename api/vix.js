@@ -2,7 +2,7 @@
 // Vercel Serverless Function — 中轉 Yahoo Finance VIX 數據
 // 放到專案根目錄的 /api/vix.js 即可，Vercel 自動部署為 /api/vix
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 // CORS headers — 允許你的 dashboard domain 呼叫
 res.setHeader(‘Access-Control-Allow-Origin’, ‘*’);
 res.setHeader(‘Access-Control-Allow-Methods’, ‘GET, OPTIONS’);
