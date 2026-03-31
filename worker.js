@@ -26,13 +26,13 @@ export default {
       const startDate = `${yyyy}-${mm}-01`;
 
       const [vix, fx, cnn, margin] = await Promise.all([
-        // ✅ 改用 v8 API
+        // 改用 v8 API
         safeFetch("https://query1.finance.yahoo.com/v8/finance/quote?symbols=%5EVIX"),
-        // ✅ Alpha Vantage USD/TWD
+        // Alpha Vantage USD/TWD
         safeFetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=TWD&apikey=${ALPHA_KEY}`),
-        // ✅ CNN Fear & Greed (alternative.me 仍正常)
+        // CNN Fear & Greed (alternative.me 仍正常)
         safeFetch("https://api.alternative.me/fng/"),
-        // ✅ FinMind 融資融券，動態日期
+        // FinMind 融資融券，動態日期
         safeFetch(`https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMarginPurchaseShortSale&data_id=TAIEX&start_date=${startDate}`)
       ]);
 
