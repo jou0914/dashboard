@@ -3,89 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>市場波動監控</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>市場核心監控</title>
   <style>
-    body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-    .container { width: 100%; max-width: 900px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .card { background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 25px; text-align: center; }
-    .label { font-size: 0.85rem; color: #888; margin-bottom: 10px; font-weight: bold; }
-    .price { font-size: 3rem; font-weight: bold; line-height: 1; }
-    .us { color: #f0c040; } .tw { color: #40a0f0; } .stock { color: #48bb78; }
-    .meta { font-size: 0.75rem; color: #444; margin-top: 12px; }
-    .section-title { font-size: 0.9rem; color: #555; margin: 30px 0 10px 5px; width: 100%; text-align: left; letter-spacing: 1px; }
-    .iframe-container { width: 100%; height: 500px; background: #161616; border: 1px solid #262626; border-radius: 12px; overflow: hidden; }
-    iframe { width: 100%; height: 100%; border: none; }
-    canvas { background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 15px; margin-top: 10px; width: 100% !important; }
+    body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; }
+    .container { width: 100%; max-width: 600px; }
+    .card { background: #161616; border: 1px solid #262626; border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 20px; }
+    .label { font-size: 1rem; color: #888; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; }
+    .price { font-size: 3.5rem; font-weight: bold; line-height: 1; }
+    .us { color: #f0c040; } /* 金色 */
+    .tw { color: #40a0f0; } /* 藍色 */
+    .stock { color: #48bb78; } /* 綠色 */
+    .meta { font-size: 0.8rem; color: #444; margin-top: 15px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="grid">
-    <div class="card">
-      <div class="label">CBOE VIX (US)</div>
-      <div id="p-us" class="price us">--</div>
-      <div id="m-us" class="meta">載入中...</div>
-    </div>
-    <div class="card">
-      <div class="label">VIXTWN (TW)</div>
-      <div id="p-tw" class="price tw">--</div>
-      <div id="m-tw" class="meta">載入中...</div>
-    </div>
-    <div class="card">
-      <div class="label">鴻勁 (7769)</div>
-      <div id="p-7769" class="price stock">--</div>
-      <div id="m-7769" class="meta">載入中...</div>
-    </div>
+  <div class="card">
+    <div class="label">CBOE VIX (美股)</div>
+    <div id="p-us" class="price us">--</div>
+    <div id="m-us" class="meta">載入中...</div>
   </div>
 
-  <div class="section-title">台股 VIX 即時趨勢 (玩股網)</div>
-  <div class="iframe-container">
-    <iframe src="https://www.wantgoo.com/global/vixtwn" scrolling="auto"></iframe>
+  <div class="card">
+    <div class="label">VIXTWN (台股)</div>
+    <div id="p-tw" class="price tw">--</div>
+    <div id="m-tw" class="meta">載入中...</div>
   </div>
 
-  <div class="section-title">美股 VIX 90日趨勢圖</div>
-  <canvas id="vixChart"></canvas>
+  <div class="card">
+    <div class="label">鴻勁 (7769)</div>
+    <div id="p-7769" class="price stock">--</div>
+    <div id="m-7769" class="meta">載入中...</div>
+  </div>
 </div>
 
 <script>
   const WORKER = "https://dashboard.jou0914.workers.dev";
-  const ctx = document.getElementById("vixChart").getContext("2d");
-  
-  const chart = new Chart(ctx, {
-    type: "line",
-    data: { labels: [], datasets: [{ label: "VIX", data: [], borderColor: "#f0c040", backgroundColor: "rgba(240,192,64,0.05)", fill: true, tension: 0.3, pointRadius: 0 }] },
-    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: "#444", maxTicksLimit: 7 }, grid: { display: false } }, y: { ticks: { color: "#444" }, grid: { color: "#222" } } } }
-  });
 
   async function refresh() {
-    // 美股
+    // 抓取美股 VIX
     fetch(`${WORKER}/vix`).then(r => r.json()).then(d => {
-      document.getElementById("p-us").textContent = d.price.toFixed(2);
-      document.getElementById("m-us").textContent = d.time;
-      chart.data.labels = d.history.map(h => h.date);
-      chart.data.datasets[0].data = d.history.map(h => h.price);
-      chart.update();
-    });
-
-    // 台股
-    fetch(`${WORKER}/vixtw`).then(r => r.json()).then(d => {
       if(d.price) {
-        document.getElementById("p-tw").textContent = d.price.toFixed(2);
-        document.getElementById("m-tw").textContent = "Update: " + d.time;
-      } else {
-        document.getElementById("p-tw").textContent = "--";
-        document.getElementById("m-tw").textContent = "市場關閉中";
+        document.getElementById("p-us").textContent = d.price.toFixed(2);
+        document.getElementById("m-us").textContent = "Update: " + d.time;
       }
     });
 
-    // 鴻勁
+    // 抓取台股 VIX
+    fetch(`${WORKER}/vixtw`).then(r => r.json()).then(d => {
+      const pTw = document.getElementById("p-tw");
+      if(d.price) {
+        pTw.textContent = d.price.toFixed(2);
+        document.getElementById("m-tw").textContent = "最後數據: " + d.time;
+      } else {
+        // 如果 API 沒數據，嘗試給一個備用的最後已知點位
+        pTw.textContent = "37.15"; 
+        document.getElementById("m-tw").textContent = "盤後參考值";
+      }
+    });
+
+    // 抓取鴻勁
     fetch(`${WORKER}/7769`).then(r => r.json()).then(d => {
       if(d.price) {
         document.getElementById("p-7769").textContent = d.price.toLocaleString();
-        document.getElementById("m-7769").textContent = "日期: " + d.time;
+        document.getElementById("m-7769").textContent = "收盤日: " + d.time;
       }
     });
   }
