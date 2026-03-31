@@ -3,66 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 鴻勁 股價監測</title>
+    <title>7769 鴻勁 股價監測 (Debug版)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #fff; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        h1 { color: #333; margin-bottom: 0.5rem; }
-        .symbol { color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; }
-        .price { font-size: 3rem; font-weight: bold; color: #e74c3c; margin: 10px 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #fff; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; margin-bottom: 20px; }
+        h1 { color: #333; margin: 0; }
+        .symbol { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+        .price { font-size: 3.5rem; font-weight: bold; color: #e74c3c; margin: 10px 0; }
         .info { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-        .update-btn { margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
-        .update-btn:hover { background: #2980b9; }
-        #loading { font-size: 0.8rem; color: #999; }
+        .update-btn { margin-top: 20px; padding: 12px 25px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%; }
+        .update-btn:hover { background: #0056b3; }
+        #status { font-size: 0.8rem; color: #888; margin-top: 10px; }
+        
+        /* Debug Log 樣式 */
+        .debug-container { width: 90%; max-width: 500px; background: #222; color: #00ff00; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; overflow-x: auto; box-shadow: inset 0 0 10px #000; }
+        .debug-title { color: #fff; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>鴻勁</h1>
-    <div class="symbol">7769.TPE (Alpha Vantage 資料來源)</div>
+    <div class="symbol">7769.TPE</div>
     <div id="price" class="price">--.--</div>
-    <div id="loading">準備就緒</div>
+    <div id="status">等待更新...</div>
     
     <div class="info">
-        <div><span>開盤:</span> <strong id="open">--</strong></div>
-        <div><span>最高:</span> <strong id="high">--</strong></div>
+        <div>開盤: <strong id="open">--</strong></div>
+        <div>最高: <strong id="high">--</strong></div>
     </div>
     
     <button class="update-btn" onclick="fetchStockData()">更新行情</button>
 </div>
 
+<div class="debug-container">
+    <div class="debug-title">
+        <span>Debug Log (API 回傳紀錄)</span>
+        <span style="cursor:pointer" onclick="document.getElementById('log').innerText=''">清除</span>
+    </div>
+    <div id="log">尚未有資料紀錄...</div>
+</div>
+
 <script>
-    // 請在此處填入您的 API 金鑰
     const API_KEY = '12F9YHGH3T1063OB';
     const SYMBOL = '7769.TPE';
 
     async function fetchStockData() {
-        const loadingText = document.getElementById('loading');
-        loadingText.innerText = '讀取中...';
+        const priceEl = document.getElementById('price');
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
         
+        statusEl.innerText = '正在連線至 Alpha Vantage...';
+        logEl.innerText = `[${new Date().toLocaleTimeString()}] 發送請求至: ${SYMBOL}\n` + logEl.innerText;
+
         try {
-            const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${SYMBOL}&apikey=${API_KEY}`);
+            // 使用 Global Quote 函數
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${SYMBOL}&apikey=${API_KEY}`;
+            const response = await fetch(url);
             const data = await response.json();
-            
+
+            // 記錄原始回傳內容到 Debug Log
+            logEl.innerText = `[回傳數據]: ${JSON.stringify(data)}\n\n` + logEl.innerText;
+
+            if (data["Note"]) {
+                statusEl.innerText = '錯誤：達到 API 呼叫頻率限制 (每分鐘5次)';
+                return;
+            }
+
             const quote = data["Global Quote"];
             
             if (quote && quote["05. price"]) {
-                document.getElementById('price').innerText = parseFloat(quote["05. price"]).toFixed(2);
+                priceEl.innerText = parseFloat(quote["05. price"]).toFixed(2);
                 document.getElementById('open').innerText = parseFloat(quote["02. open"]).toFixed(2);
                 document.getElementById('high').innerText = parseFloat(quote["03. high"]).toFixed(2);
-                loadingText.innerText = `最後更新: ${quote["07. latest trading day"]}`;
+                statusEl.innerText = `更新成功: ${quote["07. latest trading day"]}`;
+            } else if (data["Error Message"]) {
+                statusEl.innerText = '代碼無效或格式錯誤';
             } else {
-                loadingText.innerText = '找不到資料或 API 次數達上限';
+                statusEl.innerText = '此代碼目前無資料 (查無 7769.TPE)';
+                // 嘗試另一個可能的後綴
+                logEl.innerText = `[提示]: 若 7769.TPE 無資料，可能是 Alpha Vantage 尚未收錄此新股。\n` + logEl.innerText;
             }
+
         } catch (error) {
-            console.error('Error:', error);
-            loadingText.innerText = '連線錯誤';
+            logEl.innerText = `[錯誤]: ${error.message}\n` + logEl.innerText;
+            statusEl.innerText = '網路連線失敗';
         }
     }
 
-    // 初始載入
-    fetchStockData();
+    // 頁面載入後自動執行一次
+    window.onload = fetchStockData;
 </script>
 
 </body>
