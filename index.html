@@ -1,49 +1,71 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>市場監控儀表板</title>
-  <style>
-    body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
-    .container { width: 100%; max-width: 500px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
-    .full { grid-column: span 2; }
-    .label { font-size: 0.75rem; color: #666; margin-bottom: 8px; font-weight: bold; }
-    .price { font-size: 2.5rem; font-weight: bold; }
-    .cnn-c { color: #ff5f5f; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
-    .meta { font-size: 0.7rem; color: #333; margin-top: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市場監控 (Debug Mode)</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 500px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
+        .full { grid-column: span 2; }
+        .label { font-size: 0.75rem; color: #666; margin-bottom: 8px; font-weight: bold; }
+        .price { font-size: 2.5rem; font-weight: bold; }
+        .cnn-c { color: #ff5f5f; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
+        .meta { font-size: 0.7rem; color: #333; margin-top: 5px; }
+    </style>
 </head>
 <body>
 <div class="container">
-  <div class="grid">
-    <div class="card full"><div class="label">CNN FEAR & GREED</div><div id="p-cnn" class="price cnn-c">--</div><div id="m-cnn" class="meta">--</div></div>
-    <div class="card"><div class="label">VIX (US)</div><div id="p-vix" class="price vix-c">--</div></div>
-    <div class="card"><div class="label">VIX (TW)</div><div id="p-vtw" class="price tw-c">--</div></div>
-    <div class="card"><div class="label">USD / TWD</div><div id="p-twd" class="price twd-c">--</div></div>
-    <div class="card"><div class="label">7769 (鴻勁)</div><div id="p-7769" class="price s-c">--</div></div>
-  </div>
+    <div class="grid">
+        <div class="card full"><div class="label">CNN FEAR & GREED</div><div id="p-cnn" class="price cnn-c">--</div><div id="m-cnn" class="meta">--</div></div>
+        <div class="card"><div class="label">VIX (US)</div><div id="p-vix" class="price vix-c">--</div></div>
+        <div class="card"><div class="label">VIX (TW)</div><div id="p-vtw" class="price tw-c">--</div></div>
+        <div class="card"><div class="label">USD / TWD</div><div id="p-twd" class="price twd-c">--</div></div>
+        <div class="card"><div class="label">7769 (鴻勁)</div><div id="p-7769" class="price s-c">--</div></div>
+    </div>
 </div>
+
 <script>
-  const API = "https://dashboard.jou0914.workers.dev";
-  async function refresh() {
-    const getData = (path, id, fix = 2) => {
-      fetch(`${API}${path}`).then(r => r.json()).then(d => {
-        const p = d.price;
-        document.getElementById(id).textContent = (p !== null && p !== undefined) ? (id === 'p-7769' ? p.toLocaleString() : p.toFixed(fix)) : "--";
-        if(id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label || "--";
-      }).catch(() => document.getElementById(id).textContent = "--");
-    };
-    getData('/cnn', 'p-cnn', 0);
-    getData('/vix', 'p-vix', 2);
-    getData('/vixtw', 'p-vtw', 2);
-    getData('/twd', 'p-twd', 3);
-    getData('/7769', 'p-7769');
-  }
-  refresh();
-  setInterval(refresh, 300000); // 考慮到 API 額度，改為每 5 分鐘刷新一次
+    const API = "https://dashboard.jou0914.workers.dev";
+
+    async function refresh() {
+        console.log(`%c[${new Date().toLocaleTimeString()}] Starting Refresh...`, "color: #a084ff; font-weight: bold;");
+
+        const updateItem = async (path, id, fix = 2) => {
+            console.group(`Fetching: ${path}`);
+            try {
+                const res = await fetch(`${API}${path}`);
+                const d = await res.json();
+                console.log("Response Data:", d);
+
+                const el = document.getElementById(id);
+                if (d.price !== null && d.price !== undefined) {
+                    el.textContent = (id === 'p-7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
+                    if (id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label;
+                } else {
+                    console.warn(`Value is null for ${id}`);
+                    el.textContent = "--";
+                }
+            } catch (err) {
+                console.error(`Fetch Error for ${path}:`, err);
+                document.getElementById(id).textContent = "--";
+            }
+            console.groupEnd();
+        };
+
+        await Promise.all([
+            updateItem('/cnn', 'p-cnn', 0),
+            updateItem('/vix', 'p-vix', 2),
+            updateItem('/vixtw', 'p-vtw', 2),
+            updateItem('/twd', 'p-twd', 3),
+            updateItem('/7769', 'p-7769')
+        ]);
+    }
+
+    refresh();
+    setInterval(refresh, 300000); // 5分鐘刷新一次
 </script>
 </body>
 </html>
