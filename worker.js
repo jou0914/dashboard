@@ -14,8 +14,19 @@ export default {
         );
         const json = await res.json();
 
-        // 先把原始資料回傳來看格式
-        return new Response(JSON.stringify(json), { headers: corsHeaders });
+        const dataPoints = json.data;
+        const last = dataPoints[dataPoints.length - 1];
+        const price = parseFloat(last.close);
+        const date = last.date;
+
+        return new Response(
+          JSON.stringify({
+            type: "vix",
+            price: price,
+            time: date
+          }),
+          { headers: corsHeaders }
+        );
 
       } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), {
