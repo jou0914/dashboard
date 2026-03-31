@@ -1,36 +1,25 @@
-export default {
-  async fetch(request, env, ctx) {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*", // 允許您的 Pages 網域存取
-      "Content-Type": "application/json"
-    };
-
+async function fetchVIXTW() {
     try {
-      const url = "https://corsproxy.io/?https://www.taifex.com.tw/file/taifex/CHINESE/3/vixDaily.csv";
-      const response = await fetch(url);
-      let text = await response.text();
-
-      text = text.replace(/^\uFEFF/, ""); // 移除 BOM
-      const rows = text.split(/\r?\n/);
-      const parsed = rows.slice(1).map(r => r.trim()).filter(Boolean).map(r => {
-        const [date, raw] = r.split(",");
-        const price = parseFloat((raw || "").replace(/[^0-9.]/g, ""));
-        return { date, price };
-      }).filter(d => d.date && d.price);
-
-      if (parsed.length < 2) throw new Error("資料不足");
-
-      const latest = parsed.at(-1);
-      const prev = parsed.at(-2);
-
-      return new Response(JSON.stringify({
-        price: latest.price,
-        change: latest.price - prev.price,
-        status: "success"
-      }), { headers: corsHeaders });
-
-    } catch (error) {
-      return new Response(JSON.stringify({ error: error.message, status: "error" }), { headers: corsHeaders });
+        // 因為都在同一個 Cloudflare Worker 下，使用相對路徑即可
+        const response = await fetch('/api/vixtw');
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            const price = data.price;
+            const status = getVixStatus(price);
+            
+            document.getElementById('vixtw-num').textContent = price.toFixed(2);
+            document.getElementById('vixtw-num').style.color = status.col;
+            document.getElementById('vixtw-status').textContent = status.lbl;
+            document.getElementById('vixtw-status').style.color = status.col;
+            
+            // 指針位置 (VIX 10~40 區間)
+            const pos = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
+            document.getElementById('vixtw-needle').style.left = pos + '%';
+        }
+    } catch (e) {
+        document.getElementById('vixtw-status').textContent = "等待有效數據";
+        document.getElementById('vixtw-status').style.color = "var(--text-muted)";
     }
-  }
-};
+}
