@@ -1,0 +1,25 @@
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  try {
+    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=10d';
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }
+    });
+    if (!r.ok) throw new Error(`Yahoo ${r.status}`);
+    const data = await r.json();
+    const result = data.chart.result[0];
+    const closes = result.indicators.quote[0].close.filter(Boolean);
+    const price = result.meta.regularMarketPrice ?? closes[closes.length-1];
+    const prev  = closes[closes.length-2] ?? price;
+    const change = price - prev;
+    res.status(200).json({
+      price:     parseFloat(price.toFixed(2)),
+      change:    parseFloat(change.toFixed(2)),
+      changePct: parseFloat((change/prev*100).toFixed(2)),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch(err) {
+    res.status(502).json({ error: err.message });
+  }
+};
