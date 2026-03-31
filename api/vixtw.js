@@ -13,43 +13,46 @@ export default async function handler(req, res) {
     // 🔥 清 BOM
     text = text.replace(/^\uFEFF/, "");
 
-    // 🔥 正確切行（支援 \r\n）
     const rows = text.split(/\r?\n/);
 
-    // 🔥 去掉標題 + 空行
-    const data = rows
+    const parsed = rows
       .slice(1)
       .map(row => row.trim())
       .filter(row => row.length > 0)
-      .map(row => row.split(","));
+      .map(row => {
+        const cols = row.split(",");
 
-    // 🔥 防呆
-    const valid = data.filter(r => r.length >= 2 && !isNaN(parseFloat(r[1])));
+        // 🔥 清掉奇怪符號
+        const date = cols[0]?.trim();
+        const priceRaw = cols[1]?.replace(/[^0-9.]/g, "");
 
-    if (valid.length < 2) {
+        const price = parseFloat(priceRaw);
+
+        return { date, price };
+      })
+      .filter(d => d.date && !isNaN(d.price) && d.price > 0);
+
+    if (parsed.length < 2) {
       return res.status(200).json({
         price: 0,
         status: "無有效資料",
-        debug: valid.length,
+        debug: parsed, // 🔥 看實際解析結果
       });
     }
 
-    const latest = valid.at(-1);
-    const prev = valid.at(-2);
-
-    const latestVIX = parseFloat(latest[1]);
-    const prevVIX = parseFloat(prev[1]);
+    const latest = parsed.at(-1);
+    const prev = parsed.at(-2);
 
     res.status(200).json({
-      price: latestVIX,
-      change: latestVIX - prevVIX,
-      changePct: ((latestVIX - prevVIX) / prevVIX) * 100,
-      date: latest[0],
+      price: latest.price,
+      change: latest.price - prev.price,
+      changePct: ((latest.price - prev.price) / prev.price) * 100,
+      date: latest.date,
       status: "success",
     });
 
   } catch (error) {
-    console.error("ERROR:", error);
+    console.error(error);
 
     res.status(200).json({
       error: "抓取失敗",
