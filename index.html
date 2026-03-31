@@ -2,84 +2,142 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>全球波動率監控</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全球波動率監控儀表板</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { background: #0f0f0f; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    .container { max-width: 800px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    .card { background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #333; }
-    h1 { font-size: 0.9rem; color: #888; margin: 0 0 10px 0; }
-    .price { font-size: 2.5rem; font-weight: bold; }
-    .vix-us { color: #f0c040; } /* 美股金黃色 */
-    .vix-tw { color: #40a0f0; } /* 台股藍色 */
-    .time { font-size: 0.75rem; color: #555; margin-top: 8px; }
-    canvas { max-width: 800px; width: 100%; background: #1a1a1a; border-radius: 12px; padding: 10px; border: 1px solid #333; }
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .header { width: 100%; max-width: 800px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+    .header h1 { font-size: 1.2rem; color: #888; margin: 0; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background: #161616;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .label { font-size: 0.85rem; color: #888; margin-bottom: 8px; font-weight: bold; }
+    .price { font-size: 2.8rem; font-weight: bold; line-height: 1; }
+    .us-vix { color: #f0c040; } /* 原本的 CBOE 金色 */
+    .tw-vix { color: #40a0f0; } /* 台股藍色 */
+    .meta { font-size: 0.75rem; color: #555; margin-top: 10px; }
+    
+    .chart-container {
+      background: #161616;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 15px;
+      width: 100%;
+      max-width: 800px;
+      box-sizing: border-box;
+    }
+    canvas { width: 100% !important; }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="header">
+    <h1>MARKET VOLATILITY INDEX</h1>
+  </div>
+
+  <div class="grid">
     <div class="card">
-      <h1>CBOE VIX (美股)</h1>
-      <div id="p-us" class="price vix-us">--</div>
-      <div id="t-us" class="time">載入中...</div>
+      <div class="label">CBOE VIX (美股恐慌指數)</div>
+      <div id="p-us" class="price us-vix">--</div>
+      <div id="m-us" class="meta">載入中...</div>
     </div>
 
     <div class="card">
-      <h1>VIXTWN (台股)</h1>
-      <div id="p-tw" class="price vix-tw">--</div>
-      <div id="t-tw" class="time">等待數據...</div>
+      <div class="label">VIXTWN (台股波動率)</div>
+      <div id="p-tw" class="price tw-vix">--</div>
+      <div id="m-tw" class="meta">等待數據...</div>
     </div>
   </div>
 
-  <canvas id="vixChart"></canvas>
+  <div class="chart-container">
+    <div style="font-size: 0.8rem; color: #555; margin-bottom: 10px;">CBOE VIX 90日趨勢圖</div>
+    <canvas id="vixChart"></canvas>
+  </div>
   
 <script>
   const WORKER_URL = "https://dashboard.jou0914.workers.dev";
   const ctx = document.getElementById("vixChart").getContext("2d");
 
-  // 初始化圖表 (僅顯示美股 VIX 歷史)
+  // 初始化圖表 (保留原本美觀的樣式)
   const chart = new Chart(ctx, {
     type: "line",
     data: {
       labels: [],
       datasets: [{
-        label: "CBOE VIX 歷史軌跡",
+        label: "VIX",
         data: [],
         borderColor: "#f0c040",
-        backgroundColor: "rgba(240,192,64,0.05)",
+        backgroundColor: "rgba(240,192,64,0.08)",
         borderWidth: 2,
+        pointRadius: 0,
         tension: 0.3,
         fill: true
       }]
     },
-    options: { plugins: { legend: { display: false } } }
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#444", maxTicksLimit: 6 }, grid: { display: false } },
+        y: { ticks: { color: "#444" }, grid: { color: "#222" } }
+      }
+    }
   });
 
-  async function fetchData() {
-    // 1. 抓取美股 VIX
+  async function updateDashboard() {
+    // 1. 抓取美股 VIX 並更新圖表
     try {
       const resUs = await fetch(`${WORKER_URL}/vix`);
       const dataUs = await resUs.json();
-      document.getElementById("p-us").textContent = dataUs.price.toFixed(2);
-      document.getElementById("t-us").textContent = "更新：" + dataUs.time;
-      
-      // 更新圖表
-      chart.data.labels = dataUs.history.map(d => d.date);
-      chart.data.datasets[0].data = dataUs.history.map(d => d.price);
-      chart.update();
-    } catch (e) { console.error("US VIX Error", e); }
+      if (dataUs.price) {
+        document.getElementById("p-us").textContent = dataUs.price.toFixed(2);
+        document.getElementById("m-us").textContent = "Update: " + dataUs.time;
+        
+        chart.data.labels = dataUs.history.map(h => h.date);
+        chart.data.datasets[0].data = dataUs.history.map(h => h.price);
+        chart.update();
+      }
+    } catch (e) { console.error("US VIX Error"); }
 
-    // 2. 抓取台股 VIX
+    // 2. 抓取台股 VIX (使用剛剛修復好的 /vixtw 路由)
     try {
       const resTw = await fetch(`${WORKER_URL}/vixtw`);
       const dataTw = await resTw.json();
-      document.getElementById("p-tw").textContent = dataTw.price.toFixed(2);
-      document.getElementById("t-tw").textContent = "更新：" + dataTw.time;
-    } catch (e) { console.error("TW VIX Error", e); }
+      if (dataTw.price > 0) {
+        document.getElementById("p-tw").textContent = dataTw.price.toFixed(2);
+        document.getElementById("m-tw").textContent = "最後更新：" + dataTw.time;
+      } else {
+        document.getElementById("m-tw").textContent = "台股收盤中 / 無數據";
+      }
+    } catch (e) { console.error("TW VIX Error"); }
   }
 
-  fetchData();
+  updateDashboard();
 </script>
 </body>
 </html>
