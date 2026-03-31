@@ -1,90 +1,102 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>VIX 即時指數</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      background: #0f0f0f;
-      color: #fff;
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px;
-    }
-    h1 { font-size: 1.2rem; color: #aaa; margin-bottom: 4px; }
-    #p2 { font-size: 3rem; font-weight: bold; color: #f0c040; }
-    #m2 { font-size: 0.85rem; color: #666; margin-bottom: 20px; }
-    canvas { max-width: 800px; width: 100%; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>核心資產監控 v6.8</title>
+    <style>
+        :root { 
+            --bg: #0a0a0a; --card: #161616; --border: #262626; 
+            --text: #ffffff; --muted: #888888; --accent: #f6ad55; 
+            --red: #f56565; --green: #48bb78; 
+        }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            padding: 20px; margin: 0; line-height: 1.5;
+        }
+        .header { 
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px;
+        }
+        .version { color: var(--accent); font-size: 12px; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .card { 
+            background: var(--card); border: 1px solid var(--border); 
+            border-radius: 12px; padding: 20px; transition: transform 0.2s;
+        }
+        .label { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+        .price { font-size: 32px; font-weight: bold; color: var(--accent); font-variant-numeric: tabular-nums; }
+        .meta { font-size: 12px; color: var(--muted); margin-top: 10px; }
+        #debug { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; 
+            background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; 
+            font-size: 10px; padding: 10px; overflow-y: auto; border-top: 1px solid #333;
+            box-sizing: border-box; opacity: 0.8; pointer-events: none;
+        }
+    </style>
 </head>
 <body>
+    <div class="header">
+        <div style="font-size: 18px; font-weight: bold;">MY DAILY BRIEF</div>
+        <div class="version">v6.8 雙指標整合</div>
+    </div>
 
-  <h1>CBOE VIX 恐慌指數</h1>
-  <div id="p2">--</div>
-  <div id="m2">載入中...</div>
-  <canvas id="vixChart"></canvas>
-  
-<script>
-  const ctx = document.getElementById("vixChart").getContext("2d");
+    <div class="grid">
+        <div class="card">
+            <div class="label">鴻勁 (7769:TPE)</div>
+            <div id="p-7769" class="price">--</div>
+            <div id="m-7769" class="meta">載入中...</div>
+        </div>
 
-  const chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "VIX",
-        data: [],
-        borderColor: "#f0c040",
-        backgroundColor: "rgba(240,192,64,0.08)",
-        borderWidth: 2,
-        pointRadius: 2,
-        tension: 0.3,
-        fill: true
-      }]
-    },
-    options: {
-      animation: false,
-      scales: {
-        x: {
-          ticks: { color: "#888", maxTicksLimit: 8 },
-          grid: { color: "#222" }
-        },
-        y: {
-          ticks: { color: "#888" },
-          grid: { color: "#222" }
+        <div class="card">
+            <div class="label">台股波動率 (VIXTWN)</div>
+            <div id="p-vix" class="price">--</div>
+            <div id="m-vix" class="meta">等待數據更新...</div>
+        </div>
+    </div>
+
+    <div id="debug"><div>[SYSTEM] 啟動監控模組...</div></div>
+
+    <script>
+        // 設定您的 Cloudflare Worker 網址
+        const WORKER_URL = "https://dashboard.jou0914.workers.dev";
+
+        function log(m, isError = false) {
+            const container = document.getElementById('debug');
+            const entry = document.createElement('div');
+            if (isError) entry.style.color = '#f56565';
+            entry.textContent = "[" + new Date().toLocaleTimeString() + "] " + m;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
         }
-      },
-      plugins: {
-        legend: { display: false }
-      }
-    }
-  });
 
-  async function fetchVix() {
-    try {
-      const res = await fetch("https://dashboard.jou0914.workers.dev/vix");
-      const data = await res.json();
+        async function updateData(symbol, elementId, metaId) {
+            log(`正在抓取 ${symbol}...`);
+            try {
+                // 呼叫 Worker 的 API 路由
+                const response = await fetch(`${WORKER_URL}/api/data?symbol=${symbol}`);
+                const data = await response.json();
+                
+                if (data.price && data.price > 0) {
+                    const displayPrice = (symbol === 'VIXTW') ? data.price.toFixed(2) : data.price.toLocaleString();
+                    document.getElementById(elementId).textContent = displayPrice;
+                    document.getElementById(metaId).textContent = "最後更新：" + data.date;
+                    log(`${symbol} 更新成功: ${displayPrice}`);
+                } else {
+                    throw new Error("數據格式錯誤");
+                }
+            } catch (e) {
+                log(`${symbol} 抓取失敗: ${e.message}`, true);
+                document.getElementById(metaId).textContent = "暫時無法取得數據";
+            }
+        }
 
-      if (data.price) {
-        document.getElementById("p2").textContent = data.price.toFixed(2);
-        document.getElementById("m2").textContent = "即時：" + data.time;
-
-        // 載入歷史資料
-        chart.data.labels = data.history.map(d => d.date);
-        chart.data.datasets[0].data = data.history.map(d => d.price);
-        chart.update();
-      }
-    } catch (e) {
-      document.getElementById("m2").textContent = "連線失敗";
-    }
-  }
-
-  fetchVix();
-  setInterval(fetchVix, 30000);
-</script>
-
+        // 頁面載入後立即執行
+        window.onload = () => {
+            updateData('7769', 'p-7769', 'm-7769');
+            updateData('VIXTW', 'p-vix', 'm-vix');
+        };
+    </script>
 </body>
 </html>
