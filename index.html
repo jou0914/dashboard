@@ -4,116 +4,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MY DAILY BRIEF | 核心資產監控 v6.2</title>
+    <title>MY DAILY BRIEF | 核心資產監控 v6.3</title>
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --card-bg: #161616;
-            --border: #262626;
-            --text-main: #ffffff;
-            --text-muted: #888888;
-            --red: #f56565;
-            --green: #48bb78;
-            --yellow: #f6ad55;
-            --blue: #4299e1;
-        }
-        body { background: var(--bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .logo { font-weight: bold; letter-spacing: 1px; }
-        .logo span { color: var(--yellow); }
-        .time { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .section-title { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; position: relative; overflow: hidden; }
-        .card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
-        .price-large { font-size: 2rem; font-weight: bold; margin: 8px 0; }
-        .change-tag { font-size: 0.9rem; font-weight: 500; }
-        .card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; }
-        canvas.spark { width: 100%; height: 45px; display: block; margin-top: 10px; border-radius: 4px; }
-        .gauge-container { height: 4px; border-radius: 2px; margin: 12px 0 4px; position: relative; background: linear-gradient(to right, var(--green) 0%, var(--yellow) 50%, var(--red) 100%); }
-        .needle { width: 4px; height: 12px; background: white; position: absolute; top: -4px; border-radius: 2px; transition: left 0.5s ease; }
-        .memo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .memo-card { background: rgba(255,255,255,0.02); border-radius: 4px; padding: 12px; font-size: 0.8rem; }
-        .memo-title { color: var(--yellow); margin-bottom: 8px; font-weight: bold; }
-        .memo-item { color: var(--text-muted); margin-bottom: 4px; }
-        @media(max-width:600px){ .memo-grid{ grid-template-columns:1fr; } }
+        :root { --bg:#0a0a0a; --card:#161616; --border:#262626; --text:#ffffff; --muted:#888888; --red:#f56565; --green:#48bb78; --yellow:#f6ad55; }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:20px;}
+        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+        .logo{font-weight:bold;letter-spacing:1px;} .logo span{color:var(--yellow);}
+        .time{color:var(--muted);font-size:0.9rem;font-family:monospace;}
+        .sec{font-size:0.75rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em;}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;}
+        .card-hd{font-size:0.8rem;color:var(--muted);margin-bottom:8px;}
+        .price{font-size:2rem;font-weight:bold;margin:8px 0;}
+        .chg{font-size:0.9rem;font-weight:500;} .meta{font-size:0.7rem;color:var(--muted);margin-top:8px;}
+        canvas.spark{width:100%;height:45px;display:block;margin-top:10px;border-radius:4px;}
+        .gauge-wrap{height:4px;border-radius:2px;margin:12px 0 4px;position:relative;}
+        .needle{width:4px;height:12px;background:white;position:absolute;top:-4px;border-radius:2px;transition:left 0.5s ease;}
+        .memo-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        @media(max-width:600px){.memo-grid{grid-template-columns:1fr;}}
+        .memo{background:rgba(255,255,255,0.02);border-radius:4px;padding:12px;font-size:0.8rem;}
+        .memo-title{color:var(--yellow);margin-bottom:8px;font-weight:bold;}
+        .memo-item{color:var(--muted);margin-bottom:4px;}
     </style>
 </head>
 <body>
-
 <header>
-    <div class="logo">MY DAILY BRIEF / <span>核心資產監控系統 v6.2</span></div>
+    <div class="logo">MY DAILY BRIEF / <span>核心資產監控系統 v6.3</span></div>
     <div class="time" id="clock">--:--:-- --/--</div>
 </header>
 
-<!-- 台股 -->
-
-<div class="section-title">🚀 核心追蹤 (FinMind 即時)</div>
+<div class="sec">🚀 核心追蹤 (FinMind 即時)</div>
 <div class="grid" id="tw-grid"></div>
 
-<!-- 全球 -->
+<div class="sec">🌎 全球核心指標</div>
+<div class="grid" id="global-grid"></div>
 
-<div class="section-title">🌎 全球核心指標 (TradingView)</div>
+<div class="sec">🎭 市場情緒指標</div>
 <div class="grid">
     <div class="card">
-        <div class="card-header"><span>USD/TWD 美元/台幣</span></div>
-        <div id="p-usdtwd" class="price-large">--</div>
-        <div id="c-usdtwd" class="change-tag">載入中…</div>
-        <canvas class="spark" id="sp-usdtwd" style="height:45px"></canvas>
-        <div id="m-usdtwd" class="card-meta"></div>
+        <div class="card-hd">加密恐懼貪婪 F&G</div>
+        <div id="fg-num" class="price">--</div>
+        <div id="fg-lbl" class="chg">載入中…</div>
+        <div class="gauge-wrap" style="background:linear-gradient(to right,#f56565,#f6ad55,#48bb78)">
+            <div id="fg-needle" class="needle" style="left:50%"></div>
+        </div>
     </div>
     <div class="card">
-        <div class="card-header"><span>XAU/USD 黃金現貨</span></div>
-        <div id="p-xauusd" class="price-large">--</div>
-        <div id="c-xauusd" class="change-tag">載入中…</div>
-        <canvas class="spark" id="sp-xauusd" style="height:45px"></canvas>
-        <div id="m-xauusd" class="card-meta"></div>
+        <div class="card-hd">美股波動率 VIX</div>
+        <div id="vix-num" class="price">--</div>
+        <div id="vix-lbl" class="chg">載入中…</div>
+        <div class="gauge-wrap" style="background:linear-gradient(to right,#48bb78,#f6ad55,#f56565)">
+            <div id="vix-needle" class="needle" style="left:30%"></div>
+        </div>
     </div>
     <div class="card">
-        <div class="card-header"><span>TLT 美國公債 ETF</span></div>
-        <div id="p-tlt" class="price-large">--</div>
-        <div id="c-tlt" class="change-tag">載入中…</div>
-        <canvas class="spark" id="sp-tlt" style="height:45px"></canvas>
-        <div id="m-tlt" class="card-meta"></div>
+        <div class="card-hd">台股波動率 VIXTW</div>
+        <div id="vixtw-num" class="price">--</div>
+        <div id="vixtw-lbl" class="chg">載入中…</div>
+        <div class="gauge-wrap" style="background:linear-gradient(to right,#48bb78,#f6ad55,#f56565)">
+            <div id="vixtw-needle" class="needle" style="left:50%"></div>
+        </div>
+        <div id="vixtw-meta" class="meta"></div>
     </div>
 </div>
 
-<!-- 情緒 -->
-
-<div class="section-title">🎭 市場情緒指標</div>
-<div class="grid">
-    <div class="card">
-        <div class="card-header"><span>加密恐懼貪婪 F&G</span></div>
-        <div id="fg-num" class="price-large">--</div>
-        <div id="fg-lbl" class="change-tag">載入中…</div>
-        <div class="gauge-container"><div id="fg-needle" class="needle" style="left:50%"></div></div>
-    </div>
-    <div class="card">
-        <div class="card-header"><span>美股波動率 VIX</span></div>
-        <div id="vix-num" class="price-large">--</div>
-        <div id="vix-lbl" class="change-tag">載入中…</div>
-        <div class="gauge-container"><div id="vix-needle" class="needle" style="left:30%"></div></div>
-        <div id="vix-meta" class="card-meta"></div>
-    </div>
-    <div class="card">
-        <div class="card-header"><span>台股波動率 VIXTW</span></div>
-        <div id="vixtw-num" class="price-large">--</div>
-        <div id="vixtw-lbl" class="change-tag">載入中…</div>
-        <div class="gauge-container"><div id="vixtw-needle" class="needle" style="left:50%"></div></div>
-        <div id="vixtw-meta" class="card-meta"></div>
-    </div>
-</div>
-
-<!-- 備忘 -->
-
-<div class="section-title">💡 財經備忘錄</div>
+<div class="sec">💡 財經備忘錄</div>
 <div class="memo-grid">
-    <div class="memo-card">
+    <div class="memo">
         <div class="memo-title">2025-26 節稅提醒</div>
         <div class="memo-item">· 綜所稅 5 月申報，注意列舉扣除額。</div>
         <div class="memo-item">· 股利所得選合併 (8.5% 抵減) 或分開計稅。</div>
     </div>
-    <div class="memo-card">
+    <div class="memo">
         <div class="memo-title">投資策略備忘</div>
         <div class="memo-item">· 監控 7769 鴻勁趨勢。</div>
         <div class="memo-item">· 美債 ETF 分批佈局，注意匯率風險。</div>
@@ -121,193 +84,127 @@
 </div>
 
 <script>
-// ── Clock ──
-function updateClock() {
-    const n = new Date();
-    const t = n.toLocaleTimeString('zh-TW', { hour12: false });
-    const d = (n.getMonth()+1).toString().padStart(2,'0') + '/' + n.getDate().toString().padStart(2,'0');
-    document.getElementById('clock').textContent = t + ' ' + d;
-}
-setInterval(updateClock, 1000); updateClock();
+function updateClock(){const n=new Date();const t=n.toLocaleTimeString('zh-TW',{hour12:false});const d=(n.getMonth()+1).toString().padStart(2,'0')+'/'+n.getDate().toString().padStart(2,'0');document.getElementById('clock').textContent=t+' '+d;}
+setInterval(updateClock,1000);updateClock();
 
-// ── Sparkline ──
-function drawSpark(id, prices, up) {
-    const canvas = document.getElementById('sp-' + id);
-    if (!canvas || !prices || prices.length < 2) return;
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.offsetWidth, h = canvas.offsetHeight;
-    canvas.width = w * dpr; canvas.height = h * dpr;
-    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
-    const mn = Math.min(...prices), mx = Math.max(...prices), rng = mx - mn || 1;
-    const pl=2, pr=2, pt=4, pb=4, cw=w-pl-pr, ch=h-pt-pb;
-    const pts = prices.map((p,i) => ({ x: pl+(i/(prices.length-1))*cw, y: pt+ch-((p-mn)/rng)*ch }));
-    const color = up ? '#48bb78' : '#f56565';
-    const fill  = up ? 'rgba(72,187,120,0.12)' : 'rgba(245,101,101,0.12)';
-    ctx.beginPath(); ctx.moveTo(pts[0].x, h-pb);
-    pts.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.lineTo(pts[pts.length-1].x, h-pb); ctx.closePath();
-    ctx.fillStyle = fill; ctx.fill();
-    ctx.beginPath(); pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
-    const last = pts[pts.length-1];
-    ctx.beginPath(); ctx.arc(last.x, last.y, 3, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+function drawSpark(id,prices,up){
+    const c=document.getElementById('sp-'+id);if(!c||!prices||prices.length<2)return;
+    const dpr=window.devicePixelRatio||1,w=c.offsetWidth,h=c.offsetHeight;
+    c.width=w*dpr;c.height=h*dpr;const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+    const mn=Math.min(...prices),mx=Math.max(...prices),rng=mx-mn||1;
+    const pl=2,pr=2,pt=4,pb=4,cw=w-pl-pr,ch=h-pt-pb;
+    const pts=prices.map((p,i)=>({x:pl+(i/(prices.length-1))*cw,y:pt+ch-((p-mn)/rng)*ch}));
+    const col=up?'#48bb78':'#f56565',fill=up?'rgba(72,187,120,0.12)':'rgba(245,101,101,0.12)';
+    ctx.beginPath();ctx.moveTo(pts[0].x,h-pb);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,h-pb);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+    ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
+    const last=pts[pts.length-1];ctx.beginPath();ctx.arc(last.x,last.y,3,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
 }
 
-function setCard(id, price, chg, pct, meta, prices) {
-    const up = chg >= 0;
-    const col = up ? 'var(--green)' : 'var(--red)';
-    const fmt = v => v.toLocaleString('zh-TW', { minimumFractionDigits:2, maximumFractionDigits:2 });
-    document.getElementById('p-'+id).textContent = fmt(price);
-    document.getElementById('p-'+id).style.color = col;
-    document.getElementById('c-'+id).textContent = `${up?'+':''}${fmt(chg)} (${up?'+':''}${pct.toFixed(2)}%)`;
-    document.getElementById('c-'+id).style.color = col;
-    if (document.getElementById('m-'+id)) document.getElementById('m-'+id).textContent = meta;
-    requestAnimationFrame(() => drawSpark(id, prices, up));
-}
-
-// ── FinMind helper ──
-function toDateStr(d) { return d.toISOString().split('T')[0]; }
-function nAgo(n) { const d=new Date(); d.setDate(d.getDate()-n); return toDateStr(d); }
-
-async function fetchFinMind(dataId) {
-    const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${dataId}&start_date=${nAgo(100)}&end_date=${toDateStr(new Date())}`;
-    const r = await fetch(url); const j = await r.json();
-    if (!j.data || j.data.length === 0) throw new Error('no data');
-    return j.data.slice(-60);
-}
-
-// ── Taiwan stocks ──
-const TW_STOCKS = [
-    { id:'7769',   name:'鴻勁 7769:TPE' },
-    { id:'TAIEX',  name:'台灣加權指數 TAIEX' },
-    { id:'00679B', name:'元大美債20年 00679B' },
-];
-
-function renderTWCard(s) {
-    const div = document.createElement('div'); div.className = 'card';
-    div.innerHTML = `
-        <div class="card-header"><span>${s.name}</span></div>
-        <div id="p-${s.id}" class="price-large">--</div>
-        <div id="c-${s.id}" class="change-tag">載入中…</div>
-        <canvas class="spark" id="sp-${s.id}" style="height:45px"></canvas>
-        <div id="m-${s.id}" class="card-meta"></div>`;
+function makeCard(id,title){
+    const div=document.createElement('div');div.className='card';
+    div.innerHTML=`<div class="card-hd">${title}</div><div id="p-${id}" class="price">--</div><div id="c-${id}" class="chg">載入中…</div><canvas class="spark" id="sp-${id}" style="height:45px"></canvas><div id="m-${id}" class="meta"></div>`;
     return div;
 }
 
-const twGrid = document.getElementById('tw-grid');
-TW_STOCKS.forEach(s => {
-    twGrid.appendChild(renderTWCard(s));
-    fetchFinMind(s.id).then(rows => {
-        const prices = rows.map(r => parseFloat(r.close));
-        const latest = rows[rows.length-1], prev = rows[rows.length-2];
-        const close = parseFloat(latest.close), pclose = parseFloat(prev.close);
-        const chg = close - pclose, pct = chg / pclose * 100;
-        setCard(s.id, close, chg, pct, `更新：${latest.date}`, prices);
-    }).catch(() => {
-        document.getElementById('c-'+s.id).textContent = '載入失敗';
-    });
+function setCard(id,price,chg,pct,meta,prices,dec=2){
+    const up=chg>=0,col=up?'var(--green)':'var(--red)';
+    const fmt=v=>v.toLocaleString('zh-TW',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+    document.getElementById('p-'+id).textContent=fmt(price);document.getElementById('p-'+id).style.color=col;
+    document.getElementById('c-'+id).textContent=`${up?'+':''}${fmt(chg)} (${up?'+':''}${pct.toFixed(2)}%)`;document.getElementById('c-'+id).style.color=col;
+    if(document.getElementById('m-'+id))document.getElementById('m-'+id).textContent=meta;
+    requestAnimationFrame(()=>drawSpark(id,prices,up));
+}
+
+function toDateStr(d){return d.toISOString().split('T')[0];}
+function nAgo(n){const d=new Date();d.setDate(d.getDate()-n);return toDateStr(d);}
+
+async function fetchFM(dataset,dataId){
+    const r=await fetch(`https://api.finmindtrade.com/api/v4/data?dataset=${dataset}&data_id=${dataId}&start_date=${nAgo(120)}&end_date=${toDateStr(new Date())}`);
+    const j=await r.json();if(!j.data||j.data.length===0)throw new Error('no data');return j.data;
+}
+
+async function fetchYahoo(sym){
+    for(const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']){
+        try{const r=await fetch(`${base}/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=3mo`,{headers:{'Accept':'application/json'}});if(r.ok)return await r.json();}catch(e){}
+    }
+    throw new Error('yahoo failed');
+}
+
+// TW stocks
+const TW=[{id:'7769',name:'鴻勁 7769:TPE'},{id:'TAIEX',name:'台灣加權指數 TAIEX'},{id:'00679B',name:'元大美債20年 00679B'}];
+const twGrid=document.getElementById('tw-grid');
+TW.forEach(s=>{
+    twGrid.appendChild(makeCard(s.id,s.name));
+    fetchFM('TaiwanStockPrice',s.id).then(rows=>{
+        rows=rows.slice(-60);const prices=rows.map(r=>parseFloat(r.close));
+        const l=rows[rows.length-1],p=rows[rows.length-2];const c=parseFloat(l.close),pc=parseFloat(p.close);
+        setCard(s.id,c,c-pc,(c-pc)/pc*100,`更新：${l.date}`,prices);
+    }).catch(()=>{document.getElementById('c-'+s.id).textContent='載入失敗';});
 });
 
-// ── Global markets via /api/vix (Yahoo Finance proxy) ──
-// USDTWD, XAUUSD, TLT — use Yahoo Finance symbols
-const GLOBAL = [
-    { id:'usdtwd', sym:'USDTWD=X',  label:'USDTWD' },
-    { id:'xauusd', sym:'GC%3DF',    label:'GC=F (黃金期貨)' },
-    { id:'tlt',    sym:'TLT',       label:'TLT' },
-];
+// Global
+const gGrid=document.getElementById('global-grid');
 
-async function fetchYahoo(sym) {
-    const r = await fetch(`/api/yahoo?sym=${sym}`);
-    if (!r.ok) throw new Error('api error');
-    return r.json();
-}
+// USD/TWD via FinMind
+gGrid.appendChild(makeCard('usdtwd','USD/TWD 美元/台幣'));
+fetchFM('TaiwanForexPrice','USD').then(rows=>{
+    rows=rows.slice(-60);
+    const prices=rows.map(r=>parseFloat(r.spot_sell||r.cash_sell));
+    const l=rows[rows.length-1],p=rows[rows.length-2];
+    const c=parseFloat(l.spot_sell||l.cash_sell),pc=parseFloat(p.spot_sell||p.cash_sell);
+    setCard('usdtwd',c,c-pc,(c-pc)/pc*100,`更新：${l.date}`,prices,3);
+}).catch(()=>{document.getElementById('c-usdtwd').textContent='載入失敗';});
 
-GLOBAL.forEach(g => {
-    fetchYahoo(g.sym).then(j => {
-        setCard(g.id, j.price, j.change, j.changePct, `更新：${new Date(j.updatedAt).toLocaleTimeString('zh-TW',{hour12:false})}`, j.closes);
-    }).catch(() => {
-        document.getElementById('c-'+g.id).textContent = '載入失敗';
-    });
-});
+// Gold via Yahoo
+gGrid.appendChild(makeCard('xauusd','XAU/USD 黃金現貨'));
+fetchYahoo('GC=F').then(data=>{
+    const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
+    const price=res.meta.regularMarketPrice||closes[closes.length-1],prev=closes[closes.length-2]||price;
+    setCard('xauusd',price,price-prev,(price-prev)/prev*100,'來源：Yahoo Finance',closes.slice(-60),2);
+}).catch(()=>{document.getElementById('c-xauusd').textContent='載入失敗';});
 
-// ── Fear & Greed ──
-const FG_BANDS = [[0,24,'極度恐慌','#f56565'],[25,44,'恐慌','#f97316'],[45,55,'中立','#f6ad55'],[56,74,'貪婪','#48bb78'],[75,100,'極度貪婪','#38a169']];
-function fgMeta(v) { for (const [lo,hi,l,c] of FG_BANDS) if (v>=lo&&v<=hi) return {l,c}; return {l:'--',c:'#888'}; }
-async function fetchFG() {
-    try {
-        const r = await fetch('https://api.alternative.me/fng/?limit=1&format=json');
-        const j = await r.json();
-        const val = parseInt(j.data[0].value);
-        const ts = new Date(parseInt(j.data[0].timestamp)*1000).toLocaleDateString('zh-TW');
-        const {l,c} = fgMeta(val);
-        document.getElementById('fg-num').textContent = val;
-        document.getElementById('fg-num').style.color = c;
-        document.getElementById('fg-lbl').textContent = l;
-        document.getElementById('fg-lbl').style.color = c;
-        document.getElementById('fg-needle').style.left = val + '%';
-    } catch(e) { document.getElementById('fg-lbl').textContent = '載入失敗'; }
-}
-fetchFG();
+// TLT via Yahoo
+gGrid.appendChild(makeCard('tlt','TLT 美國公債 ETF'));
+fetchYahoo('TLT').then(data=>{
+    const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
+    const price=res.meta.regularMarketPrice||closes[closes.length-1],prev=closes[closes.length-2]||price;
+    setCard('tlt',price,price-prev,(price-prev)/prev*100,'來源：Yahoo Finance',closes.slice(-60),2);
+}).catch(()=>{document.getElementById('c-tlt').textContent='載入失敗';});
 
-// ── VIX (via /api/vix) ──
-function classifyVIX(v) {
-    if (v < 15) return {lbl:'極度平靜', col:'#48bb78'};
-    if (v < 20) return {lbl:'常態波動', col:'#a0aec0'};
-    if (v < 25) return {lbl:'警戒區間', col:'#f6ad55'};
-    if (v < 35) return {lbl:'高度恐慌', col:'#f56565'};
-    return              {lbl:'極度恐慌', col:'#e53e3e'};
-}
-async function fetchVIX() {
-    try {
-        const r = await fetch('/api/vix');
-        if (!r.ok) throw new Error();
-        const j = await r.json();
-        if (j.error) throw new Error();
-        const {price, change, changePct} = j;
-        const up = change >= 0;
-        const {lbl, col} = classifyVIX(price);
-        const needle = Math.min(price / 60 * 100, 100);
-        document.getElementById('vix-num').textContent = price.toFixed(2);
-        document.getElementById('vix-num').style.color = col;
-        // VIX up = bad (reverse color logic)
-        document.getElementById('vix-lbl').textContent = `${lbl}　${up?'+':''}${change.toFixed(2)} (${up?'+':''}${changePct.toFixed(2)}%)`;
-        document.getElementById('vix-lbl').style.color = col;
-        document.getElementById('vix-needle').style.left = needle + '%';
-        document.getElementById('vix-meta').textContent = '來源：Yahoo Finance via /api/vix';
-    } catch(e) {
-        document.getElementById('vix-lbl').textContent = '載入失敗';
-    }
-}
-fetchVIX();
+// F&G
+const FGB=[[0,24,'極度恐慌','#f56565'],[25,44,'恐慌','#f97316'],[45,55,'中立','#f6ad55'],[56,74,'貪婪','#48bb78'],[75,100,'極度貪婪','#38a169']];
+function fgM(v){for(const[lo,hi,l,c]of FGB)if(v>=lo&&v<=hi)return{l,c};return{l:'--',c:'#888'};}
+fetch('https://api.alternative.me/fng/?limit=1&format=json').then(r=>r.json()).then(j=>{
+    const val=parseInt(j.data[0].value);const ts=new Date(parseInt(j.data[0].timestamp)*1000).toLocaleDateString('zh-TW');
+    const{l,c}=fgM(val);
+    document.getElementById('fg-num').textContent=val;document.getElementById('fg-num').style.color=c;
+    document.getElementById('fg-lbl').textContent=`${l}　${ts}`;document.getElementById('fg-lbl').style.color=c;
+    document.getElementById('fg-needle').style.left=val+'%';
+}).catch(()=>{document.getElementById('fg-lbl').textContent='載入失敗';});
 
-// ── VIXTW (via /api/vixtw — Cloudflare Function) ──
-function classifyVIXTW(v) {
-    if (v < 15) return {lbl:'極度平靜', col:'#48bb78'};
-    if (v < 20) return {lbl:'常態波動', col:'#a0aec0'};
-    if (v < 30) return {lbl:'警戒區間', col:'#f6ad55'};
-    return              {lbl:'高度恐慌', col:'#f56565'};
-}
-async function fetchVIXTW() {
-    try {
-        const r = await fetch('/api/vixtw');
-        if (!r.ok) throw new Error();
-        const j = await r.json();
-        if (!j.price || j.price === 0) throw new Error('zero');
-        const {price, change, changePct} = j;
-        const {lbl, col} = classifyVIXTW(price);
-        const needle = Math.min(Math.max((price - 10) / 30 * 100, 0), 100);
-        document.getElementById('vixtw-num').textContent = price.toFixed(2);
-        document.getElementById('vixtw-num').style.color = col;
-        document.getElementById('vixtw-lbl').textContent = `${lbl}　${change>=0?'+':''}${change.toFixed(2)} (${changePct.toFixed(2)}%)`;
-        document.getElementById('vixtw-lbl').style.color = col;
-        document.getElementById('vixtw-needle').style.left = needle + '%';
-        document.getElementById('vixtw-meta').textContent = `更新：${j.date}`;
-    } catch(e) {
-        document.getElementById('vixtw-lbl').textContent = '等待有效數據';
-    }
-}
-fetchVIXTW();
-setInterval(fetchVIXTW, 300000);
+// VIX via Yahoo
+function cVIX(v){if(v<15)return{l:'極度平靜',c:'#48bb78'};if(v<20)return{l:'常態波動',c:'#a0aec0'};if(v<25)return{l:'警戒區間',c:'#f6ad55'};if(v<35)return{l:'高度恐慌',c:'#f56565'};return{l:'極度恐慌',c:'#e53e3e'};}
+fetchYahoo('^VIX').then(data=>{
+    const res=data.chart.result[0];const closes=res.indicators.quote[0].close.filter(v=>v!=null);
+    const price=res.meta.regularMarketPrice||closes[closes.length-1],prev=closes[closes.length-2]||price;
+    const chg=price-prev,pct=chg/prev*100,up=chg>=0;const{l,c}=cVIX(price);
+    document.getElementById('vix-num').textContent=price.toFixed(2);document.getElementById('vix-num').style.color=c;
+    document.getElementById('vix-lbl').textContent=`${l}　${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;document.getElementById('vix-lbl').style.color=c;
+    document.getElementById('vix-needle').style.left=Math.min(price/60*100,100)+'%';
+}).catch(()=>{document.getElementById('vix-lbl').textContent='載入失敗';});
+
+// VIXTW via FinMind
+function cVIXTW(v){if(v<15)return{l:'極度平靜',c:'#48bb78'};if(v<20)return{l:'常態波動',c:'#a0aec0'};if(v<30)return{l:'警戒區間',c:'#f6ad55'};return{l:'高度恐慌',c:'#f56565'};}
+fetchFM('TaiwanStockPrice','VIXTW').then(rows=>{
+    let idx=-1;for(let i=rows.length-1;i>=0;i--){if(parseFloat(rows[i].close)>0){idx=i;break;}}
+    if(idx<1)throw new Error('no valid');
+    const l=rows[idx],p=rows[idx-1];const price=parseFloat(l.close),ppc=parseFloat(p.close);
+    const chg=price-ppc,pct=chg/ppc*100,up=chg>=0;const{l:lbl,c:col}=cVIXTW(price);
+    document.getElementById('vixtw-num').textContent=price.toFixed(2);document.getElementById('vixtw-num').style.color=col;
+    document.getElementById('vixtw-lbl').textContent=`${lbl}　${up?'+':''}${chg.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)`;document.getElementById('vixtw-lbl').style.color=col;
+    document.getElementById('vixtw-needle').style.left=Math.min(Math.max((price-10)/30*100,0),100)+'%';
+    document.getElementById('vixtw-meta').textContent=`更新：${l.date}`;
+}).catch(()=>{document.getElementById('vixtw-lbl').textContent='等待有效數據';});
 </script>
 
 </body>
