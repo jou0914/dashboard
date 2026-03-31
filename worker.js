@@ -7,18 +7,13 @@ export default {
       "Content-Type": "application/json"
     };
 
-    if (url.pathname === "/test") {
+if (url.pathname === "/test") {
   try {
     const res = await fetch(
-      "https://query1.finance.yahoo.com/v7/finance/quote?symbols=^TWII",
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
-      }
+          "https://stooq.com/q/d/l/?s=^twii&i=d"
     );
-    const json = await res.json();
-    return new Response(JSON.stringify(json), { headers: corsHeaders });
+    const text = await res.text();
+    return new Response(text, { headers: corsHeaders });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
