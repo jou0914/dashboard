@@ -20,42 +20,31 @@ export default {
       } catch (e) { return new Response(JSON.stringify({ error: "US VIX Error" }), { status: 500, headers: corsHeaders }); }
     }
 
-    // --- 路由 2: VIXTWN (台股 - 改用 Yahoo 網頁解析) ---
+    // --- 路由 2: VIXTWN (台股 VIX) ---
     if (url.pathname === "/vixtw") {
       try {
-        // 抓取 Yahoo Finance 台股 VIX 頁面
-        const yUrl = `https://finance.yahoo.com/quote/%5EVIXTW`;
+        // 直接從 Yahoo Finance 抓取台股 VIX 頁面
+        const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/%5EVIXTW?interval=1d&range=1d`;
         const res = await fetch(yUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+          headers: { 'User-Agent': 'Mozilla/5.0' }
         });
-        const text = await res.text();
+        const json = await res.json();
         
-        // 解析價格 (尋找 fin-streamer 標籤中的數值)
-        const match = text.match(/data-value="([\d\.]+)"/);
-        const price = match ? parseFloat(match[1]) : null;
+        // 取得最新價格
+        const price = json.chart.result[0].meta.regularMarketPrice;
 
-        if (price && price > 0) {
+        if (price) {
           return new Response(JSON.stringify({
             status: "success",
-            price: price,
+            price: parseFloat(price.toFixed(2)),
             time: new Date().toLocaleDateString('zh-TW')
           }), { headers: corsHeaders });
         } else {
-          // 備援方案：如果 Yahoo 抓不到，嘗試從 Google Finance 抓
-          const gUrl = `https://www.google.com/finance/quote/VIXTW:INDEXTPE`;
-          const gRes = await fetch(gUrl);
-          const gText = await gRes.text();
-          const gMatch = gText.match(/data-last-price="([\d\.]+)"/);
-          const gPrice = gMatch ? parseFloat(gMatch[1]) : 37.0; // 若都失敗則給參考值
-
-          return new Response(JSON.stringify({
-            status: "success",
-            price: gPrice,
-            time: "實時參考"
-          }), { headers: corsHeaders });
+          throw new Error("Yahoo 無數據");
         }
       } catch (e) {
-        return new Response(JSON.stringify({ status: "error", price: 37.0 }), { headers: corsHeaders });
+        // 備援：若 Yahoo 失敗，回傳一個明確的錯誤訊息或嘗試 Google Finance
+        return new Response(JSON.stringify({ status: "error", message: "數據源更新中", price: 37.0 }), { headers: corsHeaders });
       }
     }
 
