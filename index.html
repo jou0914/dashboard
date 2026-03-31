@@ -3,69 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>市場監控 (Debug Mode)</title>
+    <title>市場監控 v1.5.0</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 500px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
+        .ver { width: 100%; text-align: right; font-size: 10px; color: #333; margin-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; position: relative; }
         .full { grid-column: span 2; }
-        .label { font-size: 0.75rem; color: #666; margin-bottom: 8px; font-weight: bold; }
-        .price { font-size: 2.5rem; font-weight: bold; }
-        .cnn-c { color: #ff5f5f; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
-        .meta { font-size: 0.7rem; color: #333; margin-top: 5px; }
+        .label { font-size: 11px; color: #666; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .price { font-size: 2.2rem; font-weight: bold; transition: all 0.3s; }
+        .cnn-c { color: #ff4d4d; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
+        
+        /* Debug Panel */
+        #debug-panel { margin-top: 20px; background: #0a0a0a; border: 1px dashed #222; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 10px; color: #444; width: 100%; box-sizing: border-box; }
+        .log-err { color: #ff4d4d; }
+        .log-ok { color: #48bb78; }
     </style>
 </head>
 <body>
 <div class="container">
+    <div class="ver">VER 1.5.0</div>
     <div class="grid">
-        <div class="card full"><div class="label">CNN FEAR & GREED</div><div id="p-cnn" class="price cnn-c">--</div><div id="m-cnn" class="meta">--</div></div>
+        <div class="card full"><div class="label">CNN Fear & Greed</div><div id="p-cnn" class="price cnn-c">--</div></div>
         <div class="card"><div class="label">VIX (US)</div><div id="p-vix" class="price vix-c">--</div></div>
         <div class="card"><div class="label">VIX (TW)</div><div id="p-vtw" class="price tw-c">--</div></div>
         <div class="card"><div class="label">USD / TWD</div><div id="p-twd" class="price twd-c">--</div></div>
         <div class="card"><div class="label">7769 (鴻勁)</div><div id="p-7769" class="price s-c">--</div></div>
     </div>
+    
+    <div id="debug-panel">
+        <div style="border-bottom: 1px solid #222; margin-bottom: 5px; padding-bottom: 3px;">SYSTEM MONITOR LOG:</div>
+        <div id="log-content">Waiting for data...</div>
+    </div>
 </div>
 
 <script>
     const API = "https://dashboard.jou0914.workers.dev";
+    const logEl = document.getElementById('log-content');
+
+    function addLog(msg, type='ok') {
+        const time = new Date().toLocaleTimeString();
+        const line = `<div class="log-${type}">[${time}] ${msg}</div>`;
+        logEl.innerHTML = line + logEl.innerHTML; // 最新紀錄在最上面
+    }
 
     async function refresh() {
-        console.log(`%c[${new Date().toLocaleTimeString()}] Starting Refresh...`, "color: #a084ff; font-weight: bold;");
-
-        const updateItem = async (path, id, fix = 2) => {
-            console.group(`Fetching: ${path}`);
+        const fetchItem = async (path, id, fix = 2) => {
             try {
                 const res = await fetch(`${API}${path}`);
                 const d = await res.json();
-                console.log("Response Data:", d);
-
-                const el = document.getElementById(id);
-                if (d.price !== null && d.price !== undefined) {
-                    el.textContent = (id === 'p-7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
-                    if (id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label;
+                
+                if (d.price !== null) {
+                    document.getElementById(id).textContent = (id === 'p-7769') ? d.price.toLocaleString() : d.price.toFixed(fix);
+                    addLog(`${path} loaded: ${d.price}`, 'ok');
                 } else {
-                    console.warn(`Value is null for ${id}`);
-                    el.textContent = "--";
+                    document.getElementById(id).textContent = "--";
+                    addLog(`${path} error: ${d.error || 'Empty'}`, 'err');
                 }
-            } catch (err) {
-                console.error(`Fetch Error for ${path}:`, err);
+            } catch (e) {
                 document.getElementById(id).textContent = "--";
+                addLog(`${path} critical: ${e.message}`, 'err');
             }
-            console.groupEnd();
         };
 
-        await Promise.all([
-            updateItem('/cnn', 'p-cnn', 0),
-            updateItem('/vix', 'p-vix', 2),
-            updateItem('/vixtw', 'p-vtw', 2),
-            updateItem('/twd', 'p-twd', 3),
-            updateItem('/7769', 'p-7769')
-        ]);
+        logEl.innerHTML = ""; // 每次整理
+        await fetchItem('/cnn', 'p-cnn', 0);
+        await fetchItem('/vix', 'p-vix', 2);
+        await fetchItem('/vixtw', 'p-vtw', 2);
+        await fetchItem('/twd', 'p-twd', 3);
+        await fetchItem('/7769', 'p-7769');
     }
 
     refresh();
-    setInterval(refresh, 300000); // 5分鐘刷新一次
+    setInterval(refresh, 300000); // 5分鐘
 </script>
 </body>
 </html>
