@@ -1,3 +1,8 @@
+headers: {
+  "User-Agent": "Mozilla/5.0",
+  "Referer": "https://www.taifex.com.tw/",
+}
+
 export default async function handler(req, res) {
   try {
     const url = "https://www.taifex.com.tw/cht/3/vixData";
