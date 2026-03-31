@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>交易儀表板 v3</title>
     <style>
         :root { --bg: #000; --card: #1c1c1e; --border: #2c2c2e; --text: #fff; --green: #30d158; --red: #ff453a; --gray: #8e8e93; }
@@ -16,31 +16,43 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .label { color: var(--gray); font-size: 13px; margin-bottom: 8px; display: block; }
         .value { font-size: 22px; font-weight: 700; }
-        #log { position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #0f0; font-size: 10px; padding: 10px; max-height: 80px; overflow-y: auto; border-top: 1px solid #333; }
+        #log { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.9); color: #0f0; font-size: 10px; padding: 10px; max-height: 80px; overflow-y: auto; border-top: 1px solid #333; z-index: 1000; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header"><h1>交易儀表板</h1><div id="sent" class="sentiment-tag">--</div></div>
+        <div class="header">
+            <h1 style="font-size:24px;margin:0">交易儀表板</h1>
+            <div id="sent" class="sentiment-tag">--</div>
+        </div>
+
         <div class="grid">
             <div class="card"><span class="label">CNN 恐慌指數</span><div id="cnn" class="value">--</div></div>
             <div class="card"><span class="label">美股 VIX</span><div id="vix" class="value">--</div></div>
         </div>
+
         <div class="card">
             <div style="display:flex; justify-content:space-between;">
                 <div><span class="label">USD / TWD</span><div id="twd" class="value">--</div></div>
                 <div style="text-align:right;"><span class="label">台指 VIX</span><div id="vixtw" class="value">--</div></div>
             </div>
         </div>
+
         <div class="grid">
-            <div class="card"><span class="label">融資變化 (億)</span><div id="m" class="value">--</div></div>
-            <div class="card"><span class="label">融券變化 (張)</span><div id="s" class="value">--</div></div>
+            <div class="card">
+                <span class="label">融資變化 (億)</span>
+                <div id="m" class="value">--</div>
+            </div>
+            <div class="card">
+                <span class="label">融券變化 (張)</span>
+                <div id="s" class="value">--</div>
+            </div>
         </div>
     </div>
-    <div id="log">系統初始化...</div>
+    <div id="log">系統啟動中...</div>
 
     <script>
-        const API_BASE = "https://dashboard.jou0914.workers.dev"; 
+        const API = "https://dashboard.jou0914.workers.dev/market"; [span_2](start_span)//[span_2](end_span)
 
         function log(msg) {
             const l = document.getElementById("log");
@@ -48,22 +60,22 @@
         }
 
         async function update() {
-            log("正在抓取數據...");
+            log("正在同步數據...");
             try {
-                const res = await fetch(`${API_BASE}/market`);
-                const d = await res.json();
+                const r = await fetch(API, { cache: 'no-store' });
+                const d = await r.json();
                 
                 document.getElementById("cnn").textContent = d.cnn ?? "--";
-                document.getElementById("vix").textContent = d.vix?.toFixed(2) ?? "--";
-                document.getElementById("vixtw").textContent = d.vixtw?.toFixed(2) ?? "--";
-                document.getElementById("twd").textContent = d.twd?.toFixed(2) ?? "--";
+                document.getElementById("vix").textContent = d.vix ? d.vix.toFixed(2) : "--";
+                document.getElementById("vixtw").textContent = d.vixtw ? d.vixtw.toFixed(2) : "--";
+                document.getElementById("twd").textContent = d.twd ? d.twd.toFixed(2) : "--";
 
-                if (d.marginChange) {
-                    const m = d.marginChange / 100000000;
-                    document.getElementById("m").textContent = (m > 0 ? "+" : "") + m.toFixed(2);
-                    document.getElementById("m").style.color = m > 0 ? "var(--green)" : "var(--red)";
+                if (d.marginChange !== undefined) {
+                    const val = d.marginChange / 100000000;
+                    document.getElementById("m").textContent = (val > 0 ? "+" : "") + val.toFixed(2);
+                    document.getElementById("m").style.color = val > 0 ? "var(--green)" : "var(--red)";
                 }
-                if (d.shortChange) {
+                if (d.shortChange !== undefined) {
                     document.getElementById("s").textContent = (d.shortChange > 0 ? "+" : "") + d.shortChange.toLocaleString();
                 }
 
@@ -73,12 +85,12 @@
                 
                 log("更新成功");
             } catch (e) {
-                log("錯誤: " + e.message);
+                log("ERR: " + e.message);
             }
         }
 
         update();
-        setInterval(update, 60000); // 建議改為 1 分鐘，避免 Alpha Vantage 免費版次數用光
+        setInterval(update, 60000); // 建議維持 1 分鐘，避免觸發 Yahoo/Alpha 的頻率限制
     </script>
 </body>
 </html>
