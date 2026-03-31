@@ -6,87 +6,43 @@
   <title>市場全數據監控</title>
   <style>
     body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 800px; }
-    .header { text-align: center; color: #444; font-size: 0.8rem; margin-bottom: 20px; letter-spacing: 2px; }
-    
-    /* 網格佈局 */
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .container { width: 100%; max-width: 500px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
-    .full-width { grid-column: span 2; } /* CNN 佔滿整行 */
-
-    .label { font-size: 0.8rem; color: #777; margin-bottom: 8px; font-weight: bold; }
+    .full { grid-column: span 2; }
+    .label { font-size: 0.75rem; color: #666; margin-bottom: 5px; font-weight: bold; }
     .price { font-size: 2.2rem; font-weight: bold; }
-    
-    /* 顏色定義 */
-    .cnn-color { color: #ff5f5f; }
-    .vix-color { color: #f0c040; }
-    .tw-color { color: #40a0f0; }
-    .twd-color { color: #a084ff; }
-    .stock-color { color: #48bb78; }
-    
-    .meta { font-size: 0.7rem; color: #333; margin-top: 8px; }
+    .cnn-c { color: #ff5f5f; } .vix-c { color: #f0c040; } .tw-c { color: #40a0f0; } .twd-c { color: #a084ff; } .s-c { color: #48bb78; }
+    .meta { font-size: 0.7rem; color: #333; margin-top: 5px; }
   </style>
 </head>
 <body>
-
 <div class="container">
-  <div class="header">DASHBOARD LIVE</div>
-
   <div class="grid">
-    <div class="card full-width">
-      <div class="label">CNN FEAR & GREED</div>
-      <div id="p-cnn" class="price cnn-color">--</div>
-      <div id="m-cnn" class="meta">LOADING</div>
-    </div>
-
-    <div class="card">
-      <div class="label">VIX (US)</div>
-      <div id="p-us" class="price vix-color">--</div>
-    </div>
-
-    <div class="card">
-      <div class="label">VIX (TW)</div>
-      <div id="p-tw" class="price tw-color">--</div>
-    </div>
-
-    <div class="card">
-      <div class="label">USD / TWD</div>
-      <div id="p-twd" class="price twd-color">--</div>
-    </div>
-
-    <div class="card">
-      <div class="label">7769 (鴻勁)</div>
-      <div id="p-7769" class="price stock-color">--</div>
-    </div>
+    <div class="card full"><div class="label">CNN FEAR & GREED</div><div id="p-cnn" class="price cnn-c">--</div><div id="m-cnn" class="meta">--</div></div>
+    <div class="card"><div class="label">VIX (US)</div><div id="p-vix" class="price vix-c">--</div></div>
+    <div class="card"><div class="label">VIX (TW)</div><div id="p-vtw" class="price tw-c">--</div></div>
+    <div class="card"><div class="label">USD / TWD</div><div id="p-twd" class="price twd-c">--</div></div>
+    <div class="card"><div class="label">7769 (鴻勁)</div><div id="p-7769" class="price s-c">--</div></div>
   </div>
 </div>
-
 <script>
   const API = "https://dashboard.jou0914.workers.dev";
-
   async function update() {
-    const fetchAPI = (path, id, isLocale = false, fixed = 2) => {
+    const getData = (path, id, fix = 2) => {
       fetch(`${API}${path}`).then(r => r.json()).then(d => {
-        const el = document.getElementById(id);
-        if (d.price !== null) {
-          el.textContent = isLocale ? d.price.toLocaleString() : d.price.toFixed(fixed);
-          if (id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label;
-        } else {
-          el.textContent = "--";
-        }
+        const val = d.price;
+        document.getElementById(id).textContent = (val !== null && val !== undefined) ? (fix === 'auto' ? val.toLocaleString() : val.toFixed(fix)) : "--";
+        if(id === 'p-cnn') document.getElementById('m-cnn').textContent = d.label || "--";
       }).catch(() => document.getElementById(id).textContent = "--");
     };
-
-    fetchAPI('/cnn', 'p-cnn', false, 0);
-    fetchAPI('/vix', 'p-us');
-    fetchAPI('/vixtw', 'p-tw');
-    fetchAPI('/twd', 'p-twd', false, 3);
-    fetchAPI('/7769', 'p-7769', true);
+    getData('/cnn', 'p-cnn', 0);
+    getData('/vix', 'p-vix', 2);
+    getData('/vixtw', 'p-vtw', 2);
+    getData('/twd', 'p-twd', 3);
+    getData('/7769', 'p-7769', 'auto');
   }
-
-  update();
-  setInterval(update, 60000);
+  update(); setInterval(update, 60000);
 </script>
-
 </body>
 </html>
