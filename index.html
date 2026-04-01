@@ -33,7 +33,7 @@
 
 <script>
     // ⚠️ 請填入你在第一步取得的 GAS 網址
-    const PROXY_URL = '這裡填入你的GAS網址';
+    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxi2Xm_MZ1Bak8sAIfC-MiPaHERwuqpz8eSh8yRUy5efO8sa6Mur_XJ95BHhqYtKnJ7ww/exec';
 
     function addLog(msg) {
         document.getElementById('log').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log').innerHTML;
@@ -41,7 +41,7 @@
 
     async function fetchData() {
         if (!PROXY_URL.startsWith('http')) {
-            addLog("https://script.google.com/macros/s/AKfycbxi2Xm_MZ1Bak8sAIfC-MiPaHERwuqpz8eSh8yRUy5efO8sa6Mur_XJ95BHhqYtKnJ7ww/exec"）；
+            addLog("錯誤: 未填入代理網址");
             return;
         }
 
