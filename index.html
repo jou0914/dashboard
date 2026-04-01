@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投資戰情室 v5.7</title>
+    <title>投資戰情室 v5.8 - 趨勢圖版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card { background: var(--card); padding: 15px; border-radius: 14px; border-left: 4px solid #444; grid-column: span 1; transition: 0.3s; }
+        .card { background: var(--card); padding: 12px; border-radius: 14px; border-left: 4px solid #444; grid-column: span 1; position: relative; overflow: hidden; }
         .full-width { grid-column: span 2; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
-        .label { font-size: 11px; color: #888; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-        .main-val { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
-        .sub-val { font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
-        .gold-calc { font-size: 1rem; color: var(--gold); margin-top: 5px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
-        .gauge-container { position: relative; width: 200px; height: 110px; margin: 5px auto 0; }
-        #cnnGauge { width: 200px; height: 110px; }
-        #fngValue { font-size: 2.2rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
-        .btn-cnn { background: #cc0000; color: white; text-decoration: none; display: block; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; text-align: center; margin-top: 8px; }
+        .label { font-size: 10px; color: #888; font-weight: 600; margin-bottom: 2px; }
+        .main-val { font-size: 1.6rem; font-weight: 800; }
+        .sub-val { font-size: 0.8rem; font-weight: 600; }
+        /* 圖表容器樣式 */
+        .chart-container { width: 100%; height: 50px; margin-top: 8px; }
+        .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 4px; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
+        .gauge-container { position: relative; width: 180px; height: 100px; margin: 5px auto 0; }
+        #fngValue { font-size: 2rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; cursor: pointer; grid-column: span 2; }
-        .log-container { width: 100%; max-width: 380px; margin-top: 15px; border-radius: 10px; border: 1px solid #333; overflow: hidden; }
-        #log-window { background: #000; padding: 10px; font-family: monospace; font-size: 9px; color: #00ff00; height: 80px; overflow-y: auto; white-space: pre-wrap; }
+        #log-window { background: #000; padding: 8px; font-family: monospace; font-size: 9px; color: #00ff00; height: 60px; overflow-y: auto; width: 100%; max-width: 360px; margin-top:10px; border-radius:8px; }
     </style>
 </head>
 <body>
@@ -32,87 +32,112 @@
         <div class="label">鴻勁 (7769.TW)</div>
         <div id="p-7769" class="main-val">--</div>
         <div id="diff-7769" class="sub-val">--</div>
+        <div class="chart-container"><canvas id="chart-7769"></canvas></div>
     </div>
 
     <div id="card-vix" class="card">
         <div class="label">VIX 指數</div>
-        <div id="p-vix" class="main-val" style="color:var(--gold); font-size: 1.5rem;">--</div>
+        <div id="p-vix" class="main-val" style="font-size: 1.3rem;">--</div>
         <div id="diff-vix" class="sub-val">--</div>
+        <div class="chart-container"><canvas id="chart-vix"></canvas></div>
     </div>
     
     <div id="card-twd" class="card">
         <div class="label">USD/TWD</div>
-        <div id="p-twd" class="main-val" style="font-size: 1.5rem;">--</div>
+        <div id="p-twd" class="main-val" style="font-size: 1.3rem;">--</div>
         <div id="diff-twd" class="sub-val">--</div>
+        <div class="chart-container"><canvas id="chart-twd"></canvas></div>
     </div>
 
     <div id="card-gold" class="card full-width">
         <div class="label">國際黃金 (盎司)</div>
         <div id="p-gold" class="main-val">--</div>
         <div id="diff-gold" class="sub-val">--</div>
-        <div id="calc-gold" class="gold-calc">計算中... NT$/g</div>
+        <div class="chart-container"><canvas id="chart-gold"></canvas></div>
+        <div id="calc-gold" class="gold-calc">計算中...</div>
     </div>
 
     <div class="card full-width" style="border-left-color: var(--gold);">
         <div class="label">Crypto Fear & Greed Index</div>
         <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="fngValue">--</div></div>
-        <div id="fngStatus" style="text-align:center; color:var(--gold); font-weight:bold; font-size: 12px;">偵測中...</div>
-        <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-cnn">打開 CNN 恐慌指數官網</a>
+        <div id="fngStatus" style="text-align:center; color:var(--gold); font-weight:bold; font-size: 11px;">--</div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div class="log-container">
-    <div id="log-window">Initializing v5.7...</div>
-</div>
+<div id="log-window">Initializing v5.8...</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
+    let charts = {};
 
     function addLog(msg) {
-        const win = document.getElementById('log-window');
-        win.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + win.innerHTML;
+        document.getElementById('log-window').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-window').innerHTML;
     }
 
-    let currentUSD = 32.5; // 預設值
+    function renderSparkline(id, historyData, color) {
+        const ctx = document.getElementById(`chart-${id}`).getContext('2d');
+        if (charts[id]) charts[id].destroy();
+        
+        charts[id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: historyData.map((_, i) => i),
+                datasets: [{
+                    data: historyData,
+                    borderColor: color,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: color + '22',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    }
 
     function updateCard(id, data) {
         if (!data?.chart?.result) return null;
-        const m = data.chart.result[0].meta;
+        const res = data.chart.result[0];
+        const m = res.meta;
+        const history = res.indicators.adjclose[0].adjclose || res.indicators.quote[0].close;
+        const validHistory = history.filter(v => v !== null);
+        
         const price = m.regularMarketPrice;
-        const prev = m.previousClose;
-        const diff = price - prev;
-        const perc = (diff / prev) * 100;
+        const diff = price - m.previousClose;
+        const perc = (diff / m.previousClose) * 100;
+        const color = diff >= 0 ? '#ff4d4d' : '#2ecc71';
         
-        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: 2});
-        document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-        
-        const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
+        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: id==='7769'?0:2});
         document.getElementById(`p-${id}`).style.color = color;
+        document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
         document.getElementById(`diff-${id}`).style.color = color;
-        document.getElementById(`card-${id}`).classList.add(diff >= 0 ? 'up' : 'down');
         
+        renderSparkline(id, validHistory, color);
         return price;
     }
 
     async function updateAll() {
-        addLog('Connecting to GAS...');
+        addLog('Connecting...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
 
-            // 更新基本資料
             updateCard('7769', data.stock_7769);
             updateCard('vix', data.vix_index);
             const twd = updateCard('twd', data.usd_twd);
             const goldOz = updateCard('gold', data.gold_price);
 
-            // 黃金換算邏輯
             if (twd && goldOz) {
                 const pricePerGram = (goldOz * twd) / 31.1034768;
-                document.getElementById('calc-gold').innerText = `換算台幣：${pricePerGram.toLocaleString(undefined, {maximumFractionDigits: 0})} NT$/公克`;
-                addLog('✅ Gold Conversion OK');
+                document.getElementById('calc-gold').innerText = `換算台幣：${Math.round(pricePerGram).toLocaleString()} NT$/g`;
             }
 
             if (data.crypto_fng?.data) {
@@ -120,26 +145,23 @@
                 document.getElementById('fngValue').innerText = val;
                 document.getElementById('fngStatus').innerText = data.crypto_fng.data[0].value_classification.toUpperCase();
                 drawGauge(val);
-                addLog('✅ Crypto F&G: ' + val);
+                addLog('✅ Crypto OK');
             }
-            addLog('✅ Dashboard Updated');
+            addLog('✅ All Synced');
         } catch (e) { addLog('❌ Error: ' + e.message); }
     }
 
     function drawGauge(value) {
         const canvas = document.getElementById('cnnGauge');
         const ctx = canvas.getContext('2d');
-        canvas.width = 400; canvas.height = 220; ctx.scale(2, 2);
-        ctx.clearRect(0, 0, 200, 110);
-        ctx.beginPath(); ctx.arc(100, 100, 80, Math.PI, 0); ctx.lineWidth = 15; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
-        if (value !== null) {
-            const grad = ctx.createLinearGradient(20, 0, 180, 0);
-            grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-            ctx.beginPath(); ctx.arc(100, 100, 80, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
-        }
+        canvas.width = 360; canvas.height = 200; ctx.scale(2, 2);
+        ctx.clearRect(0, 0, 180, 100);
+        ctx.beginPath(); ctx.arc(90, 90, 70, Math.PI, 0); ctx.lineWidth = 12; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        const grad = ctx.createLinearGradient(20, 0, 160, 0);
+        grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
+        ctx.beginPath(); ctx.arc(90, 90, 70, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
     }
 
-    drawGauge(null);
     updateAll();
 </script>
 </body>
