@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投資戰情室 v5.8 - 趨勢圖版</title>
+    <title>投資戰情室 v5.9 - 曲線圖強化版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; }
+        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card { background: var(--card); padding: 12px; border-radius: 14px; border-left: 4px solid #444; grid-column: span 1; position: relative; overflow: hidden; }
+        .card { background: var(--card); padding: 12px; border-radius: 16px; border-left: 4px solid #444; grid-column: span 1; position: relative; }
         .full-width { grid-column: span 2; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         .label { font-size: 10px; color: #888; font-weight: 600; margin-bottom: 2px; }
-        .main-val { font-size: 1.6rem; font-weight: 800; }
-        .sub-val { font-size: 0.8rem; font-weight: 600; }
-        /* 圖表容器樣式 */
-        .chart-container { width: 100%; height: 50px; margin-top: 8px; }
-        .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 4px; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
+        .main-val { font-size: 1.7rem; font-weight: 800; }
+        .sub-val { font-size: 0.85rem; font-weight: 600; }
+        .chart-container { width: 100%; height: 55px; margin-top: 8px; }
+        .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
         .gauge-container { position: relative; width: 180px; height: 100px; margin: 5px auto 0; }
         #fngValue { font-size: 2rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
-        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; cursor: pointer; grid-column: span 2; }
-        #log-window { background: #000; padding: 8px; font-family: monospace; font-size: 9px; color: #00ff00; height: 60px; overflow-y: auto; width: 100%; max-width: 360px; margin-top:10px; border-radius:8px; }
+        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 12px; font-size: 16px; cursor: pointer; grid-column: span 2; }
+        #log-window { background: #111; padding: 10px; font-family: monospace; font-size: 9px; color: #00ff00; height: 80px; overflow-y: auto; width: 100%; max-width: 360px; margin-top:15px; border-radius:10px; border: 1px solid #333; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -37,14 +36,14 @@
 
     <div id="card-vix" class="card">
         <div class="label">VIX 指數</div>
-        <div id="p-vix" class="main-val" style="font-size: 1.3rem;">--</div>
+        <div id="p-vix" class="main-val" style="font-size: 1.4rem;">--</div>
         <div id="diff-vix" class="sub-val">--</div>
         <div class="chart-container"><canvas id="chart-vix"></canvas></div>
     </div>
     
     <div id="card-twd" class="card">
         <div class="label">USD/TWD</div>
-        <div id="p-twd" class="main-val" style="font-size: 1.3rem;">--</div>
+        <div id="p-twd" class="main-val" style="font-size: 1.4rem;">--</div>
         <div id="diff-twd" class="sub-val">--</div>
         <div class="chart-container"><canvas id="chart-twd"></canvas></div>
     </div>
@@ -58,22 +57,23 @@
     </div>
 
     <div class="card full-width" style="border-left-color: var(--gold);">
-        <div class="label">Crypto Fear & Greed Index</div>
+        <div class="label">CRYPTO FEAR & GREED INDEX</div>
         <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="fngValue">--</div></div>
-        <div id="fngStatus" style="text-align:center; color:var(--gold); font-weight:bold; font-size: 11px;">--</div>
+        <div id="fngStatus" style="text-align:center; color:var(--gold); font-weight:bold; font-size: 11px; margin-top:5px;">偵測中...</div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div id="log-window">Initializing v5.8...</div>
+<div id="log-window">Initializing v5.9...</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
     let charts = {};
 
     function addLog(msg) {
-        document.getElementById('log-window').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-window').innerHTML;
+        const win = document.getElementById('log-window');
+        win.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + win.innerHTML;
     }
 
     function renderSparkline(id, historyData, color) {
@@ -87,29 +87,32 @@
                 datasets: [{
                     data: historyData,
                     borderColor: color,
-                    borderWidth: 2,
+                    borderWidth: 2.5,
                     pointRadius: 0,
                     fill: true,
-                    backgroundColor: color + '22',
+                    backgroundColor: (context) => {
+                        const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 55);
+                        gradient.addColorStop(0, color + '44');
+                        gradient.addColorStop(1, color + '00');
+                        return gradient;
+                    },
                     tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: { x: { display: false }, y: { display: false } }
             }
         });
     }
 
     function updateCard(id, data) {
-        if (!data?.chart?.result) return null;
+        if (!data?.chart?.result) { addLog(`❌ ${id} fail`); return null; }
+        
         const res = data.chart.result[0];
         const m = res.meta;
-        const history = res.indicators.adjclose[0].adjclose || res.indicators.quote[0].close;
-        const validHistory = history.filter(v => v !== null);
-        
         const price = m.regularMarketPrice;
         const diff = price - m.previousClose;
         const perc = (diff / m.previousClose) * 100;
@@ -119,13 +122,20 @@
         document.getElementById(`p-${id}`).style.color = color;
         document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
         document.getElementById(`diff-${id}`).style.color = color;
-        
-        renderSparkline(id, validHistory, color);
+        document.getElementById(`card-${id}`).className = `card ${id==='7769'||id==='gold'?'full-width':''} ${diff >= 0 ? 'up' : 'down'}`;
+
+        // 處理歷史曲線
+        try {
+            const history = res.indicators.quote[0].close || [];
+            const validHistory = history.filter(v => v !== null);
+            if (validHistory.length > 0) renderSparkline(id, validHistory, color);
+        } catch(e) { addLog(`Chart error ${id}`); }
+
         return price;
     }
 
     async function updateAll() {
-        addLog('Connecting...');
+        addLog('Connecting to GAS...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
@@ -136,8 +146,8 @@
             const goldOz = updateCard('gold', data.gold_price);
 
             if (twd && goldOz) {
-                const pricePerGram = (goldOz * twd) / 31.1034768;
-                document.getElementById('calc-gold').innerText = `換算台幣：${Math.round(pricePerGram).toLocaleString()} NT$/g`;
+                const gPrice = (goldOz * twd) / 31.1035;
+                document.getElementById('calc-gold').innerText = `換算台幣：${Math.round(gPrice).toLocaleString()} NT$/g`;
             }
 
             if (data.crypto_fng?.data) {
@@ -147,7 +157,7 @@
                 drawGauge(val);
                 addLog('✅ Crypto OK');
             }
-            addLog('✅ All Synced');
+            addLog('✅ Dashboard Updated');
         } catch (e) { addLog('❌ Error: ' + e.message); }
     }
 
@@ -156,10 +166,10 @@
         const ctx = canvas.getContext('2d');
         canvas.width = 360; canvas.height = 200; ctx.scale(2, 2);
         ctx.clearRect(0, 0, 180, 100);
-        ctx.beginPath(); ctx.arc(90, 90, 70, Math.PI, 0); ctx.lineWidth = 12; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(90, 90, 75, Math.PI, 0); ctx.lineWidth = 14; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
         const grad = ctx.createLinearGradient(20, 0, 160, 0);
         grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-        ctx.beginPath(); ctx.arc(90, 90, 70, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
+        ctx.beginPath(); ctx.arc(90, 90, 75, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
     }
 
     updateAll();
