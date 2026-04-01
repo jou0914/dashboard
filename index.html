@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v5.4</title>
+    <title>7769 戰情室 v5.5</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
@@ -14,14 +14,11 @@
         .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 4px; }
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
         .sub-val { font-size: 1rem; font-weight: 600; }
-        
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
         #fngValue { font-size: 2.5rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
-        
         .btn-cnn { background: #cc0000; color: white; text-decoration: none; display: block; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; text-align: center; margin-top: 10px; }
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; font-size: 16px; cursor: pointer; }
-        
         .log-container { width: 100%; max-width: 380px; margin-top: 15px; border-radius: 10px; border: 1px solid #333; overflow: hidden; }
         .log-header { background: #222; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
         .btn-copy { background: #555; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
@@ -36,13 +33,11 @@
         <div id="p-7769" class="main-val">--</div>
         <div id="diff-7769" class="sub-val">--</div>
     </div>
-
     <div id="card-vix" class="card">
         <div class="label">美股恐慌指數 (VIX)</div>
         <div id="p-vix" class="main-val" style="color:#f1c40f;">--</div>
         <div class="sub-val" id="vix-status" style="color:#888;">數據同步中...</div>
     </div>
-
     <div class="card" style="border-left-color: #f1c40f;">
         <div class="label">Crypto Fear & Greed Index</div>
         <div class="gauge-container">
@@ -52,15 +47,11 @@
         <div id="fngStatus" style="text-align:center; color:#f1c40f; font-weight:bold; margin-top:5px;">偵測中...</div>
         <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-cnn">打開 CNN 恐慌指數官網</a>
     </div>
-
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
 <div class="log-container">
-    <div class="log-header">
-        <span>DEBUG CONSOLE</span>
-        <button class="btn-copy" onclick="copyLog()">COPY LOG</button>
-    </div>
+    <div class="log-header"><span>DEBUG CONSOLE</span><button class="btn-copy" onclick="copyLog()">COPY LOG</button></div>
     <div id="log-window">Initializing...</div>
 </div>
 
@@ -74,7 +65,7 @@
 
     function copyLog() {
         const text = document.getElementById('log-window').innerText;
-        navigator.clipboard.writeText(text).then(() => alert('Log 已複製到剪貼簿'));
+        navigator.clipboard.writeText(text).then(() => alert('Log 已複製'));
     }
 
     function drawGauge(value) {
@@ -98,8 +89,6 @@
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
-
-            // 1. 7769
             if (data.stock_7769?.chart?.result) {
                 const m = data.stock_7769.chart.result[0].meta;
                 const price = m.regularMarketPrice;
@@ -113,16 +102,12 @@
                 document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
                 addLog('✅ 7769 Updated');
             }
-
-            // 2. VIX
             if (data.vix_index?.chart?.result) {
                 const v = data.vix_index.chart.result[0].meta.regularMarketPrice;
                 document.getElementById('p-vix').innerText = v.toFixed(2);
                 document.getElementById('vix-status').innerText = "數據已更新";
                 addLog('✅ VIX Updated');
             }
-
-            // 3. Crypto F&G
             if (data.crypto_fng?.data) {
                 const val = parseInt(data.crypto_fng.data[0].value);
                 const rating = data.crypto_fng.data[0].value_classification;
@@ -131,15 +116,12 @@
                 drawGauge(val);
                 addLog('✅ Crypto F&G: ' + val);
             }
-
         } catch (e) {
             addLog('❌ Error: ' + e.message);
         }
     }
-
     drawGauge(null);
     updateAll();
 </script>
-
 </body>
 </html>
