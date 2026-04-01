@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v2.7</title>
+    <title>7769 戰情室 v2.9</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
         
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         
@@ -17,18 +17,19 @@
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
         .sub-val { font-size: 1rem; font-weight: 600; }
         
-        /* CNN 指針繪圖區 */
+        /* CNN 繪圖區 */
         .cnn-card { border-left-color: #f1c40f; text-align: center; }
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
         #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; color: #fff; }
-        #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
+        #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; min-height: 1.2em; }
 
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; font-size: 16px; }
+        .btn-refresh:active { background: #2850a7; transform: scale(0.98); }
         
         /* LOG 視窗與複製按鈕 */
         .log-container { width: 100%; max-width: 360px; margin-top: 15px; position: relative; }
-        #log-window { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 85px; overflow-y: auto; border: 1px solid #222; }
+        #log-window { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 95px; overflow-y: auto; border: 1px solid #222; white-space: pre-wrap; }
         .btn-copy-log { position: absolute; top: 5px; right: 5px; background: #333; color: #aaa; border: 1px solid #444; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; z-index: 10; }
         .btn-copy-log:hover { background: #444; color: #fff; }
     </style>
@@ -54,7 +55,7 @@
             <canvas id="cnnGauge"></canvas>
             <div id="cnnValueText">--</div>
         </div>
-        <div id="cnnStatusText">等待數據...</div>
+        <div id="cnnStatusText">讀取中...</div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
@@ -70,12 +71,12 @@
 
     function addLog(msg) {
         const content = document.getElementById('log-content');
-        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + content.innerHTML;
+        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
     }
 
     function copyLog() {
-        const logText = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(logText).then(() => {
+        const logContent = document.getElementById('log-content').innerText;
+        navigator.clipboard.writeText(logContent).then(() => {
             alert('LOG 已成功複製到剪貼簿！');
         });
     }
@@ -108,23 +109,15 @@
         }
     }
 
-    function getRatingText(val) {
-        if (val <= 25) return "極度恐慌 (Extreme Fear)";
-        if (val <= 45) return "恐慌 (Fear)";
-        if (val <= 55) return "中立 (Neutral)";
-        if (val <= 75) return "貪婪 (Greed)";
-        return "極度貪婪 (Extreme Greed)";
-    }
-
     async function updateAll() {
         addLog("正在連接 Google 中繼站...");
         try {
             const response = await fetch(PROXY_URL);
             const data = await response.json();
-            addLog("數據包接收成功，開始解析...");
+            addLog("數據包接收成功，正在解析...");
 
-            // 1. 鴻勁更新
-            const twKey = Object.keys(data).find(k => k.includes("7769"));
+            // 1. 鴻勁 (7769)
+            const twKey = Object.keys(data).find(k => k.includes("7769") || k.includes("stock"));
             if (twKey && data[twKey].chart) {
                 const tw = data[twKey].chart.result[0].meta;
                 const price = tw.regularMarketPrice;
@@ -136,10 +129,10 @@
                 document.getElementById('p-7769').style.color = color;
                 document.getElementById('diff-7769').style.color = color;
                 document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
-                addLog("✅ 鴻勁數據更新成功");
+                addLog("✅ 鴻勁數據同步完成");
             }
 
-            // 2. VIX 更新
+            // 2. VIX
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey && data[vixKey].chart) {
                 const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
@@ -148,15 +141,19 @@
                 addLog("✅ VIX 更新成功");
             }
 
-            // 3. CNN 更新
-            if (data.cnn_data && data.cnn_data.fear_and_greed) {
-                const cnnScore = Math.round(data.cnn_data.fear_and_greed.score);
-                document.getElementById('cnnValueText').innerText = cnnScore;
-                document.getElementById('cnnStatusText').innerText = getRatingText(cnnScore);
-                drawGauge(cnnScore);
-                addLog(`✅ CNN 指數同步成功 (${cnnScore})`);
+            // 3. CNN (全路徑比對)
+            const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn"));
+            const cnnObj = data[cnnKey];
+            
+            if (cnnObj && cnnObj.fear_and_greed) {
+                const score = Math.round(cnnObj.fear_and_greed.score);
+                const rating = cnnObj.fear_and_greed.rating.toUpperCase();
+                document.getElementById('cnnValueText').innerText = score;
+                document.getElementById('cnnStatusText').innerText = rating;
+                drawGauge(score);
+                addLog(`✅ CNN 同步成功: ${score} (${rating})`);
             } else {
-                addLog("⚠️ GAS 未回傳 CNN 數值，請確認 GAS 腳本內容");
+                addLog("⚠️ GAS 未回傳 CNN 數值，請確認 GAS 內的 URL 是否正確");
             }
 
         } catch (e) {
