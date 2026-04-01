@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 投資戰情室 v2.2</title>
+    <title>7769 投資戰情室 v2.3</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
         
-        .card { background: var(--card); padding: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-left: 5px solid #333; transition: 0.2s; position: relative; }
+        .card { background: var(--card); padding: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-left: 5px solid #333; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         
@@ -17,33 +17,30 @@
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
         .sub-val { font-size: 1rem; font-weight: 600; }
         
-        /* CNN 區塊修正：加大高度並精準對齊 */
-        .cnn-card { cursor: pointer; border-left: 5px solid #f1c40f; text-align: center; }
+        /* CNN 區塊：改用 M平方嵌入 */
+        .cnn-card { border-left: 5px solid #f1c40f; padding: 10px; }
         .cnn-container { 
             width: 100%; 
-            height: 180px; /* 加高確保指針不被蓋到 */
+            height: 220px; /* 增加高度以容納 M平方圖表 */
             overflow: hidden; 
-            margin-top: 10px; 
-            background: #000; 
-            border-radius: 8px; 
+            margin-top: 5px; 
+            background: #fff; /* M平方背景為白色，我們做一點濾鏡處理 */
+            border-radius: 12px; 
             position: relative;
-            border: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        #cnn-image { 
-            width: 100%; 
-            max-width: 340px;
-            height: auto;
-            /* 調整顯示位置，確保數值 (如 15) 能清楚顯示 */
-            transform: translateY(-5px); 
-            filter: invert(0.9) hue-rotate(180deg) brightness(0.9) contrast(1.1); 
-            transition: opacity 0.3s;
+        /* 利用 iframe 嵌入 M平方網頁 */
+        #cnn-frame {
+            width: 100%;
+            height: 450px; /* 內部長度 */
+            border: none;
+            transform: scale(0.8); /* 縮放以符合手機寬度 */
+            transform-origin: 0 0;
+            margin-top: -165px; /* 向上推，只鎖定指針圖區域 */
+            margin-left: 5px;
         }
 
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; font-size: 15px; }
-        #log-window { width: 100%; max-width: 360px; margin-top: 15px; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 100px; overflow-y: auto; border: 1px solid #222; }
+        #log-window { width: 100%; max-width: 360px; margin-top: 15px; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 80px; overflow-y: auto; border: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -58,15 +55,15 @@
     <div id="card-vix" class="card">
         <div class="label"><span>美股恐慌指數 (VIX)</span></div>
         <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
-        <div id="status-vix" class="sub-val" style="color: #888;">數據同步中...</div>
+        <div id="status-vix" class="sub-val" style="color: #888;">市場情緒監控中...</div>
     </div>
 
-    <div class="card cnn-card" onclick="window.open('https://edition.cnn.com/markets/fear-and-greed')">
-        <div class="label" style="justify-content: center;">CNN Fear & Greed Index (Stock)</div>
+    <div class="card cnn-card">
+        <div class="label" style="justify-content: center;">CNN Fear & Greed (MacroMicro)</div>
         <div class="cnn-container">
-            <img id="cnn-image" src="https://images.weserv.nl/?url=money.cnn.com/.element/img/5.0/data/feargreed/1.png&cache=0" alt="CNN Stock Index" onerror="handleCnnError()">
+            <iframe id="cnn-frame" src="https://www.macromicro.me/series/22748/cnn-fear-and-greed" scrolling="no"></iframe>
         </div>
-        <div style="font-size: 11px; margin-top: 8px; color: #f1c40f;">點擊查看實時股市指針 ↗</div>
+        <div style="font-size: 11px; margin-top: 8px; color: #f1c40f; text-align: center;">數據來源：財經M平方</div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
@@ -82,42 +79,38 @@
         content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + content.innerHTML;
     }
 
-    // 修正備援邏輯：不再自動跳轉到加密貨幣圖，而是強化繞道載入
-    function handleCnnError() {
-        const img = document.getElementById('cnn-image');
-        addLog("⚠️ 官方圖載入受阻，嘗試強制刷新代理...");
-        const ts = new Date().getTime();
-        // 如果連代理都失敗，這行會嘗試換一個代理節點
-        img.src = `https://images.weserv.nl/?url=money.cnn.com/.element/img/5.0/data/feargreed/1.png&t=${ts}&output=png`;
-    }
-
     async function updateAll() {
-        addLog("連線中...");
+        addLog("連線至數據中繼站...");
         try {
             const response = await fetch(PROXY_URL);
             const data = await response.json();
             
-            // 處理 7769 & VIX (省略重複邏輯以求簡潔)
+            // 7769 解析
             const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey) {
                 const tw = data[twKey].chart.result[0].meta;
-                document.getElementById('p-7769').innerText = tw.regularMarketPrice.toFixed(2);
+                const price = tw.regularMarketPrice;
+                const diff = price - tw.previousClose;
+                const perc = (diff / tw.previousClose) * 100;
+                document.getElementById('p-7769').innerText = price.toFixed(2);
                 document.getElementById('p-7769').style.color = 'var(--red)';
-                addLog("✅ 鴻勁更新成功");
+                document.getElementById('diff-7769').innerText = `▲ ${diff.toFixed(2)} (${perc.toFixed(2)}%)`;
+                document.getElementById('diff-7769').style.color = 'var(--red)';
+                document.getElementById('card-7769').className = 'card up';
+                addLog("✅ 鴻勁數據同步成功");
             }
 
+            // VIX 解析
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey) {
                 const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
                 document.getElementById('p-vix').innerText = vixVal.toFixed(2);
-                addLog("✅ VIX 更新成功");
+                addLog("✅ VIX 數據同步成功");
             }
 
-            // 強制載入 CNN 股市指針
-            const cnnImg = document.getElementById('cnn-image');
-            const ts = new Date().getTime();
-            cnnImg.src = `https://images.weserv.nl/?url=money.cnn.com/.element/img/5.0/data/feargreed/1.png&t=${ts}`;
-            addLog("🔄 同步股市情緒指針...");
+            // 重新整理 iframe 確保數據最新
+            document.getElementById('cnn-frame').src = document.getElementById('cnn-frame').src;
+            addLog("🔄 M平方圖表已重載");
 
         } catch (e) {
             addLog("❌ 錯誤: " + e.message);
