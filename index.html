@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 投資戰情室 v1.8</title>
+    <title>7769 投資戰情室 v1.9</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
         
-        /* 卡片基礎樣式 */
+        /* 卡片設計 */
         .card { background: var(--card); padding: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-left: 5px solid #333; transition: 0.2s; position: relative; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         
         .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1.5px; }
+        .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
         .sub-val { font-size: 1rem; font-weight: 600; }
         
-        /* CNN 區塊：使用代理圖片避開黑畫面 */
+        /* CNN 區塊修正 */
         .cnn-card { cursor: pointer; border-left: 5px solid #f1c40f; text-align: center; }
-        .cnn-viz { 
+        .cnn-container { 
             width: 100%; 
-            height: 110px; 
+            height: 120px; 
             overflow: hidden; 
             margin-top: 10px; 
             background: #000; 
@@ -31,18 +31,18 @@
             border: 1px solid #333;
         }
         #cnn-image { 
-            width: 300px;
+            width: 280px;
             position: absolute;
             left: 50%;
-            transform: translateX(-50%) translateY(-15px) scale(1.1);
-            /* 深色模式濾鏡：確保指針顏色正確且背景變深 */
-            filter: invert(0.9) hue-rotate(180deg) brightness(0.8) contrast(1.2); 
+            top: 50%;
+            transform: translate(-50%, -45%) scale(1.2);
+            /* 套用深色模式濾鏡，並增加對比度防止模糊 */
+            filter: invert(0.9) hue-rotate(180deg) brightness(0.8) contrast(1.3); 
         }
 
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; font-size: 15px; }
         .btn-refresh:active { background: #2850a7; transform: scale(0.98); }
 
-        /* 日誌視窗 */
         #log-window { width: 100%; max-width: 360px; margin-top: 15px; background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 100px; overflow-y: auto; border: 1px solid #222; }
         .copy-tag { font-size: 9px; color: #444; cursor: pointer; float: right; border: 1px solid #333; padding: 1px 4px; border-radius: 3px; }
     </style>
@@ -51,7 +51,7 @@
 
 <div class="dashboard">
     <div id="card-7769" class="card">
-        <div class="label"><span>鴻勁 (7769.TW)</span><span id="time-7769"></span></div>
+        <div class="label"><span>鴻勁 (7769.TW)</span></div>
         <div id="p-7769" class="main-val">--.--</div>
         <div id="diff-7769" class="sub-val">--.-- (--%)</div>
     </div>
@@ -59,15 +59,15 @@
     <div id="card-vix" class="card">
         <div class="label"><span>美股恐慌指數 (VIX)</span></div>
         <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
-        <div id="status-vix" class="sub-val" style="color: #888;">市場情緒監控中...</div>
+        <div id="status-vix" class="sub-val" style="color: #888;">數據同步中...</div>
     </div>
 
     <div class="card cnn-card" onclick="window.open('https://edition.cnn.com/markets/fear-and-greed')">
         <div class="label" style="justify-content: center;">CNN Fear & Greed Index</div>
-        <div class="cnn-viz">
-            <img id="cnn-image" src="https://images.weserv.nl/?url=https://money.cnn.com/.element/img/5.0/data/feargreed/1.png" alt="CNN Index">
+        <div class="cnn-container">
+            <img id="cnn-image" src="https://images.weserv.nl/?url=money.cnn.com/.element/img/5.0/data/feargreed/1.png" alt="CNN Index">
         </div>
-        <div style="font-size: 12px; margin-top: 8px; color: #f1c40f;">點擊查看實時指針分析 ↗</div>
+        <div style="font-size: 11px; margin-top: 8px; color: #f1c40f;">點擊查看實時分析 ↗</div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
@@ -88,65 +88,56 @@
     }
 
     async function updateAll() {
-        addLog("連線中繼站獲取數據...");
+        addLog("正在請求全球市場數據...");
         try {
             const response = await fetch(PROXY_URL);
             const data = await response.json();
-            addLog("數據解析中...");
-
-            // 1. 處理 7769 數據
+            
+            // 處理 7769
             const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey && data[twKey].chart) {
                 const tw = data[twKey].chart.result[0].meta;
                 const price = tw.regularMarketPrice;
-                const prevClose = tw.previousClose;
-                const diff = price - prevClose;
-                const percent = (diff / prevClose) * 100;
+                const prev = tw.previousClose;
+                const diff = price - prev;
+                const perc = (diff / prev) * 100;
                 
                 document.getElementById('p-7769').innerText = price.toFixed(2);
-                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${percent.toFixed(2)}%)`;
+                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
                 
-                const card = document.getElementById('card-7769');
                 const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
-                card.className = diff >= 0 ? 'card up' : 'card down';
+                document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
                 document.getElementById('p-7769').style.color = color;
                 document.getElementById('diff-7769').style.color = color;
-                addLog("✅ 鴻勁數據更新成功");
+                addLog("✅ 鴻勁 7769 更新完成");
             }
 
-            // 2. 處理 VIX 數據
+            // 處理 VIX
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey && data[vixKey].chart) {
-                const vixMeta = data[vixKey].chart.result[0].meta;
-                const vixPrice = vixMeta.regularMarketPrice;
-                document.getElementById('p-vix').innerText = vixPrice.toFixed(2);
-                
-                let statusText = "市場情緒平穩";
-                if (vixPrice > 20) statusText = "⚠️ 波動加劇";
-                if (vixPrice > 30) statusText = "🔥 極度恐慌預警";
-                document.getElementById('status-vix').innerText = statusText;
-                addLog("✅ VIX 更新成功");
+                const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
+                document.getElementById('p-vix').innerText = vixVal.toFixed(2);
+                document.getElementById('status-vix').innerText = vixVal > 25 ? "⚠️ 波動加劇" : "市場情緒平穩";
+                addLog("✅ VIX 更新完成");
             }
 
-            // 3. 更新 CNN 圖片 (透過代理並增加隨機參數避免快取)
+            // 強制重新載入 CNN 圖片
             const cnnImg = document.getElementById('cnn-image');
-            const timestamp = new Date().getTime();
-            cnnImg.src = `https://images.weserv.nl/?url=https://money.cnn.com/.element/img/5.0/data/feargreed/1.png&t=${timestamp}`;
-            addLog("✅ CNN 走勢圖已同步");
+            const ts = new Date().getTime();
+            cnnImg.src = `https://images.weserv.nl/?url=money.cnn.com/.element/img/5.0/data/feargreed/1.png&t=${ts}`;
+            addLog("✅ CNN 圖片同步完成");
 
-        } catch (err) {
-            addLog(`❌ 錯誤: ${err.message}`);
+        } catch (e) {
+            addLog("❌ 錯誤: " + e.message);
         }
     }
 
     function copyLog() {
-        const text = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(text).then(() => alert("Log 已複製"));
+        navigator.clipboard.writeText(document.getElementById('log-content').innerText);
+        alert("Log 已複製");
     }
 
-    // 啟動執行
     updateAll();
 </script>
-
 </body>
 </html>
