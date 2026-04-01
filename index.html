@@ -3,30 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v3.1</title>
+    <title>7769 戰情室 v3.2</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
-        
         .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
-        
         .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 6px; }
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
         .sub-val { font-size: 1rem; font-weight: 600; }
-        
-        /* CNN 繪圖區 */
         .cnn-card { border-left-color: #f1c40f; text-align: center; }
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
         #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; color: #fff; }
         #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
-
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; font-size: 16px; }
-        
-        /* LOG 視窗與複製按鈕 */
         .log-container { width: 100%; max-width: 360px; margin-top: 15px; position: relative; }
         #log-window { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 95px; overflow-y: auto; border: 1px solid #222; white-space: pre-wrap; }
         .btn-copy-log { position: absolute; top: 5px; right: 5px; background: #333; color: #aaa; border: 1px solid #444; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; z-index: 10; }
@@ -40,22 +33,19 @@
         <div id="p-7769" class="main-val">--.--</div>
         <div id="diff-7769" class="sub-val">--.-- (--%)</div>
     </div>
-
     <div id="card-vix" class="card">
         <div class="label">美股恐慌指數 (VIX)</div>
         <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
         <div id="status-vix" class="sub-val" style="color: #888;">同步中...</div>
     </div>
-
     <div class="card cnn-card">
         <div class="label">CNN Fear & Greed Index</div>
         <div class="gauge-container">
             <canvas id="cnnGauge"></canvas>
             <div id="cnnValueText">--</div>
         </div>
-        <div id="cnnStatusText">等待數據回傳...</div>
+        <div id="cnnStatusText">讀取中...</div>
     </div>
-
     <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
 </div>
 
@@ -74,36 +64,22 @@
 
     function copyLog() {
         const text = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert('LOG 已成功複製到剪貼簿！');
-        });
+        navigator.clipboard.writeText(text).then(() => alert('LOG 已複製'));
     }
 
     function drawGauge(value) {
         const canvas = document.getElementById('cnnGauge');
         const ctx = canvas.getContext('2d');
-        canvas.width = 480; canvas.height = 260;
-        ctx.scale(2, 2);
+        canvas.width = 480; canvas.height = 260; ctx.scale(2, 2);
         ctx.clearRect(0, 0, 240, 130);
-
-        ctx.beginPath();
-        ctx.arc(120, 120, 100, Math.PI, 0);
-        ctx.lineWidth = 18;
-        ctx.strokeStyle = '#2a2a2e';
-        ctx.stroke();
-
+        ctx.beginPath(); ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
         if (value !== null) {
             const grad = ctx.createLinearGradient(20, 0, 220, 0);
             grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-            ctx.beginPath();
-            const endAngle = Math.PI + (Math.PI * (value / 100));
-            ctx.arc(120, 120, 100, Math.PI, endAngle);
-            ctx.strokeStyle = grad; ctx.stroke();
-            ctx.save();
-            ctx.translate(120, 120); ctx.rotate(endAngle);
-            ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4);
-            ctx.fillStyle = '#fff'; ctx.fill();
-            ctx.restore();
+            ctx.beginPath(); const endAngle = Math.PI + (Math.PI * (value / 100));
+            ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();
+            ctx.save(); ctx.translate(120, 120); ctx.rotate(endAngle); ctx.beginPath();
+            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
         }
     }
 
@@ -112,49 +88,57 @@
         try {
             const response = await fetch(PROXY_URL);
             const data = await response.json();
-            addLog("數據包接收成功，開始解析內容...");
+            addLog("數據包接收成功，正在識別結構...");
 
-            // 1. 鴻勁 7769
-            const twKey = Object.keys(data).find(k => k.includes("7769") || k.includes("stock"));
+            // 1. 處理 7769
+            const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey && data[twKey].chart) {
                 const tw = data[twKey].chart.result[0].meta;
-                const price = tw.regularMarketPrice;
-                const diff = price - tw.previousClose;
-                const perc = (diff / tw.previousClose) * 100;
-                document.getElementById('p-7769').innerText = price.toFixed(2);
-                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+                const diff = tw.regularMarketPrice - tw.previousClose;
+                document.getElementById('p-7769').innerText = tw.regularMarketPrice.toFixed(2);
                 const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
                 document.getElementById('p-7769').style.color = color;
+                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)}`;
                 document.getElementById('diff-7769').style.color = color;
                 document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
-                addLog("✅ 鴻勁同步成功");
+                addLog("✅ 鴻勁數據同步完成");
             }
 
-            // 2. VIX
+            // 2. 處理 VIX
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
-            if (vixKey && data[vixKey].chart) {
-                const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-vix').innerText = vixVal.toFixed(2);
-                addLog("✅ VIX 更新成功");
+            if (vixKey) document.getElementById('p-vix').innerText = data[vixKey].chart.result[0].meta.regularMarketPrice.toFixed(2);
+
+            // 3. CNN 智慧解析 (相容物件模式與歷史陣列模式)
+            const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn"));
+            const cnnData = data[cnnKey];
+            let score, rating;
+
+            if (cnnData && cnnData.fear_and_greed) {
+                // 模式 A: 物件模式 (graphdata/current)
+                score = Math.round(cnnData.fear_and_greed.score);
+                rating = cnnData.fear_and_greed.rating.toUpperCase();
+                addLog("ℹ️ 使用物件模式解析 CNN");
+            } else if (Array.isArray(cnnData) && cnnData.length > 0) {
+                // 模式 B: 歷史陣列模式 (static/history)
+                const latest = cnnData[cnnData.length - 1];
+                score = Math.round(latest.y);
+                rating = latest.rating ? latest.rating.toUpperCase() : "UNKNOWN";
+                addLog("ℹ️ 使用歷史陣列模式解析 CNN");
             }
 
-            // 3. CNN (採用多標籤匹配)
-            const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn") || k.includes("fear"));
-            if (cnnKey && data[cnnKey].fear_and_greed) {
-                const score = Math.round(data[cnnKey].fear_and_greed.score);
+            if (score !== undefined) {
                 document.getElementById('cnnValueText').innerText = score;
-                document.getElementById('cnnStatusText').innerText = data[cnnKey].fear_and_greed.rating.toUpperCase();
+                document.getElementById('cnnStatusText').innerText = rating;
                 drawGauge(score);
-                addLog(`✅ CNN 指數同步完成: ${score}`);
+                addLog(`✅ CNN 同步成功: ${score}`);
             } else {
-                addLog("⚠️ CNN 數據解析失敗，請確認 GAS 是否有抓取 cnn_data");
+                addLog("⚠️ CNN 解析失敗：結構不符合預期");
             }
 
         } catch (e) {
             addLog("❌ 錯誤: " + e.message);
         }
     }
-
     drawGauge(null);
     updateAll();
 </script>
