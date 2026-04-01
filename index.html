@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 投資戰情室 v1.6.2</title>
+    <title>7769 投資戰情室 v1.6.3</title>
     <style>
         :root { --red: #ff5252; --green: #2ecc71; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .dashboard { width: 100%; max-width: 400px; display: grid; gap: 15px; }
+        
         .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-left: 6px solid #444; transition: 0.3s; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
+        
         .label { font-size: 13px; color: #aaa; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
         .main-val { font-size: 2.8rem; font-weight: 800; margin: 5px 0; letter-spacing: -1px; }
         .sub-val { font-size: 1.1rem; font-weight: 600; }
+        
         .cnn-card { background: linear-gradient(145deg, #2c2c2c, #000); cursor: pointer; border-left: 6px solid #f1c40f; text-align: center; }
+        .cnn-card:hover { transform: translateY(-3px); }
+
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
+        .btn-refresh:active { background: #2850a7; transform: scale(0.98); }
+
         #log-window { width: 100%; max-width: 380px; margin-top: 20px; background: #000; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #555; height: 120px; overflow-y: auto; }
-        .copy-tag { font-size: 10px; color: #444; cursor: pointer; float: right; }
+        .copy-tag { font-size: 10px; color: #444; cursor: pointer; float: right; border: 1px solid #333; padding: 2px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -32,25 +39,25 @@
     <div id="card-vix" class="card">
         <div class="label"><span>美股恐慌指數 (VIX)</span></div>
         <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
-        <div id="status-vix" class="sub-val" style="color: #888;">等待中...</div>
+        <div id="status-vix" class="sub-val" style="color: #888;">數據同步中...</div>
     </div>
 
     <div class="card cnn-card" onclick="window.open('https://edition.cnn.com/markets/fear-and-greed')">
         <div class="label" style="justify-content: center;">CNN Fear & Greed Index</div>
         <div style="font-size: 1.1rem; margin: 10px 0; color: #f1c40f;">查看全球情緒指針 ↗</div>
+        <div style="font-size: 10px; color: #666;">(建議交易時間手動查看)</div>
     </div>
 
-    <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
+    <button class="btn-refresh" onclick="updateAll()">手動刷新數據</button>
 </div>
 
 <div id="log-window">
-    <span class="copy-tag" onclick="copyLog()">[複製 LOG]</span>
-    <div id="log-content">系統初始化成功...</div>
+    <span class="copy-tag" onclick="copyLog()">複製 LOG</span>
+    <div id="log-content">系統初始化中...</div>
 </div>
 
 <script>
-    // 已填入你的專屬 GAS 代理網址
-    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbx5h5oQLvricMy5t5UGvJRyoO8Wklk_BJdyEiT7FroNlukw0mgH8PuN7rPMQvIv8uJO9Q/exec';
+    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
 
     function addLog(msg) {
         const content = document.getElementById('log-content');
@@ -58,13 +65,14 @@
     }
 
     async function updateAll() {
-        addLog("正在請求全球市場數據...");
+        addLog("連線至 Google 中繼站...");
         try {
             const response = await fetch(PROXY_URL);
             const data = await response.json();
-            addLog("數據包接收成功，解析中...");
+            addLog("數據包接收成功，開始解析內容...");
 
-            // --- 解析 7769.TW ---
+            // --- 1. 解析 7769.TW ---
+            // 嘗試模糊搜尋 Key 名稱
             const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey && data[twKey].chart && data[twKey].chart.result) {
                 const tw = data[twKey].chart.result[0].meta;
@@ -84,11 +92,13 @@
                 card.className = diff >= 0 ? 'card up' : 'card down';
                 pEl.style.color = color;
                 dEl.style.color = color;
-                addLog("✅ 鴻勁 7769 更新成功");
+                addLog("✅ 鴻勁數據更新成功");
+            } else {
+                addLog("⚠️ 找不到 7769 數據節點");
             }
 
-            // --- 解析 VIX (強化版邏輯) ---
-            // 自動尋找包含 VIX 字眼的任何 Key (處理 ^VIX 或 %5EVIX)
+            // --- 2. 解析 VIX ---
+            // 尋找包含 VIX 的 Key
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey && data[vixKey].chart && data[vixKey].chart.result) {
                 const vixMeta = data[vixKey].chart.result[0].meta;
@@ -96,27 +106,27 @@
                 
                 document.getElementById('p-vix').innerText = vixPrice.toFixed(2);
                 
-                let status = "市場情緒平穩";
-                if (vixPrice > 20) status = "⚠️ 波動加劇";
-                if (vixPrice > 30) status = "🔥 極度恐慌預警";
-                document.getElementById('status-vix').innerText = status;
+                let statusText = "市場情緒平穩";
+                if (vixPrice > 20) statusText = "⚠️ 波動加劇";
+                if (vixPrice > 30) statusText = "🔥 極度恐慌預警";
+                document.getElementById('status-vix').innerText = statusText;
                 addLog(`✅ VIX 更新成功 (${vixKey})`);
             } else {
-                addLog("⚠️ 無法定位 VIX 數據，請檢查 GAS 代碼");
+                addLog("⚠️ 無法讀取 VIX 數據，請檢查 GAS 代碼");
                 document.getElementById('p-vix').innerText = "N/A";
             }
 
         } catch (err) {
-            addLog(`❌ 連線錯誤: ${err.message}`);
+            addLog(`❌ 連線失敗: ${err.message}`);
         }
     }
 
     function copyLog() {
-        navigator.clipboard.writeText(document.getElementById('log-content').innerText);
-        alert("Log 已複製");
+        const text = document.getElementById('log-content').innerText;
+        navigator.clipboard.writeText(text).then(() => alert("Log 已複製"));
     }
 
-    // 初次載入
+    // 初次執行
     updateAll();
 </script>
 
