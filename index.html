@@ -109,7 +109,7 @@
 
             // CNN 數據抓取 (抓取 API 返回的結構化數據，不再用圖片)
             // 備註：如果你的 GAS 目前沒有 CNN 數值，請先查看 Log 視窗回傳的數據內容
-            const cnnVal = 15; // 這裡可以改為 data.cnn_value 之類的動態屬性
+            const cnnVal = 10; // 這裡可以改為 data.cnn_value 之類的動態屬性
             document.getElementById('cnnValueText').innerText = cnnVal;
             drawGauge(cnnVal);
             document.getElementById('cnnStatusText').innerText = "股市極度恐慌 (Extreme Fear)";
