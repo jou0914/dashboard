@@ -1,134 +1,75 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v4.6</title>
-    <style>
-        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .version-bar { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #333; }
-        .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .card.up { border-left-color: var(--red); }
-        .card.down { border-left-color: var(--green); }
-        .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 4px; }
-        .main-val { font-size: 2.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .sub-val { font-size: 1rem; font-weight: 600; margin-top: 2px; }
-        .cnn-card { border-left-color: #f1c40f; text-align: center; }
-        .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
-        #cnnGauge { width: 240px; height: 130px; }
-        #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
-        #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
-        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
-        .log-container { width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; position: relative; }
-        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        #log-window { background: #000; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 130px; overflow-y: auto; white-space: pre-wrap; }
-        .btn-copy-log { background: #444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-<div class="version-bar">
-    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v4.6 LIVE</span>
-    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待刷新...</span>
-</div>
-
-<div class="dashboard">
-    <div id="card-7769" class="card">
-        <div class="label">鴻勁 (7769.TW)</div>
-        <div id="p-7769" class="main-val">--.--</div>
-        <div id="diff-7769" class="sub-val">--.-- (--%)</div>
-    </div>
-    <div id="card-vix" class="card">
-        <div class="label">美股恐慌指數 (VIX)</div>
-        <div id="p-vix" class="main-val" style="color:#f1c40f;">--.--</div>
-        <div id="diff-vix" class="sub-val" style="color:#888;">數據同步中...</div>
-    </div>
-    <div class="card cnn-card">
-        <div class="label">CNN Fear & Greed Index</div>
-        <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
-        <div id="cnnStatusText">偵測中...</div>
-    </div>
-    <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
-</div>
-
-<div class="log-container">
-    <div class="log-header"><span>DEBUG CONSOLE</span><button class="btn-copy-log" onclick="copyLog()">COPY LOG</button></div>
-    <div id="log-window"><div id="log-content">Initializing...</div></div>
-</div>
-
 <script>
-    [span_3](start_span)// 已更新為您提供的正式網址[span_3](end_span)
-    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
+    // 1. 先定義網址與功能函數
+    [span_2](start_span)const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';[span_2](end_span)
 
     function addLog(msg) {
         const content = document.getElementById('log-content');
-        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
+        if (content) {
+            [span_3](start_span)content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;[span_3](end_span)
+        }
     }
 
     function copyLog() {
-        navigator.clipboard.writeText(document.getElementById('log-content').innerText).then(() => alert('Log Copied'));
+        [span_4](start_span)navigator.clipboard.writeText(document.getElementById('log-content').innerText).then(() => alert('Log Copied'));[span_4](end_span)
     }
 
     function drawGauge(value) {
         const canvas = document.getElementById('cnnGauge');
-        const ctx = canvas.getContext('2d');
+        [span_5](start_span)const ctx = canvas.getContext('2d');[span_5](end_span)
         canvas.width = 480; canvas.height = 260; ctx.scale(2, 2);
         ctx.clearRect(0, 0, 240, 130);
         ctx.beginPath();
-        ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        [span_6](start_span)ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();[span_6](end_span)
         if (value !== null) {
-            const grad = ctx.createLinearGradient(20, 0, 220, 0);
-            grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
+            [span_7](start_span)const grad = ctx.createLinearGradient(20, 0, 220, 0);[span_7](end_span)
+            [span_8](start_span)grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');[span_8](end_span)
             ctx.beginPath(); const endAngle = Math.PI + (Math.PI * (value / 100));
-            ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();
+            [span_9](start_span)ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();[span_9](end_span)
             ctx.save(); ctx.translate(120, 120); ctx.rotate(endAngle); ctx.beginPath();
             ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4);
-            ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+            [span_10](start_span)ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();[span_10](end_span)
         }
     }
 
     async function updateAll() {
-        addLog('Requesting GAS...');
+        [span_11](start_span)addLog('Requesting GAS...');[span_11](end_span)
         try {
-            const res = await fetch(PROXY_URL);
-            const data = await res.json();
+            [span_12](start_span)const res = await fetch(PROXY_URL);[span_12](end_span)
+            [span_13](start_span)const data = await res.json();[span_13](end_span)
             addLog('Keys Received: ' + Object.keys(data));
 
             for (let key in data) {
                 const node = data[key];
 
-                [span_4](start_span)[span_5](start_span)[span_6](start_span)// 1. Yahoo Finance 解析 (7769 & VIX)[span_4](end_span)[span_5](end_span)[span_6](end_span)
-                if (node.chart) {
+                // 處理 Yahoo Finance (7769 & VIX)
+                [span_14](start_span)if (node.chart) {[span_14](end_span)
                     const m = node.chart.result[0].meta;
-                    const price = m.regularMarketPrice;
+                    [span_15](start_span)const price = m.regularMarketPrice;[span_15](end_span)
                     const prev = m.previousClose;
                     const diff = price - prev;
 
-                    if (m.symbol.includes('VIX') || key.toLowerCase().includes('vix')) {
+                    [span_16](start_span)if (m.symbol.includes('VIX') || key.toLowerCase().includes('vix')) {[span_16](end_span)
                         document.getElementById('p-vix').innerText = price.toFixed(2);
-                        document.getElementById('diff-vix').innerText = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}`;
+                        document.getElementById('diff-vix').innerText = `${diff >= 0 ? [span_17](start_span)'+' : ''}${diff.toFixed(2)}`;[span_17](end_span)
                         addLog('✅ VIX updated');
                     } else {
-                        document.getElementById('p-7769').innerText = price.toLocaleString();
-                        const perc = (diff / prev) * 100;
-                        document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(1)} (${perc.toFixed(2)}%)`;
+                        [span_18](start_span)document.getElementById('p-7769').innerText = price.toLocaleString();[span_18](end_span)
+                        [span_19](start_span)const perc = (diff / prev) * 100;[span_19](end_span)
+                        document.getElementById('diff-7769').innerText = `${diff >= 0 ? [span_20](start_span)'▲' : '▼'} ${Math.abs(diff).toFixed(1)} (${perc.toFixed(2)}%)`;[span_20](end_span)
                         const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
                         document.getElementById('p-7769').style.color = color;
-                        document.getElementById('diff-7769').style.color = color;
+                        [span_21](start_span)document.getElementById('diff-7769').style.color = color;[span_21](end_span)
                         document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
                         addLog('✅ 7769 updated');
                     }
                 }
 
-                [span_7](start_span)// 2. 財經 M 平方解析 (讀取 14.74)[span_7](end_span)
-                if (key === 'cnn_m_square' || node.data) {
+                // 處理財經 M 平方解析 (讀取 14.74)
+                if (key === 'cnn_m_square' || (node.data && node.data["c:50108"])) {
                     try {
-                        // 依照 M 平方 API 結構跳轉至最後一筆數據
                         const series = node.data["c:50108"].s[0].data;
                         const latestPoint = series[series.length - 1]; 
-                        const score = parseFloat(latestPoint[1]); // 取得 14.74
+                        const score = parseFloat(latestPoint[1]); 
 
                         document.getElementById('cnnValueText').innerText = score.toFixed(1);
                         
@@ -146,13 +87,13 @@
                     }
                 }
             }
-            document.getElementById('lastUpdate').innerText = `更新於: ${new Date().toLocaleTimeString()}`;
+            [span_22](start_span)document.getElementById('lastUpdate').innerText = `更新於: ${new Date().toLocaleTimeString()}`;[span_22](end_span)
         } catch (e) {
-            addLog('Critical Fail: ' + e.message);
+            [span_23](start_span)addLog('Critical Fail: ' + e.message);[span_23](end_span)
         }
     }
+
+    // 2. 最後才執行初始化呼叫
     drawGauge(null);
     updateAll();
 </script>
-</body>
-</html>
