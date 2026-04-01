@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v4.0</title>
+    <title>7769 戰情室 v4.6</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
@@ -30,7 +30,7 @@
 <body>
 
 <div class="version-bar">
-    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v4.0 DIAGNOSTIC</span>
+    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v4.6 LIVE</span>
     <span id="lastUpdate" style="font-size: 10px; color: #888;">等待刷新...</span>
 </div>
 
@@ -59,6 +59,7 @@
 </div>
 
 <script>
+    [span_3](start_span)// 已更新為您提供的正式網址[span_3](end_span)
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
 
     function addLog(msg) {
@@ -75,14 +76,16 @@
         const ctx = canvas.getContext('2d');
         canvas.width = 480; canvas.height = 260; ctx.scale(2, 2);
         ctx.clearRect(0, 0, 240, 130);
-        ctx.beginPath(); ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
         if (value !== null) {
             const grad = ctx.createLinearGradient(20, 0, 220, 0);
             grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
             ctx.beginPath(); const endAngle = Math.PI + (Math.PI * (value / 100));
             ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();
             ctx.save(); ctx.translate(120, 120); ctx.rotate(endAngle); ctx.beginPath();
-            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4);
+            ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
         }
     }
 
@@ -95,14 +98,15 @@
 
             for (let key in data) {
                 const node = data[key];
-                
-                // 1. Yahoo Finance 
+
+                [span_4](start_span)[span_5](start_span)[span_6](start_span)// 1. Yahoo Finance 解析 (7769 & VIX)[span_4](end_span)[span_5](end_span)[span_6](end_span)
                 if (node.chart) {
                     const m = node.chart.result[0].meta;
                     const price = m.regularMarketPrice;
                     const prev = m.previousClose;
                     const diff = price - prev;
-                    if (m.symbol.includes('VIX') || key.includes('vix')) {
+
+                    if (m.symbol.includes('VIX') || key.toLowerCase().includes('vix')) {
                         document.getElementById('p-vix').innerText = price.toFixed(2);
                         document.getElementById('diff-vix').innerText = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}`;
                         addLog('✅ VIX updated');
@@ -118,17 +122,27 @@
                     }
                 }
 
-                // 2. CNN Diagnostic
-                if (key.includes('cnn')) {
-                    if (node.fear_and_greed) {
-                        const score = Math.round(node.fear_and_greed.score);
-                        document.getElementById('cnnValueText').innerText = score;
-                        document.getElementById('cnnStatusText').innerText = node.fear_and_greed.rating.toUpperCase();
+                [span_7](start_span)// 2. 財經 M 平方解析 (讀取 14.74)[span_7](end_span)
+                if (key === 'cnn_m_square' || node.data) {
+                    try {
+                        // 依照 M 平方 API 結構跳轉至最後一筆數據
+                        const series = node.data["c:50108"].s[0].data;
+                        const latestPoint = series[series.length - 1]; 
+                        const score = parseFloat(latestPoint[1]); // 取得 14.74
+
+                        document.getElementById('cnnValueText').innerText = score.toFixed(1);
+                        
+                        let rating = "極度恐懼";
+                        if (score > 25) rating = "恐懼";
+                        if (score > 45) rating = "中立";
+                        if (score > 55) rating = "貪婪";
+                        if (score > 75) rating = "極度貪婪";
+
+                        document.getElementById('cnnStatusText').innerText = rating;
                         drawGauge(score);
-                        addLog('✅ CNN Score: ' + score);
-                    } else if (node.error) {
-                        addLog('❌ CNN Error from GAS: ' + node.error);
-                        document.getElementById('cnnStatusText').innerText = "連線受阻";
+                        addLog('✅ CNN Updated: ' + score);
+                    } catch (err) {
+                        addLog('⚠️ CNN 解析路徑失敗: ' + err.message);
                     }
                 }
             }
