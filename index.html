@@ -1,88 +1,21 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v5.3</title>
-    <style>
-        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #444; }
-        .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 4px; }
-        .main-val { font-size: 2.6rem; font-weight: 800; }
-        
-        /* CNN 按鈕樣式 */
-        .cnn-btn-container { margin-top: 10px; display: flex; gap: 8px; }
-        .btn-link { flex: 1; background: #444; color: #fff; text-decoration: none; padding: 8px; border-radius: 8px; font-size: 12px; text-align: center; border: 1px solid #555; }
-        
-        .log-container { width: 100%; max-width: 380px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-        #log-window { background: #000; padding: 10px; font-family: monospace; font-size: 10px; color: #00ff00; height: 100px; overflow-y: auto; }
-        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; }
-    </style>
-</head>
-<body>
+function doGet() {
+  const urls = {
+    "stock_7769": "https://query1.finance.yahoo.com/v8/finance/chart/7769.TW",
+    "vix_index": "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX",
+    // 免 Key 的加密情緒指標 API
+    "crypto_fng": "https://api.alternative.me/fng/"
+  };
 
-<div class="dashboard">
-    <div id="card-7769" class="card"><div class="label">鴻勁 (7769.TW)</div><div id="p-7769" class="main-val">--</div></div>
-    <div id="card-vix" class="card"><div class="label">美股恐慌指數 (VIX)</div><div id="p-vix" class="main-val" style="color:#f1c40f;">--</div></div>
-
-    <div class="card" style="border-left-color: #f1c40f;">
-        <div class="label">MARKET SENTIMENT</div>
-        <div id="crypto-status" style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">CryptoPanic 數據同步中...</div>
-        
-        <div class="cnn-btn-container">
-            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link">📊 OPEN CNN F&G</a>
-            <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" class="btn-link">₿ CRYPTO F&G</a>
-        </div>
-    </div>
-
-    <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
-</div>
-
-<div class="log-container">
-    <div id="log-window"><div id="log-content">Initializing v5.3...</div></div>
-</div>
-
-<script>
-    const PROXY_URL = '你的_GAS_部署網址'; // <--- 記得換成新的 GAS 網址
-
-    function addLog(msg) {
-        document.getElementById('log-content').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-content').innerHTML;
+  let results = {};
+  for (let key in urls) {
+    try {
+      let response = UrlFetchApp.fetch(urls[key], { "muteHttpExceptions": true });
+      results[key] = JSON.parse(response.getContentText());
+    } catch (e) {
+      results[key] = { "error": e.message };
     }
+  }
 
-    async function updateAll() {
-        addLog('Connecting...');
-        try {
-            const res = await fetch(PROXY_URL);
-            const data = await res.json();
-
-            // 1. 處理 7769
-            if (data.stock_7769?.chart) {
-                const p = data.stock_7769.chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-7769').innerText = p.toLocaleString();
-                addLog('✅ 7769 OK');
-            }
-
-            // 2. 處理 VIX
-            if (data.vix_index?.chart) {
-                const v = data.vix_index.chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-vix').innerText = v.toFixed(2);
-                addLog('✅ VIX OK');
-            }
-
-            // 3. 處理 CryptoPanic (顯示最新熱門新聞數量作為情緒參考)
-            if (data.crypto_panic?.results) {
-                const count = data.crypto_panic.results.length;
-                document.getElementById('crypto-status').innerText = `Hot News: ${count} 則更新中`;
-                addLog('✅ Crypto Data OK');
-            }
-
-        } catch (e) {
-            addLog('❌ Error: ' + e.message);
-        }
-    }
-    updateAll();
-</script>
-</body>
-</html>
+  return ContentService.createTextOutput(JSON.stringify(results))
+    .setMimeType(ContentService.MimeType.JSON);
+}
