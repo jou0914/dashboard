@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v5.0</title>
+    <title>7769 戰情室 v5.1</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
@@ -21,14 +21,20 @@
         #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
         #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
-        #log-window { background: #000; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 100px; overflow-y: auto; width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; }
+
+        /* --- 重新加入 Log 容器與按鈕樣式 --- */
+        .log-container { width: 100%; max-width: 380px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        #log-window { background: #000; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 130px; overflow-y: auto; white-space: pre-wrap; }
+        .btn-copy-log { background: #444; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; transition: 0.2s; }
+        .btn-copy-log:active { background: #666; }
     </style>
 </head>
 <body>
 
 <div class="version-bar">
-    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v5.0 ALPHA-LIVE</span>
-    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待中...</span>
+    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v5.1 ALPHA-LIVE</span>
+    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待刷新...</span>
 </div>
 
 <div class="dashboard">
@@ -43,17 +49,26 @@
         <div id="diff-vix" class="sub-val" style="color:#888;">數據同步中...</div>
     </div>
     <div class="card cnn-card">
-        <div class="label">Fear & Greed Index</div>
-        <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
+        <div class="label">Fear & Greed Index (AlphaVantage)</div>
+        <div class="gauge-container">
+            <canvas id="cnnGauge"></canvas>
+            <div id="cnnValueText">--</div>
+        </div>
         <div id="cnnStatusText">偵測中...</div>
     </div>
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div id="log-window"><div id="log-content">Initializing...</div></div>
+<div class="log-container">
+    <div class="log-header">
+        <span>DEBUG CONSOLE</span>
+        <button class="btn-copy-log" onclick="copyLog()">COPY LOG</button>
+    </div>
+    <div id="log-window"><div id="log-content">Initializing...</div></div>
+</div>
 
 <script>
-    // 1. 優先定義變數 (避免 Initialization 錯誤)
+    // 您的 GAS 部署網址
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
 
     function addLog(msg) {
@@ -61,20 +76,53 @@
         content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
     }
 
+    // 重新加入一鍵複製邏輯
+    function copyLog() {
+        const text = document.getElementById('log-content').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Log 內容已複製到剪貼簿');
+        }).catch(err => {
+            console.error('無法複製: ', err);
+        });
+    }
+
     function drawGauge(value) {
         const canvas = document.getElementById('cnnGauge');
         const ctx = canvas.getContext('2d');
         canvas.width = 480; canvas.height = 260; ctx.scale(2, 2);
         ctx.clearRect(0, 0, 240, 130);
+        
+        // 底色圓弧
         ctx.beginPath();
-        ctx.arc(120, 120, 100, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        ctx.arc(120, 120, 100, Math.PI, 0); 
+        ctx.lineWidth = 18; 
+        ctx.strokeStyle = '#2a2a2e'; 
+        ctx.stroke();
+
         if (value !== null) {
+            // 進度圓弧
             const grad = ctx.createLinearGradient(20, 0, 220, 0);
-            grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-            ctx.beginPath(); const endAngle = Math.PI + (Math.PI * (value / 100));
-            ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();
-            ctx.save(); ctx.translate(120, 120); ctx.rotate(endAngle); ctx.beginPath();
-            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+            grad.addColorStop(0, '#ff4d4d'); 
+            grad.addColorStop(0.5, '#f1c40f'); 
+            grad.addColorStop(1, '#2ecc71');
+            
+            ctx.beginPath(); 
+            const endAngle = Math.PI + (Math.PI * (value / 100));
+            ctx.arc(120, 120, 100, Math.PI, endAngle); 
+            ctx.strokeStyle = grad; 
+            ctx.stroke();
+
+            // 指針
+            ctx.save(); 
+            ctx.translate(120, 120); 
+            ctx.rotate(endAngle); 
+            ctx.beginPath();
+            ctx.moveTo(0, -4); 
+            ctx.lineTo(95, 0); 
+            ctx.lineTo(0, 4); 
+            ctx.fillStyle = '#fff'; 
+            ctx.fill(); 
+            ctx.restore();
         }
     }
 
@@ -84,7 +132,7 @@
             const res = await fetch(PROXY_URL);
             const data = await res.json();
 
-            // 處理 Yahoo 數據 (7769)
+            // 1. 處理 7769 (Yahoo)
             if (data.stock_7769 && data.stock_7769.chart) {
                 const m = data.stock_7769.chart.result[0].meta;
                 const diff = m.regularMarketPrice - m.previousClose;
@@ -98,14 +146,15 @@
                 addLog('✅ 7769 Updated');
             }
 
-            // 處理 VIX
+            // 2. 處理 VIX
             if (data.vix_index && data.vix_index.chart) {
                 const price = data.vix_index.chart.result[0].meta.regularMarketPrice;
                 document.getElementById('p-vix').innerText = price.toFixed(2);
+                document.getElementById('diff-vix').innerText = '數據已更新';
                 addLog('✅ VIX Updated');
             }
 
-            // 處理 AlphaVantage Fear & Greed Index
+            // 3. 處理 AlphaVantage Fear & Greed
             if (data.fng_data && data.fng_data.fng) {
                 const score = parseFloat(data.fng_data.fng[0].value);
                 const rating = data.fng_data.fng[0].value_classification;
@@ -117,11 +166,11 @@
 
             document.getElementById('lastUpdate').innerText = `更新於: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-            addLog('Error: ' + e.message);
+            addLog('❌ Fetch Fail: ' + e.message);
         }
     }
 
-    // 2. 初始化執行
+    // 初始化
     drawGauge(null);
     updateAll();
 </script>
