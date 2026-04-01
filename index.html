@@ -3,76 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v3.5</title>
+    <title>7769 戰情室 v3.6</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        
-        /* 版本號頂部欄 */
         .version-bar { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #333; }
-        .version-tag { font-size: 11px; color: #f1c40f; font-weight: bold; background: #333; padding: 2px 8px; border-radius: 4px; }
-        .update-time { font-size: 10px; color: #888; }
-
+        .version-tag { font-size: 11px; color: #f1c40f; font-weight: bold; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
         .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
-        
-        .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 6px; }
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
-        
-        /* CNN 繪圖區 */
         .cnn-card { border-left-color: #f1c40f; text-align: center; }
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
         #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
         #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
-
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
-        
-        /* 詳細 Debug Log 視窗 */
-        .log-container { width: 100%; max-width: 360px; margin-top: 15px; position: relative; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
-        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        #log-window { background: #000; padding: 12px; font-family: 'Consolas', monospace; font-size: 10px; color: #00ff00; height: 120px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+        .log-container { width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; }
+        #log-window { background: #000; padding: 12px; font-family: 'Consolas', monospace; font-size: 10px; color: #00ff00; height: 160px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
         .btn-copy-log { background: #444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="version-bar">
-    <span class="version-tag">SYSTEM v3.5 PRO</span>
-    <span id="lastUpdate" class="update-time">最後同步: 尚未更新</span>
+    <span class="version-tag">SYSTEM v3.6 MONITOR</span>
+    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待同步...</span>
 </div>
 
 <div class="dashboard">
-    <div id="card-7769" class="card">
-        <div class="label">鴻勁 (7769.TW)</div>
-        <div id="p-7769" class="main-val">--.--</div>
-    </div>
-
-    <div id="card-vix" class="card">
-        <div class="label">美股恐慌指數 (VIX)</div>
-        <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
-    </div>
-
+    <div id="card-7769" class="card"><div class="label" style="font-size:12px;color:#888;">鴻勁 (7769.TW)</div><div id="p-7769" class="main-val">--.--</div></div>
+    <div id="card-vix" class="card"><div class="label" style="font-size:12px;color:#888;">美股恐慌指數 (VIX)</div><div id="p-vix" class="main-val" style="color:#f1c40f;">--.--</div></div>
     <div class="card cnn-card">
-        <div class="label">CNN Fear & Greed Index</div>
-        <div class="gauge-container">
-            <canvas id="cnnGauge"></canvas>
-            <div id="cnnValueText">--</div>
-        </div>
-        <div id="cnnStatusText">DEBUGGING...</div>
+        <div class="label" style="font-size:12px;color:#888;">CNN Fear & Greed Index</div>
+        <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
+        <div id="cnnStatusText">ANALYZING...</div>
     </div>
-
-    <button class="btn-refresh" onclick="updateAll()">手動刷新數據 (FORCE REFRESH)</button>
+    <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
 <div class="log-container">
-    <div class="log-header">
-        <span>DEBUG CONSOLE (詳細日誌)</span>
-        <button class="btn-copy-log" onclick="copyLog()">COPY LOG</button>
-    </div>
-    <div id="log-window"><div id="log-content">等待初始化...</div></div>
+    <div class="log-header"><span>JSON TRAFFIC MONITOR</span><button class="btn-copy-log" onclick="copyLog()">COPY LOG</button></div>
+    <div id="log-window"><div id="log-content">Initializing...</div></div>
 </div>
 
 <script>
@@ -81,13 +55,13 @@
     function addLog(type, msg) {
         const content = document.getElementById('log-content');
         const timestamp = new Date().toLocaleTimeString();
-        const prefix = { 'info': '⚙️', 'success': '✅', 'error': '❌', 'warn': '⚠️' }[type];
-        content.innerHTML = `[${timestamp}] ${prefix} ${msg}\n` + content.innerHTML;
+        const icon = { 'info': '⚙️', 'success': '✅', 'error': '❌', 'warn': '⚠️', 'raw': '📄' }[type];
+        content.innerHTML = `[${timestamp}] ${icon} ${msg}\n` + content.innerHTML;
     }
 
     function copyLog() {
         const text = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(text).then(() => alert('已複製詳細日誌'));
+        navigator.clipboard.writeText(text).then(() => alert('Log copied!'));
     }
 
     function drawGauge(value) {
@@ -107,66 +81,53 @@
     }
 
     async function updateAll() {
-        addLog('info', '開始同步 GAS 中繼站...');
-        document.getElementById('lastUpdate').innerText = `同步中... ${new Date().toLocaleTimeString()}`;
-
+        addLog('info', 'Connecting to Proxy...');
         try {
             const res = await fetch(PROXY_URL);
-            const data = await res.json();
-            addLog('success', '成功接收 JSON 資料包');
-
-            // 1. 偵錯 7769
+            const rawText = await res.text();
+            const data = JSON.parse(rawText);
+            
+            addLog('success', 'Packet Received.');
+            addLog('raw', `Available Keys: [${Object.keys(data).join(', ')}]`);
+            
+            // 7769
             const twKey = Object.keys(data).find(k => k.includes("7769"));
-            if (twKey && data[twKey].chart) {
-                const price = data[twKey].chart.result[0].meta.regularMarketPrice;
-                const prev = data[twKey].chart.result[0].meta.previousClose;
-                document.getElementById('p-7769').innerText = price.toFixed(2);
-                document.getElementById('p-7769').style.color = price >= prev ? 'var(--red)' : 'var(--green)';
-                document.getElementById('card-7769').className = `card ${price >= prev ? 'up' : 'down'}`;
-                addLog('info', `鴻勁解析成功: ${price}`);
+            if (twKey) {
+                const p = data[twKey].chart.result[0].meta.regularMarketPrice;
+                document.getElementById('p-7769').innerText = p.toFixed(2);
+                addLog('info', `Stock 7769: ${p}`);
             }
 
-            // 2. 偵錯 VIX
+            // VIX
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey) {
-                const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-vix').innerText = vixVal.toFixed(2);
-                addLog('info', `VIX 解析成功: ${vixVal}`);
+                const v = data[vixKey].chart.result[0].meta.regularMarketPrice;
+                document.getElementById('p-vix').innerText = v.toFixed(2);
+                addLog('info', `VIX Index: ${v}`);
             }
 
-            // 3. 深度偵錯 CNN
+            // CNN Debugging
             const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn"));
-            if (!cnnKey) {
-                addLog('error', '中繼站回傳資料中完全找不到 "cnn" 關鍵字節點');
-            } else {
+            if (cnnKey) {
                 const cnnObj = data[cnnKey];
-                addLog('info', `找到 CNN 節點: "${cnnKey}"，類型: ${Array.isArray(cnnObj) ? 'Array' : typeof cnnObj}`);
-                
-                let score, rating;
-                if (cnnObj.fear_and_greed) {
-                    score = Math.round(cnnObj.fear_and_greed.score);
-                    rating = cnnObj.fear_and_greed.rating;
-                    addLog('success', `路徑 A (Object) 解析成功 Score: ${score}`);
-                } else if (Array.isArray(cnnObj) && cnnObj.length > 0) {
-                    const latest = cnnObj[cnnObj.length - 1];
-                    score = Math.round(latest.y);
-                    rating = latest.rating;
-                    addLog('success', `路徑 B (Array) 解析成功 Score: ${score}`);
-                }
-
-                if (score !== undefined) {
+                if (cnnObj.fear_and_greed || (Array.isArray(cnnObj) && cnnObj.length > 0)) {
+                    let score = cnnObj.fear_and_greed ? Math.round(cnnObj.fear_and_greed.score) : Math.round(cnnObj[cnnObj.length-1].y);
+                    let rating = cnnObj.fear_and_greed ? cnnObj.fear_and_greed.rating : cnnObj[cnnObj.length-1].rating;
                     document.getElementById('cnnValueText').innerText = score;
                     document.getElementById('cnnStatusText').innerText = rating.toUpperCase();
                     drawGauge(score);
+                    addLog('success', `CNN Parsed: ${score}`);
                 } else {
-                    addLog('warn', `CNN 節點存在但結構未知: ${JSON.stringify(cnnObj).substring(0, 50)}...`);
+                    addLog('warn', `CNN Key exists but structure is empty: ${JSON.stringify(cnnObj)}`);
                 }
+            } else {
+                addLog('error', 'CNN Key MISSING in JSON!');
+                addLog('raw', `Full JSON Payload Snapshot: ${rawText.substring(0, 300)}...`);
             }
-
-            document.getElementById('lastUpdate').innerText = `最後同步: ${new Date().toLocaleTimeString()}`;
-
+            
+            document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
         } catch (e) {
-            addLog('error', `連線崩潰: ${e.message}`);
+            addLog('error', `Critical Failure: ${e.message}`);
         }
     }
 
