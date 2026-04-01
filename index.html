@@ -3,108 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 鴻勁 監控面板 v1.3</title>
+    <title>7769 鴻勁 監控 v1.5</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .card { background: #fff; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; position: relative; }
-        .version { position: absolute; top: 10px; right: 15px; font-size: 10px; color: #ccc; }
-        h1 { margin: 0; color: #1c1e21; font-size: 1.5rem; }
-        .price { font-size: 3.5rem; font-weight: 800; color: #e74c3c; margin: 15px 0; letter-spacing: -2px; }
-        .status-bar { font-size: 12px; color: #65676b; margin-bottom: 20px; background: #f0f2f5; padding: 5px 10px; border-radius: 10px; }
-        .btn-group { display: grid; gap: 10px; }
-        button { border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-update { background: #007bff; color: white; font-size: 1rem; }
-        .btn-update:active { transform: scale(0.98); }
-        
-        /* Debug Area */
-        .debug-box { width: 100%; max-width: 350px; margin-top: 20px; background: #1c1e21; border-radius: 12px; padding: 15px; box-sizing: border-box; }
-        .debug-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .debug-header span { color: #fff; font-size: 12px; font-weight: bold; }
-        .btn-copy { background: #4e4f50; color: #fff; font-size: 10px; padding: 4px 8px; }
-        #log-output { color: #00ff00; font-family: monospace; font-size: 11px; height: 120px; overflow-y: auto; white-space: pre-wrap; text-align: left; border-top: 1px solid #333; padding-top: 10px; }
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: #fff; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        .price { font-size: 3.5rem; font-weight: bold; color: #333; margin: 15px 0; }
+        .btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .debug-box { width: 320px; margin-top: 20px; background: #222; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; }
+        #log { height: 100px; overflow-y: auto; white-space: pre-wrap; margin-top: 10px; border-top: 1px solid #444; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="version">v1.3.20260401</div>
-    <h1>鴻勁 (7769)</h1>
-    <div id="price-display" class="price">---.--</div>
-    <div id="status-text" class="status-bar">準備讀取 Yahoo Finance...</div>
-    
-    <div class="btn-group">
-        <button class="btn-update" onclick="refreshData()">立即更新行情</button>
-        <button style="background:#eee; color:#333; font-size:12px;" onclick="window.open('https://tw.stock.yahoo.com/quote/7769.TW')">查看 Yahoo 網頁版</button>
-    </div>
+    <div style="font-size: 10px; color: #ccc;">v1.5 (Backend Relay)</div>
+    <h2 style="margin:0">鴻勁 7769</h2>
+    <div id="price" class="price">--.--</div>
+    <div id="status" style="font-size:12px; color: #666; margin-bottom: 15px;">初始化中...</div>
+    <button class="btn" onclick="fetchData()">刷新數據</button>
 </div>
 
 <div class="debug-box">
-    <div class="debug-header">
+    <div style="display:flex; justify-content:space-between">
         <span>DEBUG LOG</span>
-        <button class="btn-copy" onclick="copyLog()">一鍵複製 Log</button>
+        <button onclick="copyLog()" style="font-size:10px">複製</button>
     </div>
-    <div id="log-output">初始化中...</div>
+    <div id="log"></div>
 </div>
 
 <script>
-    const logOutput = document.getElementById('log-output');
-    const priceDisplay = document.getElementById('price-display');
-    const statusText = document.getElementById('status-text');
+    // ⚠️ 請填入你在第一步取得的 GAS 網址
+    const PROXY_URL = '這裡填入你的GAS網址';
 
     function addLog(msg) {
-        const now = new Date().toLocaleTimeString();
-        logOutput.innerHTML = `[${now}] ${msg}\n` + logOutput.innerHTML;
+        document.getElementById('log').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log').innerHTML;
     }
 
-    async function refreshData() {
-        addLog("開始嘗試抓取 7769.TW...");
-        statusText.innerText = "連線中...";
-        
-        // 使用 Yahoo Finance 的公開 API (透過 query2 介面)
-        const symbol = "7769.TW"; 
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+    async function fetchData() {
+        if (!PROXY_URL.startsWith('http')) {
+            addLog("https://script.google.com/macros/s/AKfycbxi2Xm_MZ1Bak8sAIfC-MiPaHERwuqpz8eSh8yRUy5efO8sa6Mur_XJ95BHhqYtKnJ7ww/exec"）；
+            return;
+        }
+
+        document.getElementById('status').innerText = "透過中繼站抓取中...";
+        addLog("正在請求中繼站...");
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(PROXY_URL);
             const data = await response.json();
             
-            addLog(`API 回傳狀態: ${response.status}`);
-            addLog(`數據快照: ${JSON.stringify(data).substring(0, 100)}...`);
-
-            const result = data.chart.result[0];
-            const meta = result.meta;
-            const currentPrice = meta.regularMarketPrice;
-            const prevClose = meta.previousClose;
-
-            if (currentPrice) {
-                priceDisplay.innerText = currentPrice.toFixed(2);
-                // 判斷顏色
-                priceDisplay.style.color = currentPrice >= prevClose ? "#e74c3c" : "#2ecc71";
-                statusText.innerText = `最後更新：${new Date().toLocaleTimeString()}`;
-                addLog(`✅ 成功取得價格: ${currentPrice}`);
-            } else {
-                throw new Error("欄位解析失敗");
-            }
-
+            const meta = data.chart.result[0].meta;
+            const price = meta.regularMarketPrice;
+            
+            document.getElementById('price').innerText = price.toFixed(2);
+            document.getElementById('price').style.color = price >= meta.previousClose ? "#e74c3c" : "#2ecc71";
+            document.getElementById('status').innerText = "更新成功";
+            addLog(`✅ 成功取得價格: ${price}`);
         } catch (err) {
             addLog(`❌ 失敗: ${err.message}`);
-            statusText.innerText = "讀取失敗，請稍後再試";
-            
-            // 如果連 Yahoo 都失敗 (CORS 阻擋)，給予手動連結
-            if(err.message.includes("fetch")) {
-                addLog("提示: 可能是瀏覽器 CORS 限制，建議部署到 GitHub Pages 或使用後端代理。");
-            }
+            document.getElementById('status').innerText = "抓取失敗";
         }
     }
 
     function copyLog() {
-        const text = logOutput.innerText;
-        navigator.clipboard.writeText(text).then(() => alert("Log 已複製"));
+        navigator.clipboard.writeText(document.getElementById('log').innerText);
+        alert("已複製");
     }
 
-    // 自動執行一次
-    refreshData();
+    fetchData();
 </script>
-
 </body>
 </html>
