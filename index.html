@@ -3,68 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v3.2</title>
+    <title>7769 戰情室 v3.5</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
+        
+        /* 版本號頂部欄 */
+        .version-bar { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #333; }
+        .version-tag { font-size: 11px; color: #f1c40f; font-weight: bold; background: #333; padding: 2px 8px; border-radius: 4px; }
+        .update-time { font-size: 10px; color: #888; }
+
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
+        
         .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 6px; }
         .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
-        .sub-val { font-size: 1rem; font-weight: 600; }
+        
+        /* CNN 繪圖區 */
         .cnn-card { border-left-color: #f1c40f; text-align: center; }
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
-        #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; color: #fff; }
+        #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
         #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
-        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; font-size: 16px; }
-        .log-container { width: 100%; max-width: 360px; margin-top: 15px; position: relative; }
-        #log-window { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 10px; color: #555; height: 95px; overflow-y: auto; border: 1px solid #222; white-space: pre-wrap; }
-        .btn-copy-log { position: absolute; top: 5px; right: 5px; background: #333; color: #aaa; border: 1px solid #444; padding: 2px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; z-index: 10; }
+
+        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
+        
+        /* 詳細 Debug Log 視窗 */
+        .log-container { width: 100%; max-width: 360px; margin-top: 15px; position: relative; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        #log-window { background: #000; padding: 12px; font-family: 'Consolas', monospace; font-size: 10px; color: #00ff00; height: 120px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+        .btn-copy-log { background: #444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
     </style>
 </head>
 <body>
+
+<div class="version-bar">
+    <span class="version-tag">SYSTEM v3.5 PRO</span>
+    <span id="lastUpdate" class="update-time">最後同步: 尚未更新</span>
+</div>
 
 <div class="dashboard">
     <div id="card-7769" class="card">
         <div class="label">鴻勁 (7769.TW)</div>
         <div id="p-7769" class="main-val">--.--</div>
-        <div id="diff-7769" class="sub-val">--.-- (--%)</div>
     </div>
+
     <div id="card-vix" class="card">
         <div class="label">美股恐慌指數 (VIX)</div>
         <div id="p-vix" class="main-val" style="color: #f1c40f;">--.--</div>
-        <div id="status-vix" class="sub-val" style="color: #888;">同步中...</div>
     </div>
+
     <div class="card cnn-card">
         <div class="label">CNN Fear & Greed Index</div>
         <div class="gauge-container">
             <canvas id="cnnGauge"></canvas>
             <div id="cnnValueText">--</div>
         </div>
-        <div id="cnnStatusText">讀取中...</div>
+        <div id="cnnStatusText">DEBUGGING...</div>
     </div>
-    <button class="btn-refresh" onclick="updateAll()">更新全球市場數據</button>
+
+    <button class="btn-refresh" onclick="updateAll()">手動刷新數據 (FORCE REFRESH)</button>
 </div>
 
 <div class="log-container">
-    <button class="btn-copy-log" onclick="copyLog()">複製 LOG</button>
-    <div id="log-window"><div id="log-content">系統初始化中...</div></div>
+    <div class="log-header">
+        <span>DEBUG CONSOLE (詳細日誌)</span>
+        <button class="btn-copy-log" onclick="copyLog()">COPY LOG</button>
+    </div>
+    <div id="log-window"><div id="log-content">等待初始化...</div></div>
 </div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
 
-    function addLog(msg) {
+    function addLog(type, msg) {
         const content = document.getElementById('log-content');
-        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix = { 'info': '⚙️', 'success': '✅', 'error': '❌', 'warn': '⚠️' }[type];
+        content.innerHTML = `[${timestamp}] ${prefix} ${msg}\n` + content.innerHTML;
     }
 
     function copyLog() {
         const text = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(text).then(() => alert('LOG 已複製'));
+        navigator.clipboard.writeText(text).then(() => alert('已複製詳細日誌'));
     }
 
     function drawGauge(value) {
@@ -84,61 +107,69 @@
     }
 
     async function updateAll() {
-        addLog("連線至中繼站...");
-        try {
-            const response = await fetch(PROXY_URL);
-            const data = await response.json();
-            addLog("數據包接收成功，正在識別結構...");
+        addLog('info', '開始同步 GAS 中繼站...');
+        document.getElementById('lastUpdate').innerText = `同步中... ${new Date().toLocaleTimeString()}`;
 
-            // 1. 處理 7769
+        try {
+            const res = await fetch(PROXY_URL);
+            const data = await res.json();
+            addLog('success', '成功接收 JSON 資料包');
+
+            // 1. 偵錯 7769
             const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey && data[twKey].chart) {
-                const tw = data[twKey].chart.result[0].meta;
-                const diff = tw.regularMarketPrice - tw.previousClose;
-                document.getElementById('p-7769').innerText = tw.regularMarketPrice.toFixed(2);
-                const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
-                document.getElementById('p-7769').style.color = color;
-                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)}`;
-                document.getElementById('diff-7769').style.color = color;
-                document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
-                addLog("✅ 鴻勁數據同步完成");
+                const price = data[twKey].chart.result[0].meta.regularMarketPrice;
+                const prev = data[twKey].chart.result[0].meta.previousClose;
+                document.getElementById('p-7769').innerText = price.toFixed(2);
+                document.getElementById('p-7769').style.color = price >= prev ? 'var(--red)' : 'var(--green)';
+                document.getElementById('card-7769').className = `card ${price >= prev ? 'up' : 'down'}`;
+                addLog('info', `鴻勁解析成功: ${price}`);
             }
 
-            // 2. 處理 VIX
+            // 2. 偵錯 VIX
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
-            if (vixKey) document.getElementById('p-vix').innerText = data[vixKey].chart.result[0].meta.regularMarketPrice.toFixed(2);
+            if (vixKey) {
+                const vixVal = data[vixKey].chart.result[0].meta.regularMarketPrice;
+                document.getElementById('p-vix').innerText = vixVal.toFixed(2);
+                addLog('info', `VIX 解析成功: ${vixVal}`);
+            }
 
-            // 3. CNN 智慧解析 (相容物件模式與歷史陣列模式)
+            // 3. 深度偵錯 CNN
             const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn"));
-            const cnnData = data[cnnKey];
-            let score, rating;
-
-            if (cnnData && cnnData.fear_and_greed) {
-                // 模式 A: 物件模式 (graphdata/current)
-                score = Math.round(cnnData.fear_and_greed.score);
-                rating = cnnData.fear_and_greed.rating.toUpperCase();
-                addLog("ℹ️ 使用物件模式解析 CNN");
-            } else if (Array.isArray(cnnData) && cnnData.length > 0) {
-                // 模式 B: 歷史陣列模式 (static/history)
-                const latest = cnnData[cnnData.length - 1];
-                score = Math.round(latest.y);
-                rating = latest.rating ? latest.rating.toUpperCase() : "UNKNOWN";
-                addLog("ℹ️ 使用歷史陣列模式解析 CNN");
-            }
-
-            if (score !== undefined) {
-                document.getElementById('cnnValueText').innerText = score;
-                document.getElementById('cnnStatusText').innerText = rating;
-                drawGauge(score);
-                addLog(`✅ CNN 同步成功: ${score}`);
+            if (!cnnKey) {
+                addLog('error', '中繼站回傳資料中完全找不到 "cnn" 關鍵字節點');
             } else {
-                addLog("⚠️ CNN 解析失敗：結構不符合預期");
+                const cnnObj = data[cnnKey];
+                addLog('info', `找到 CNN 節點: "${cnnKey}"，類型: ${Array.isArray(cnnObj) ? 'Array' : typeof cnnObj}`);
+                
+                let score, rating;
+                if (cnnObj.fear_and_greed) {
+                    score = Math.round(cnnObj.fear_and_greed.score);
+                    rating = cnnObj.fear_and_greed.rating;
+                    addLog('success', `路徑 A (Object) 解析成功 Score: ${score}`);
+                } else if (Array.isArray(cnnObj) && cnnObj.length > 0) {
+                    const latest = cnnObj[cnnObj.length - 1];
+                    score = Math.round(latest.y);
+                    rating = latest.rating;
+                    addLog('success', `路徑 B (Array) 解析成功 Score: ${score}`);
+                }
+
+                if (score !== undefined) {
+                    document.getElementById('cnnValueText').innerText = score;
+                    document.getElementById('cnnStatusText').innerText = rating.toUpperCase();
+                    drawGauge(score);
+                } else {
+                    addLog('warn', `CNN 節點存在但結構未知: ${JSON.stringify(cnnObj).substring(0, 50)}...`);
+                }
             }
+
+            document.getElementById('lastUpdate').innerText = `最後同步: ${new Date().toLocaleTimeString()}`;
 
         } catch (e) {
-            addLog("❌ 錯誤: " + e.message);
+            addLog('error', `連線崩潰: ${e.message}`);
         }
     }
+
     drawGauge(null);
     updateAll();
 </script>
