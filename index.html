@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v3.6</title>
+    <title>7769 戰情室 v3.7</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .version-bar { width: 100%; max-width: 380px; display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #333; }
-        .version-tag { font-size: 11px; color: #f1c40f; font-weight: bold; }
         .dashboard { width: 100%; max-width: 380px; display: grid; gap: 12px; }
         .card { background: var(--card); padding: 18px; border-radius: 16px; border-left: 5px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
-        .main-val { font-size: 2.6rem; font-weight: 800; margin: 3px 0; letter-spacing: -1px; }
+        .label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 4px; }
+        .main-val { font-size: 2.6rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        .sub-val { font-size: 1rem; font-weight: 600; margin-top: 2px; }
         .cnn-card { border-left-color: #f1c40f; text-align: center; }
         .gauge-container { position: relative; width: 240px; height: 130px; margin: 10px auto 0; }
         #cnnGauge { width: 240px; height: 130px; }
@@ -22,31 +23,42 @@
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
         .log-container { width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
         .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; }
-        #log-window { background: #000; padding: 12px; font-family: 'Consolas', monospace; font-size: 10px; color: #00ff00; height: 160px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+        #log-window { background: #000; padding: 12px; font-family: 'Consolas', monospace; font-size: 10px; color: #00ff00; height: 140px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
         .btn-copy-log { background: #444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="version-bar">
-    <span class="version-tag">SYSTEM v3.6 MONITOR</span>
-    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待同步...</span>
+    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v3.7 FINAL</span>
+    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待刷新...</span>
 </div>
 
 <div class="dashboard">
-    <div id="card-7769" class="card"><div class="label" style="font-size:12px;color:#888;">鴻勁 (7769.TW)</div><div id="p-7769" class="main-val">--.--</div></div>
-    <div id="card-vix" class="card"><div class="label" style="font-size:12px;color:#888;">美股恐慌指數 (VIX)</div><div id="p-vix" class="main-val" style="color:#f1c40f;">--.--</div></div>
-    <div class="card cnn-card">
-        <div class="label" style="font-size:12px;color:#888;">CNN Fear & Greed Index</div>
-        <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
-        <div id="cnnStatusText">ANALYZING...</div>
+    <div id="card-7769" class="card">
+        <div class="label">鴻勁 (7769.TW)</div>
+        <div id="p-7769" class="main-val">--.--</div>
+        <div id="diff-7769" class="sub-val">--.-- (--%)</div>
     </div>
+
+    <div id="card-vix" class="card">
+        <div class="label">美股恐慌指數 (VIX)</div>
+        <div id="p-vix" class="main-val" style="color:#f1c40f;">--.--</div>
+        <div id="diff-vix" class="sub-val" style="color:#888;">數據同步中...</div>
+    </div>
+
+    <div class="card cnn-card">
+        <div class="label">CNN Fear & Greed Index</div>
+        <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
+        <div id="cnnStatusText">等待 GAS 回傳...</div>
+    </div>
+
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
 <div class="log-container">
-    <div class="log-header"><span>JSON TRAFFIC MONITOR</span><button class="btn-copy-log" onclick="copyLog()">COPY LOG</button></div>
-    <div id="log-window"><div id="log-content">Initializing...</div></div>
+    <div class="log-header"><span>DEBUG CONSOLE</span><button class="btn-copy-log" onclick="copyLog()">COPY LOG</button></div>
+    <div id="log-window"><div id="log-content">System Initializing...</div></div>
 </div>
 
 <script>
@@ -54,14 +66,12 @@
 
     function addLog(type, msg) {
         const content = document.getElementById('log-content');
-        const timestamp = new Date().toLocaleTimeString();
-        const icon = { 'info': '⚙️', 'success': '✅', 'error': '❌', 'warn': '⚠️', 'raw': '📄' }[type];
-        content.innerHTML = `[${timestamp}] ${icon} ${msg}\n` + content.innerHTML;
+        const icon = { 'info': '⚙️', 'success': '✅', 'error': '❌', 'warn': '⚠️' }[type];
+        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${icon} ${msg}\n` + content.innerHTML;
     }
 
     function copyLog() {
-        const text = document.getElementById('log-content').innerText;
-        navigator.clipboard.writeText(text).then(() => alert('Log copied!'));
+        navigator.clipboard.writeText(document.getElementById('log-content').innerText).then(() => alert('Log Copied'));
     }
 
     function drawGauge(value) {
@@ -81,53 +91,59 @@
     }
 
     async function updateAll() {
-        addLog('info', 'Connecting to Proxy...');
+        addLog('info', 'Connecting to GAS...');
         try {
             const res = await fetch(PROXY_URL);
-            const rawText = await res.text();
-            const data = JSON.parse(rawText);
-            
-            addLog('success', 'Packet Received.');
-            addLog('raw', `Available Keys: [${Object.keys(data).join(', ')}]`);
-            
-            // 7769
+            const data = await res.json();
+            addLog('success', `Data Received. Keys: [${Object.keys(data).join(', ')}]`);
+
+            // 7769 解析 (含漲跌幅)
             const twKey = Object.keys(data).find(k => k.includes("7769"));
             if (twKey) {
-                const p = data[twKey].chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-7769').innerText = p.toFixed(2);
-                addLog('info', `Stock 7769: ${p}`);
+                const tw = data[twKey].chart.result[0].meta;
+                const price = tw.regularMarketPrice;
+                const prev = tw.previousClose;
+                const diff = price - prev;
+                const perc = (diff / prev) * 100;
+                
+                document.getElementById('p-7769').innerText = price.toLocaleString();
+                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(1)} (${perc.toFixed(2)}%)`;
+                
+                const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
+                document.getElementById('p-7769').style.color = color;
+                document.getElementById('diff-7769').style.color = color;
+                document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
+                addLog('info', `Stock 7769: ${price} (${diff >= 0 ? '+' : ''}${diff})`);
             }
 
-            // VIX
+            // VIX 解析
             const vixKey = Object.keys(data).find(k => k.toUpperCase().includes("VIX"));
             if (vixKey) {
-                const v = data[vixKey].chart.result[0].meta.regularMarketPrice;
-                document.getElementById('p-vix').innerText = v.toFixed(2);
-                addLog('info', `VIX Index: ${v}`);
+                const vix = data[vixKey].chart.result[0].meta;
+                const vPrice = vix.regularMarketPrice;
+                const vPrev = vix.previousClose;
+                const vDiff = vPrice - vPrev;
+                document.getElementById('p-vix').innerText = vPrice.toFixed(2);
+                document.getElementById('diff-vix').innerText = `${vDiff >= 0 ? '+' : ''}${vDiff.toFixed(2)} (自昨收)`;
+                addLog('info', `VIX: ${vPrice}`);
             }
 
-            // CNN Debugging
+            // CNN 解析
             const cnnKey = Object.keys(data).find(k => k.toLowerCase().includes("cnn"));
-            if (cnnKey) {
-                const cnnObj = data[cnnKey];
-                if (cnnObj.fear_and_greed || (Array.isArray(cnnObj) && cnnObj.length > 0)) {
-                    let score = cnnObj.fear_and_greed ? Math.round(cnnObj.fear_and_greed.score) : Math.round(cnnObj[cnnObj.length-1].y);
-                    let rating = cnnObj.fear_and_greed ? cnnObj.fear_and_greed.rating : cnnObj[cnnObj.length-1].rating;
-                    document.getElementById('cnnValueText').innerText = score;
-                    document.getElementById('cnnStatusText').innerText = rating.toUpperCase();
-                    drawGauge(score);
-                    addLog('success', `CNN Parsed: ${score}`);
-                } else {
-                    addLog('warn', `CNN Key exists but structure is empty: ${JSON.stringify(cnnObj)}`);
-                }
+            if (cnnKey && data[cnnKey].fear_and_greed) {
+                const cnn = data[cnnKey].fear_and_greed;
+                document.getElementById('cnnValueText').innerText = Math.round(cnn.score);
+                document.getElementById('cnnStatusText').innerText = cnn.rating.toUpperCase();
+                drawGauge(cnn.score);
+                addLog('success', `CNN Score: ${cnn.score}`);
             } else {
-                addLog('error', 'CNN Key MISSING in JSON!');
-                addLog('raw', `Full JSON Payload Snapshot: ${rawText.substring(0, 300)}...`);
+                document.getElementById('cnnStatusText').innerText = "GAS 抓取失敗";
+                addLog('error', 'GAS 端的 CNN 欄位遺失，請檢查 GAS 腳本中的網址與 Header');
             }
-            
-            document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
+
+            document.getElementById('lastUpdate').innerText = `更新於: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-            addLog('error', `Critical Failure: ${e.message}`);
+            addLog('error', `Fail: ${e.message}`);
         }
     }
 
