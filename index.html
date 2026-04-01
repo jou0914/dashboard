@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 戰情室 v4.6</title>
+    <title>7769 戰情室 v5.0</title>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #121212; --card: #1c1c1e; --text: #e0e0e0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
@@ -21,24 +21,21 @@
         #cnnValueText { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
         #cnnStatusText { font-size: 0.9rem; color: #f1c40f; margin-top: 8px; font-weight: bold; }
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
-        .log-container { width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; position: relative; }
-        .log-header { background: #222; color: #aaa; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        #log-window { background: #000; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 130px; overflow-y: auto; white-space: pre-wrap; }
-        .btn-copy-log { background: #444; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+        #log-window { background: #000; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 100px; overflow-y: auto; width: 100%; max-width: 360px; margin-top: 15px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="version-bar">
-    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v4.6 LIVE</span>
-    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待刷新...</span>
+    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">v5.0 ALPHA-LIVE</span>
+    <span id="lastUpdate" style="font-size: 10px; color: #888;">等待中...</span>
 </div>
 
 <div class="dashboard">
     <div id="card-7769" class="card">
         <div class="label">鴻勁 (7769.TW)</div>
         <div id="p-7769" class="main-val">--.--</div>
-        <div id="diff-7769" class="sub-val">--.-- (--%)</div>
+        <div id="diff-7769" class="sub-val">--.--</div>
     </div>
     <div id="card-vix" class="card">
         <div class="label">美股恐慌指數 (VIX)</div>
@@ -46,31 +43,22 @@
         <div id="diff-vix" class="sub-val" style="color:#888;">數據同步中...</div>
     </div>
     <div class="card cnn-card">
-        <div class="label">CNN Fear & Greed Index</div>
+        <div class="label">Fear & Greed Index</div>
         <div class="gauge-container"><canvas id="cnnGauge"></canvas><div id="cnnValueText">--</div></div>
         <div id="cnnStatusText">偵測中...</div>
     </div>
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div class="log-container">
-    <div class="log-header"><span>DEBUG CONSOLE</span><button class="btn-copy-log" onclick="copyLog()">COPY LOG</button></div>
-    <div id="log-window"><div id="log-content">Initializing...</div></div>
-</div>
+<div id="log-window"><div id="log-content">Initializing...</div></div>
 
 <script>
-    // 1. 先定義核心變數與功能函數
+    // 1. 優先定義變數 (避免 Initialization 錯誤)
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
 
     function addLog(msg) {
         const content = document.getElementById('log-content');
-        if (content) {
-            content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
-        }
-    }
-
-    function copyLog() {
-        navigator.clipboard.writeText(document.getElementById('log-content').innerText).then(() => alert('Log Copied'));
+        content.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + content.innerHTML;
     }
 
     function drawGauge(value) {
@@ -86,75 +74,54 @@
             ctx.beginPath(); const endAngle = Math.PI + (Math.PI * (value / 100));
             ctx.arc(120, 120, 100, Math.PI, endAngle); ctx.strokeStyle = grad; ctx.stroke();
             ctx.save(); ctx.translate(120, 120); ctx.rotate(endAngle); ctx.beginPath();
-            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4);
-            ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+            ctx.moveTo(0, -4); ctx.lineTo(95, 0); ctx.lineTo(0, 4); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
         }
     }
 
     async function updateAll() {
-        addLog('Requesting GAS...');
+        addLog('Connecting AlphaVantage via GAS...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
-            addLog('Keys Received: ' + Object.keys(data));
 
-            for (let key in data) {
-                const node = data[key];
-
-                // 處理 Yahoo Finance (7769 & VIX)
-                if (node.chart) {
-                    const m = node.chart.result[0].meta;
-                    const price = m.regularMarketPrice;
-                    const prev = m.previousClose;
-                    const diff = price - prev;
-
-                    if (m.symbol.includes('VIX') || key.toLowerCase().includes('vix')) {
-                        document.getElementById('p-vix').innerText = price.toFixed(2);
-                        document.getElementById('diff-vix').innerText = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}`;
-                        addLog('✅ VIX updated');
-                    } else {
-                        document.getElementById('p-7769').innerText = price.toLocaleString();
-                        const perc = (diff / prev) * 100;
-                        document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(1)} (${perc.toFixed(2)}%)`;
-                        const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
-                        document.getElementById('p-7769').style.color = color;
-                        document.getElementById('diff-7769').style.color = color;
-                        document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
-                        addLog('✅ 7769 updated');
-                    }
-                }
-
-                // 處理財經 M 平方解析 (讀取 14.74)
-                if (key === 'cnn_m_square' || (node.data && node.data["c:50108"])) {
-                    try {
-                        // 依照 M 平方 API 結構跳轉至最後一筆數據
-                        const series = node.data["c:50108"].s[0].data;
-                        const latestPoint = series[series.length - 1]; 
-                        const score = parseFloat(latestPoint[1]); 
-
-                        document.getElementById('cnnValueText').innerText = score.toFixed(1);
-                        
-                        let rating = "極度恐懼";
-                        if (score > 25) rating = "恐懼";
-                        if (score > 45) rating = "中立";
-                        if (score > 55) rating = "貪婪";
-                        if (score > 75) rating = "極度貪婪";
-
-                        document.getElementById('cnnStatusText').innerText = rating;
-                        drawGauge(score);
-                        addLog('✅ CNN Updated: ' + score);
-                    } catch (err) {
-                        addLog('⚠️ CNN 解析路徑失敗: ' + err.message);
-                    }
-                }
+            // 處理 Yahoo 數據 (7769)
+            if (data.stock_7769 && data.stock_7769.chart) {
+                const m = data.stock_7769.chart.result[0].meta;
+                const diff = m.regularMarketPrice - m.previousClose;
+                const perc = (diff / m.previousClose) * 100;
+                document.getElementById('p-7769').innerText = m.regularMarketPrice.toLocaleString();
+                document.getElementById('diff-7769').innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(1)} (${perc.toFixed(2)}%)`;
+                const color = diff >= 0 ? 'var(--red)' : 'var(--green)';
+                document.getElementById('p-7769').style.color = color;
+                document.getElementById('diff-7769').style.color = color;
+                document.getElementById('card-7769').className = `card ${diff >= 0 ? 'up' : 'down'}`;
+                addLog('✅ 7769 Updated');
             }
+
+            // 處理 VIX
+            if (data.vix_index && data.vix_index.chart) {
+                const price = data.vix_index.chart.result[0].meta.regularMarketPrice;
+                document.getElementById('p-vix').innerText = price.toFixed(2);
+                addLog('✅ VIX Updated');
+            }
+
+            // 處理 AlphaVantage Fear & Greed Index
+            if (data.fng_data && data.fng_data.fng) {
+                const score = parseFloat(data.fng_data.fng[0].value);
+                const rating = data.fng_data.fng[0].value_classification;
+                document.getElementById('cnnValueText').innerText = score;
+                document.getElementById('cnnStatusText').innerText = rating.toUpperCase();
+                drawGauge(score);
+                addLog('✅ Alpha F&G Updated: ' + score);
+            }
+
             document.getElementById('lastUpdate').innerText = `更新於: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-            addLog('Critical Fail: ' + e.message);
+            addLog('Error: ' + e.message);
         }
     }
 
-    // 2. 最後才執行初始化呼叫，確保所有變數已定義
+    // 2. 初始化執行
     drawGauge(null);
     updateAll();
 </script>
