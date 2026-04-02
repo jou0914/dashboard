@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投資戰情室 v7.4</title>
+    <title>投資戰情室 v7.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
@@ -14,6 +14,7 @@
         .full-width { grid-column: span 2; height: 145px; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
+        .card.alert-bg { border-left-color: var(--alert); box-shadow: inset 0 0 10px rgba(255, 204, 0, 0.2); }
         
         .label { font-size: 10px; color: #888; font-weight: 600; margin-bottom: 2px; }
         .main-val { font-size: 1.35rem; font-weight: 800; line-height: 1.1; }
@@ -23,10 +24,8 @@
         .alert-hint { font-size: 8.5px; color: var(--alert); font-weight: bold; margin-top: 2px; }
         .gold-calc { font-size: 0.85rem; color: var(--gold); margin-top: 5px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
         
-        /* 匯率列穩定器 */
         .flex-row { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        /* 加密情緒區校正 */
         .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 16px; padding: 12px; border-left: 4px solid var(--gold); position: relative; min-height: 175px; }
         .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin: 5px 0; overflow: hidden; }
         #cnnGauge { width: 220px !important; height: 110px !important; }
@@ -34,7 +33,7 @@
         #fngStatus { font-size: 10px; color: var(--gold); font-weight: bold; margin-bottom: 2px; }
 
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 10px; }
-        .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 48px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 48px; border-radius: 10px; font-size: 11px; font-weight: bold; text-align: center; }
         .btn-cnn { background: #cc0000; }
         .btn-vixtwn { background: #444; border: 1px solid #666; }
         .btn-sub { font-size: 8px; color: var(--alert); font-weight: normal; margin-top: 2px; }
@@ -53,7 +52,7 @@
         <div class="chart-container"><canvas id="chart-twii"></canvas></div>
     </div>
     <div id="card-wtx" class="card">
-        <div class="label">台指期貨大盤</div>
+        <div class="label">台指期貨</div>
         <div id="p-wtx" class="main-val">--</div>
         <div id="diff-wtx" class="sub-val">--</div>
         <div class="chart-container"><canvas id="chart-wtx"></canvas></div>
@@ -72,26 +71,26 @@
         <div class="chart-container"><canvas id="chart-oil"></canvas></div>
     </div>
 
-    <div id="card-vix" class="card full-width" style="height: 120px;">
+    <div id="card-vix" class="card full-width" style="height: 110px;">
         <div class="label">美股 VIX 指數</div>
         <div id="p-vix" class="main-val">--</div>
         <div id="diff-vix" class="sub-val">--</div>
-        <div class="alert-hint">恐慌指標: > 30</div>
+        <div class="alert-hint">指標: > 30</div>
         <div class="chart-container" style="height: 30px;"><canvas id="chart-vix"></canvas></div>
     </div>
 
     <div class="flex-row">
-        <div id="card-twd" class="card" style="width: 100%;">
+        <div id="card-twd" class="card">
             <div class="label">USD / TWD</div>
             <div id="p-twd" class="main-val">--</div>
             <div id="diff-twd" class="sub-val">--</div>
             <div class="chart-container"><canvas id="chart-twd"></canvas></div>
         </div>
-        <div id="card-jpy" class="card" style="width: 100%;">
+        <div id="card-jpy" class="card">
             <div class="label">USD / JPY</div>
             <div id="p-jpy" class="main-val">--</div>
             <div id="diff-jpy" class="sub-val">--</div>
-            <div class="alert-hint">極度恐慌指標: > 159</div>
+            <div class="alert-hint">指標: > 159</div>
             <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
         </div>
     </div>
@@ -105,22 +104,21 @@
     </div>
 
     <div class="fng-area">
-        <div class="label">CRYPTO FEAR & GREED INDEX</div>
+        <div class="label">CRYPTO FEAR & GREED</div>
         <div id="fngStatus">--</div>
         <div class="fng-gauge-wrapper">
             <canvas id="cnnGauge"></canvas>
             <div id="fngValue">--</div>
         </div>
-        <div class="alert-hint">恐慌指標: < 10</div>
-        
+        <div class="alert-hint">指標: < 10</div>
         <div class="btn-row">
             <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">
                 CNN 恐慌按鈕
-                <span class="btn-sub">恐慌指標: < 10</span>
+                <span class="btn-sub">指標: < 10</span>
             </a>
             <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link btn-vixtwn">
                 台股 VIX 網頁
-                <span class="btn-sub">恐慌指標: > 40</span>
+                <span class="btn-sub">指標: > 40</span>
             </a>
         </div>
     </div>
@@ -130,9 +128,9 @@
 
 <div style="width:100%; max-width:360px; display:flex; justify-content:space-between; margin-top:10px;">
     <span style="font-size:10px; color:#888;">DEBUG CONSOLE</span>
-    <button onclick="copyLog()" style="background:#444; color:#ccc; border:none; padding:2px 8px; border-radius:4px; font-size:10px; cursor:pointer;">COPY LOG</button>
+    <button onclick="copyLog()" style="background:#444; color:#ccc; border:none; padding:2px 8px; border-radius:4px; font-size:10px;">COPY</button>
 </div>
-<div id="log-window">Initializing...</div>
+<div id="log-window">Ready...</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
@@ -176,24 +174,20 @@
         const price = m.regularMarketPrice;
         const diff = price - m.previousClose;
         const perc = (diff / m.previousClose) * 100;
-        const color = diff >= 0 ? '#ff4d4d' : '#2ecc71';
+        let color = diff >= 0 ? '#ff4d4d' : '#2ecc71';
         
-        const pElem = document.getElementById(`p-${id}`);
-        if(pElem) {
-            pElem.innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id.includes('twd')||id.includes('jpy')?2:0)});
-            pElem.style.color = color;
-        }
-        
-        const dElem = document.getElementById(`diff-${id}`);
-        if(dElem) {
-            dElem.innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-            dElem.style.color = color;
-        }
+        // 日幣警戒顏色邏輯
+        if(id === 'jpy' && price > 159) color = '#ffcc00';
+
+        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id.includes('twd')||id.includes('jpy')?2:0)});
+        document.getElementById(`p-${id}`).style.color = color;
+        document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+        document.getElementById(`diff-${id}`).style.color = color;
 
         const card = document.getElementById(`card-${id}`);
         if(card) {
-            let baseClass = id==='gold'||id==='vix' ? 'card full-width' : 'card';
-            card.className = `${baseClass} ${diff >= 0 ? 'up' : 'down'}`;
+            let base = (id==='gold'||id==='vix') ? 'card full-width' : 'card';
+            card.className = `${base} ${diff >= 0 ? 'up' : 'down'} ${id === 'jpy' && price > 159 ? 'alert-bg' : ''}`;
         }
 
         try {
@@ -223,11 +217,11 @@
             if (data.crypto_fng?.data) {
                 const val = parseInt(data.crypto_fng.data[0].value);
                 document.getElementById('fngValue').innerText = val;
-                document.getElementById('fngStatus').innerText = data.crypto_fng.data[0].classification.toUpperCase();
+                document.getElementById('fngStatus').innerText = data.crypto_fng.data[0].value_classification.toUpperCase();
                 drawGauge(val);
-                addLog('✅ All Data Synced');
+                addLog('✅ Sync Success');
             }
-        } catch (e) { addLog('❌ Sync Failed'); }
+        } catch (e) { addLog('❌ Sync Failed: ' + e.message); }
     }
 
     function drawGauge(value) {
