@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v8.6</title>
+    <title>全球投資戰情室 v8.7</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
@@ -11,25 +11,26 @@
         
         .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         
-        .card { background: var(--card); padding: 12px; border-radius: 18px; border-left: 4px solid #444; height: 135px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; position: relative; }
-        .full-width { grid-column: span 2; height: 145px; }
+        .card { background: var(--card); padding: 12px; border-radius: 18px; border-left: 4px solid #444; height: 145px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; position: relative; }
+        .full-width { grid-column: span 2; height: 155px; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         .card.alert-active { border-left-color: var(--alert); box-shadow: inset 0 0 15px rgba(255, 204, 0, 0.2); }
         
         .label { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 2px; }
-        .main-val { font-size: 1.4rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
-        .sub-val { font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
-        .chart-container { width: 100%; height: 38px; margin-top: auto; }
+        .main-val { font-size: 1.3rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
+        .sub-val { font-size: 0.75rem; font-weight: 600; margin-top: 2px; }
+        
+        /* 確保所有卡片都有曲線容器高度 */
+        .chart-container { width: 100%; height: 45px; margin-top: auto; }
         
         .alert-hint { font-size: 9px; color: var(--alert); font-weight: bold; margin-top: 4px; display: block; }
-        .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 8px; }
+        .gold-calc { font-size: 0.85rem; color: var(--gold); margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 8px; }
         
         .flex-row { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        /* 修正：加密恐慌指數區域 */
         .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 200px; position: relative; }
-        .fng-gauge-wrapper { position: relative; width: 220px; height: 120px; margin-top: 10px; display: flex; justify-content: center; }
+        .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin-top: 10px; display: flex; justify-content: center; }
         #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; z-index: 10; }
         #fngLabel { font-size: 10px; color: #888; position: absolute; bottom: -10px; width: 100%; text-align: center; }
 
@@ -75,7 +76,7 @@
         <div class="label">美股 VIX 指數</div>
         <div id="p-vix" class="main-val">--</div>
         <div id="diff-vix" class="sub-val">--</div>
-        <div class="alert-hint">⚠️ 極度恐慌指標：> 30</div>
+        <div class="alert-hint">⚠️ 指標：> 30 極度恐慌</div>
         <div class="chart-container"><canvas id="chart-vix"></canvas></div>
     </div>
 
@@ -84,12 +85,14 @@
             <div class="label">USD / TWD</div>
             <div id="p-twd" class="main-val">--</div>
             <div id="diff-twd" class="sub-val">--</div>
+            <div class="chart-container"><canvas id="chart-twd"></canvas></div>
         </div>
         <div id="card-jpy" class="card">
             <div class="label">USD / JPY</div>
             <div id="p-jpy" class="main-val">--</div>
             <div id="diff-jpy" class="sub-val">--</div>
             <div class="alert-hint">⚠️ 警戒：> 159</div>
+            <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
         </div>
     </div>
 
@@ -98,7 +101,7 @@
         <div id="p-gold" class="main-val">--</div>
         <div id="diff-gold" class="sub-val">--</div>
         <div class="chart-container"><canvas id="chart-gold"></canvas></div>
-        <div id="calc-gold" class="gold-calc">換算中...</div>
+        <div id="calc-gold" class="gold-calc">換算：-- NT$ / 克</div>
     </div>
 
     <div class="fng-area">
@@ -125,7 +128,7 @@
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div id="log-window">Connecting... v8.6</div>
+<div id="log-window">Connecting... v8.7</div>
 <button onclick="copyLog()" style="width:100%; max-width:380px; margin-top:5px; background:#333; color:#ccc; border:none; padding:8px; border-radius:8px; font-size:12px; cursor:pointer;">一鍵複製 LOG</button>
 
 <script>
@@ -153,7 +156,7 @@
                 datasets: [{
                     data: historyData, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true,
                     backgroundColor: (c) => {
-                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 40);
+                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 45);
                         g.addColorStop(0, color + '22'); g.addColorStop(1, color + '00'); return g;
                     },
                     tension: 0.4
@@ -184,50 +187,30 @@
 
         const card = document.getElementById(`card-${id}`);
         let isAlert = (id === 'jpy' && price > 159) || (id === 'vix' && price > 30);
-        if(card) card.className = `${id==='gold'||id==='vix'?'card full-width':'card'} ${diff>=0?'up':'down'} ${isAlert?'alert-active':''}`;
+        if(card) {
+            const baseClass = (id==='gold'||id==='vix') ? 'card full-width' : 'card';
+            card.className = `${baseClass} ${diff>=0?'up':'down'} ${isAlert?'alert-active':''}`;
+        }
 
         try {
             const h = res.indicators.quote[0].close.filter(v => v !== null);
             if (h.length > 0) renderSparkline(id, h, color);
-        } catch(e) {}
+        } catch(e) { addLog(`⚠️ ${id} 繪圖出錯`); }
         return price;
     }
 
-    /* 修正：畫布渲染邏輯 */
     function drawGauge(value, classification) {
         const canvas = document.getElementById('fngGauge');
         const ctx = canvas.getContext('2d');
         const dpr = window.devicePixelRatio || 1;
-        
-        canvas.width = 220 * dpr;
-        canvas.height = 110 * dpr;
-        canvas.style.width = '220px';
-        canvas.style.height = '110px';
+        canvas.width = 220 * dpr; canvas.height = 110 * dpr;
+        canvas.style.width = '220px'; canvas.style.height = '110px';
         ctx.scale(dpr, dpr);
-
         ctx.clearRect(0, 0, 220, 110);
-        
-        // 背景軌道
-        ctx.beginPath();
-        ctx.arc(110, 100, 85, Math.PI, 0);
-        ctx.lineWidth = 14;
-        ctx.strokeStyle = '#333';
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // 數值彩色條
+        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, 0); ctx.lineWidth = 14; ctx.strokeStyle = '#333'; ctx.lineCap = 'round'; ctx.stroke();
         const grad = ctx.createLinearGradient(30, 0, 190, 0);
-        grad.addColorStop(0, '#ff4d4d');   // 恐慌
-        grad.addColorStop(0.5, '#f1c40f'); // 中立
-        grad.addColorStop(1, '#2ecc71');   // 貪婪
-        
-        ctx.beginPath();
-        ctx.arc(110, 100, 85, Math.PI, Math.PI + (Math.PI * (value / 100)));
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 14;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
+        grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
+        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.stroke();
         document.getElementById('fngLabel').innerText = classification.toUpperCase();
     }
 
@@ -237,12 +220,13 @@
             const res = await fetch(PROXY_URL);
             const data = await res.json();
             updateCard('twii', data.stock_twii);
-            updateCard('7769', data.stock_7769);
             updateCard('ym', data.stock_ym);
-            updateCard('vix', data.vix_index);
+            updateCard('7769', data.stock_7769);
             updateCard('oil', data.oil_brent);
+            updateCard('vix', data.vix_index);
+            updateCard('twd', data.usd_twd);
             updateCard('jpy', data.usd_jpy);
-            const twd = updateCard('twd', data.usd_twd);
+            const twd = data.usd_twd.chart.result[0].meta.regularMarketPrice;
             const goldOz = updateCard('gold', data.gold_price);
             
             if (twd && goldOz) {
@@ -256,7 +240,7 @@
                 drawGauge(val, cls);
                 addLog('✅ All Updated');
             }
-        } catch (e) { addLog('❌ Sync Error'); }
+        } catch (e) { addLog('❌ Sync Error: ' + e.message); }
     }
 
     updateAll();
