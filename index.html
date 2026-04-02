@@ -1,186 +1,35 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投資戰情室 v6.2</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card { background: var(--card); padding: 12px; border-radius: 16px; border-left: 4px solid #444; position: relative; height: 130px; overflow: hidden; display: flex; flex-direction: column; }
-        .full-width { grid-column: span 2; height: 145px; }
-        .card.up { border-left-color: var(--red); }
-        .card.down { border-left-color: var(--green); }
-        .label { font-size: 10px; color: #888; font-weight: 600; margin-bottom: 2px; }
-        .main-val { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
-        .sub-val { font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
-        .chart-container { width: 100%; height: 45px; margin-top: auto; position: relative; }
-        #card-gold { height: 170px; }
-        .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 5px; font-weight: bold; border-top: 1px solid #333; padding-top: 4px; }
-        .fng-card { grid-column: span 2; height: 210px; border-left-color: var(--gold); }
-        .gauge-container { position: relative; width: 180px; height: 95px; margin: 5px auto 0; }
-        #fngValue { font-size: 2rem; font-weight: bold; position: absolute; bottom: 0; width: 100%; text-align: center; }
-        .btn-cnn { background: #cc0000; color: white; text-decoration: none; display: block; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; text-align: center; margin: 10px 10px 0; }
-        .btn-refresh { background: #3367d6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 12px; font-size: 16px; cursor: pointer; grid-column: span 2; }
-        #log-window { background: #111; padding: 10px; font-family: monospace; font-size: 9px; color: #00ff00; height: 60px; overflow-y: auto; width: 100%; max-width: 360px; margin-top:15px; border-radius:10px; border: 1px solid #333; white-space: pre-wrap; }
-    </style>
-</head>
-<body>
-
-<div class="dashboard">
-    <div id="card-twii" class="card">
-        <div class="label">台股大盤 (^TWII)</div>
-        <div id="p-twii" class="main-val">--</div>
-        <div id="diff-twii" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-twii"></canvas></div>
-    </div>
-
-    <div id="card-7769" class="card">
-        <div class="label">鴻勁 (7769.TW)</div>
-        <div id="p-7769" class="main-val">--</div>
-        <div id="diff-7769" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-7769"></canvas></div>
-    </div>
-
-    <div id="card-vix" class="card">
-        <div class="label">VIX 指數</div>
-        <div id="p-vix" class="main-val">--</div>
-        <div id="diff-vix" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-vix"></canvas></div>
-    </div>
-    
-    <div id="card-twd" class="card">
-        <div class="label">USD/TWD</div>
-        <div id="p-twd" class="main-val">--</div>
-        <div id="diff-twd" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-twd"></canvas></div>
-    </div>
-
-    <div id="card-gold" class="card full-width">
-        <div class="label">國際黃金 (盎司)</div>
-        <div id="p-gold" class="main-val">--</div>
-        <div id="diff-gold" class="sub-val">--</div>
-        <div class="chart-container" style="height: 40px;"><canvas id="chart-gold"></canvas></div>
-        <div id="calc-gold" class="gold-calc">NT$/g 計算中...</div>
-    </div>
-
-    <div class="card fng-card">
-        <div class="label">CRYPTO FEAR & GREED INDEX</div>
-        <div class="gauge-container">
-            <canvas id="cnnGauge"></canvas>
-            <div id="fngValue">--</div>
-        </div>
-        <div id="fngStatus" style="text-align:center; color:var(--gold); font-weight:bold; font-size: 11px; margin-top: 5px;">--</div>
-        <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-cnn">打開 CNN 恐慌指數官網</a>
-    </div>
-
-    <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
-</div>
-
-<div id="log-window">Initializing v6.2...</div>
-
-<script>
-    const PROXY_URL = '您的_GAS_網址_貼在這裡';
-    let charts = {};
-
-    function addLog(msg) {
-        const win = document.getElementById('log-window');
-        win.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + win.innerHTML;
-    }
-
-    function renderSparkline(id, historyData, color) {
-        const ctx = document.getElementById(`chart-${id}`).getContext('2d');
-        if (charts[id]) charts[id].destroy();
-        charts[id] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: historyData.map((_, i) => i),
-                datasets: [{
-                    data: historyData,
-                    borderColor: color,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: true,
-                    backgroundColor: (c) => {
-                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 45);
-                        g.addColorStop(0, color + '33'); g.addColorStop(1, color + '00'); return g;
-                    },
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: { x: { display: false }, y: { display: false } }
-            }
-        });
-    }
-
     function updateCard(id, data) {
-        if (!data?.chart?.result) return null;
+        // 增加更嚴謹的檢查，避免因為個別 API 失敗導致網頁卡死
+        if (!data || data.error || !data.chart?.result) { 
+            addLog(`⚠️ ${id} 資料獲取失敗`); 
+            return null; 
+        }
+        
         const res = data.chart.result[0];
         const m = res.meta;
         const price = m.regularMarketPrice;
-        const diff = price - m.previousClose;
-        const perc = (diff / m.previousClose) * 100;
+        const prev = m.previousClose;
+        const diff = price - prev;
+        const perc = (diff / prev) * 100; // 重新計算百分比
         const color = diff >= 0 ? '#ff4d4d' : '#2ecc71';
         
-        const pElem = document.getElementById(`p-${id}`);
-        pElem.innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id==='7769'||id==='twii')?0:2});
-        pElem.style.color = color;
+        // 更新價格與百分比內容
+        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id==='7769'||id==='twii')?0:2});
+        document.getElementById(`p-${id}`).style.color = color;
         
-        const dElem = document.getElementById(`diff-${id}`);
-        dElem.innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-        dElem.style.color = color;
+        // 顯示漲跌點數與百分比
+        document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+        document.getElementById(`diff-${id}`).style.color = color;
         
+        // 更新卡片顏色狀態
         document.getElementById(`card-${id}`).className = `card ${id==='gold'?'full-width':''} ${diff >= 0 ? 'up' : 'down'}`;
 
+        // 渲染曲線圖
         try {
             const h = res.indicators.quote[0].close || [];
             const vh = h.filter(v => v !== null);
             if (vh.length > 0) renderSparkline(id, vh, color);
-        } catch(e) {}
+        } catch(e) { addLog(`📈 ${id} 圖表錯誤`); }
+        
         return price;
     }
-
-    async function updateAll() {
-        addLog('Syncing...');
-        try {
-            const res = await fetch(PROXY_URL);
-            const data = await res.json();
-            updateCard('twii', data.stock_twii);
-            updateCard('7769', data.stock_7769);
-            updateCard('vix', data.vix_index);
-            const twd = updateCard('twd', data.usd_twd);
-            const goldOz = updateCard('gold', data.gold_price);
-            
-            if (twd && goldOz) {
-                const gPrice = (goldOz * twd) / 31.1035;
-                document.getElementById('calc-gold').innerText = `換算：${Math.round(gPrice).toLocaleString()} NT$/g`;
-            }
-            if (data.crypto_fng?.data) {
-                const val = parseInt(data.crypto_fng.data[0].value);
-                document.getElementById('fngValue').innerText = val;
-                document.getElementById('fngStatus').innerText = data.crypto_fng.data[0].value_classification.toUpperCase();
-                drawGauge(val);
-                addLog('✅ Dashboard Updated');
-            }
-        } catch (e) { addLog('❌ Sync Error'); }
-    }
-
-    function drawGauge(value) {
-        const canvas = document.getElementById('cnnGauge');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 360; canvas.height = 180; ctx.scale(2, 2);
-        ctx.clearRect(0, 0, 180, 90);
-        ctx.beginPath(); ctx.arc(90, 85, 75, Math.PI, 0); ctx.lineWidth = 14; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
-        const grad = ctx.createLinearGradient(20, 0, 160, 0);
-        grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-        ctx.beginPath(); ctx.arc(90, 85, 75, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
-    }
-    updateAll();
-</script>
-</body>
-</html>
