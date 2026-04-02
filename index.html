@@ -3,47 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>投資戰情室 v6.7 - 視覺修復版</title>
+    <title>投資戰情室 v6.8</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        /* 基礎卡片樣式 */
-        .card { background: var(--card); padding: 12px; border-radius: 16px; border-left: 4px solid #444; grid-column: span 1; position: relative; height: 130px; overflow: hidden; display: flex; flex-direction: column; }
-        .full-width { grid-column: span 2; height: 150px; }
+        .card { background: var(--card); padding: 12px; border-radius: 16px; border-left: 4px solid #444; height: 130px; overflow: hidden; display: flex; flex-direction: column; }
+        .full-width { grid-column: span 2; height: 155px; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
+        
         .label { font-size: 10px; color: #888; font-weight: 600; margin-bottom: 2px; }
         .main-val { font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
         .sub-val { font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
         .chart-container { width: 100%; height: 50px; margin-top: auto; position: relative; }
         
-        /* 黃金 oz/g 換算卡片 */
-        #card-gold { height: 170px; }
         .gold-calc { font-size: 0.9rem; color: var(--gold); margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
         
-        /* 🔥 加密恐慌 & 按鈕區域：徹底重寫佈局 🔥 */
-        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 16px; padding: 15px; border-left: 4px solid var(--gold); margin-top: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .fng-label { font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; text-align: center; width: 100%; }
-        
-        /* 指針圓盤專用容器 */
-        .fng-gauge-wrapper { position: relative; width: 220px; height: 135px; margin-bottom: 15px; }
-        #cnnGauge { width: 220px; height: 135px; }
-        #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 0; width: 100%; text-align: center; line-height: 1; margin: 0; }
-        #fngStatus { text-align: center; color: var(--gold); font-weight: bold; font-size: 11px; width: 100%; margin-top: -5px; }
+        /* 加密恐慌區塊修正 */
+        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 16px; padding: 15px; border-left: 4px solid var(--gold); margin-top: 5px; }
+        .fng-gauge-wrapper { position: relative; width: 220px; height: 130px; margin-bottom: 10px; }
+        #cnnGauge { width: 220px; height: 120px; }
+        #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 0; width: 100%; text-align: center; line-height: 1; }
+        #fngStatus { text-align: center; color: var(--gold); font-weight: bold; font-size: 11px; margin-top: 5px; }
 
-        /* 🔥 下方按鈕並排區域 🔥 */
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 95%; margin-top: 15px; }
-        .btn-link { color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 8px; font-size: 12px; font-weight: bold; text-align: center; }
+        /* 按鈕區域 */
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 15px; }
+        .btn-link { color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; height: 42px; border-radius: 10px; font-size: 13px; font-weight: bold; text-align: center; }
         .btn-cnn { background: #cc0000; }
-        .btn-vixtwn { background: #555; border: 1px solid #777; }
-        
-        /* 其他 UI */
+        .btn-vixtwn { background: #444; border: 1px solid #666; }
         .btn-refresh { background: #3367d6; color: white; border: none; padding: 16px; border-radius: 14px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; cursor: pointer; grid-column: span 2; }
-        .log-header { width: 100%; max-width: 360px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 0 5px; }
-        #log-window { background: #111; padding: 10px; font-family: monospace; font-size: 9px; color: #00ff00; height: 80px; overflow-y: auto; width: 100%; max-width: 360px; margin-top:5px; border-radius:10px; border: 1px solid #333; white-space: pre-wrap; }
+        
+        /* 警示註明與 Log */
+        .alert-note { width: 100%; max-width: 360px; background: #221a00; border: 1px solid #443300; padding: 8px; border-radius: 8px; margin-top: 15px; font-size: 11px; color: #ffcc00; line-height: 1.5; }
+        .log-header { width: 100%; max-width: 360px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 5px; }
+        #log-window { background: #111; padding: 10px; font-family: monospace; font-size: 9px; color: #00ff00; height: 85px; overflow-y: auto; width: 100%; max-width: 360px; border-radius: 10px; border: 1px solid #333; white-space: pre-wrap; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -63,7 +59,7 @@
     </div>
     <div id="card-vix" class="card">
         <div class="label">美股 VIX 指數</div>
-        <div id="p-vix" class="main-val" style="color:#f1c40f;">--</div>
+        <div id="p-vix" class="main-val">--</div>
         <div id="diff-vix" class="sub-val">--</div>
         <div class="chart-container"><canvas id="chart-vix"></canvas></div>
     </div>
@@ -82,34 +78,36 @@
     </div>
 
     <div class="fng-area">
-        <div class="fng-label">CRYPTO FEAR & GREED INDEX</div>
+        <div class="label" style="text-align:center; width:100%;">CRYPTO FEAR & GREED INDEX</div>
         <div class="fng-gauge-wrapper">
             <canvas id="cnnGauge"></canvas>
             <div id="fngValue">--</div>
         </div>
-        <div id="fngStatus">偵測中...</div>
+        <div id="fngStatus">LOADING...</div>
         
         <div class="btn-row">
-            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">
-                CNN 恐慌指數
-            </a>
-            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link btn-vixtwn">
-                玩股台股 VIX
-            </a>
+            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">CNN 恐慌指數</a>
+            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link btn-vixtwn">台股 VIX 網頁</a>
         </div>
     </div>
 
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
+<div class="alert-note">
+    ⚠️ <b>極度恐慌參考指標：</b><br>
+    • CNN 恐慌指數 < 10 | 加密貨幣恐慌指數 < 10 <br>
+    • 台股 VIX > 40 | 美股 VIX > 30
+</div>
+
 <div class="log-header">
     <span style="font-size:10px; color:#888;">DEBUG CONSOLE</span>
-    <button onclick="copyLog()" style="background:#555;color:#fff;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:10px;">COPY LOG</button>
+    <button onclick="copyLog()" style="background:#444;color:#ccc;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;">COPY LOG</button>
 </div>
-<div id="log-window">Initializing v6.7...</div>
+<div id="log-window">Initializing v6.8...</div>
 
 <script>
-    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
+    const PROXY_URL = '您的_GAS_網址_貼在這裡';
     let charts = {};
 
     function addLog(msg) {
@@ -132,8 +130,8 @@
                 datasets: [{
                     data: historyData, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true,
                     backgroundColor: (c) => {
-                        const gradient = c.chart.ctx.createLinearGradient(0, 0, 0, 50);
-                        gradient.addColorStop(0, color + '33'); gradient.addColorStop(1, color + '00'); return gradient;
+                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 50);
+                        g.addColorStop(0, color + '33'); g.addColorStop(1, color + '00'); return g;
                     },
                     tension: 0.4
                 }]
@@ -143,7 +141,7 @@
     }
 
     function updateCard(id, data) {
-        if (!data || data.error || !data.chart?.result) { addLog(`⚠️ ${id} skip`); return null; }
+        if (!data || data.error || !data.chart?.result) { addLog(`⚠️ ${id} Fail`); return null; }
         const res = data.chart.result[0];
         const m = res.meta;
         const price = m.regularMarketPrice;
@@ -153,58 +151,53 @@
         
         document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id==='7769'||id==='twii')?0:2});
         document.getElementById(`p-${id}`).style.color = color;
-        // 確保顯示點數與百分比
         document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
         document.getElementById(`diff-${id}`).style.color = color;
-        
         document.getElementById(`card-${id}`).className = `card ${id==='gold'?'full-width':''} ${diff >= 0 ? 'up' : 'down'}`;
 
         try {
-            const history = res.indicators.quote[0].close || [];
-            const validHistory = history.filter(v => v !== null);
-            if (validHistory.length > 0) renderSparkline(id, validHistory, color);
+            const h = res.indicators.quote[0].close || [];
+            const vh = h.filter(v => v !== null);
+            if (vh.length > 0) renderSparkline(id, vh, color);
         } catch(e) {}
         return price;
     }
 
     async function updateAll() {
-        addLog('Syncing...');
+        addLog('Syncing data...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
-
             updateCard('twii', data.stock_twii);
             updateCard('7769', data.stock_7769);
             updateCard('vix', data.vix_index);
             const twd = updateCard('twd', data.usd_twd);
             const goldOz = updateCard('gold', data.gold_price);
-
+            
             if (twd && goldOz) {
                 const gPrice = (goldOz * twd) / 31.1035;
                 document.getElementById('calc-gold').innerText = `換算：${Math.round(gPrice).toLocaleString()} NT$/g`;
             }
-
             if (data.crypto_fng?.data) {
                 const val = parseInt(data.crypto_fng.data[0].value);
                 document.getElementById('fngValue').innerText = val;
                 document.getElementById('fngStatus').innerText = data.crypto_fng.data[0].value_classification.toUpperCase();
                 drawGauge(val);
-                addLog('✅ All Synced');
+                addLog('✅ Dashboard Updated');
             }
-        } catch (e) { addLog('❌ Error: ' + e.message); }
+        } catch (e) { addLog('❌ Sync Error'); }
     }
 
     function drawGauge(value) {
         const canvas = document.getElementById('cnnGauge');
         const ctx = canvas.getContext('2d');
-        canvas.width = 440; canvas.height = 270; ctx.scale(2, 2);
-        ctx.clearRect(0, 0, 220, 135);
-        ctx.beginPath(); ctx.arc(110, 115, 95, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
+        canvas.width = 440; canvas.height = 240; ctx.scale(2, 2);
+        ctx.clearRect(0, 0, 220, 120);
+        ctx.beginPath(); ctx.arc(110, 110, 90, Math.PI, 0); ctx.lineWidth = 18; ctx.strokeStyle = '#2a2a2e'; ctx.stroke();
         const grad = ctx.createLinearGradient(30, 0, 190, 0);
         grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-        ctx.beginPath(); ctx.arc(110, 115, 95, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
+        ctx.beginPath(); ctx.arc(110, 110, 90, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
     }
-    drawGauge(null);
     updateAll();
 </script>
 </body>
