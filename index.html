@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v8.5</title>
+    <title>全球投資戰情室 v8.6</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
@@ -15,10 +15,8 @@
         .full-width { grid-column: span 2; height: 145px; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
-        .card.alert-active { border-left-color: var(--alert); box-shadow: inset 0 0 15px rgba(255, 204, 0, 0.2); animation: pulse 2s infinite; }
+        .card.alert-active { border-left-color: var(--alert); box-shadow: inset 0 0 15px rgba(255, 204, 0, 0.2); }
         
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-
         .label { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 2px; }
         .main-val { font-size: 1.4rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
         .sub-val { font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
@@ -29,11 +27,13 @@
         
         .flex-row { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 190px; }
-        .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin: 5px 0; }
-        #fngValue { font-size: 2.5rem; font-weight: bold; position: absolute; bottom: -5px; width: 100%; text-align: center; }
+        /* 修正：加密恐慌指數區域 */
+        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 200px; position: relative; }
+        .fng-gauge-wrapper { position: relative; width: 220px; height: 120px; margin-top: 10px; display: flex; justify-content: center; }
+        #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; z-index: 10; }
+        #fngLabel { font-size: 10px; color: #888; position: absolute; bottom: -10px; width: 100%; text-align: center; }
 
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 15px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 25px; }
         .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 55px; border-radius: 14px; font-size: 11px; font-weight: bold; text-align: center; background: #2c2c2e; border: 1px solid #3a3a3c; }
         .btn-cnn { background: #cc0000; border: none; }
         .btn-sub { font-size: 9px; color: var(--alert); font-weight: normal; margin-top: 3px; }
@@ -104,19 +104,20 @@
     <div class="fng-area">
         <div class="label">CRYPTO FEAR & GREED</div>
         <div class="fng-gauge-wrapper">
-            <canvas id="cnnGauge"></canvas>
+            <canvas id="fngGauge"></canvas>
             <div id="fngValue">--</div>
+            <div id="fngLabel">EXTREME FEAR</div>
         </div>
-        <div class="alert-hint">⚠️ 極度恐慌指標：< 10</div>
+        <div class="alert-hint" style="margin-top:20px;">⚠️ 極度恐慌指標：< 10</div>
         
         <div class="btn-row">
             <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">
-                CNN 恐慌指數
-                <span class="btn-sub">恐慌指標：< 10</span>
+                CNN 恐慌按鈕
+                <span class="btn-sub">指標：< 10</span>
             </a>
             <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">
                 台股 VIX 網頁
-                <span class="btn-sub">恐慌指標：> 40</span>
+                <span class="btn-sub">指標：> 40</span>
             </a>
         </div>
     </div>
@@ -124,8 +125,8 @@
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div id="log-window">Connecting... v8.5</div>
-<button onclick="copyLog()" style="width:100%; max-width:380px; margin-top:5px; background:#333; color:#ccc; border:none; padding:8px; border-radius:8px; font-size:12px;">一鍵複製 LOG</button>
+<div id="log-window">Connecting... v8.6</div>
+<button onclick="copyLog()" style="width:100%; max-width:380px; margin-top:5px; background:#333; color:#ccc; border:none; padding:8px; border-radius:8px; font-size:12px; cursor:pointer;">一鍵複製 LOG</button>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
@@ -181,16 +182,53 @@
             document.getElementById(`diff-${id}`).style.color = color;
         }
 
-        // 判斷警戒指標
         const card = document.getElementById(`card-${id}`);
         let isAlert = (id === 'jpy' && price > 159) || (id === 'vix' && price > 30);
-        card.className = `${id==='gold'||id==='vix'?'card full-width':'card'} ${diff>=0?'up':'down'} ${isAlert?'alert-active':''}`;
+        if(card) card.className = `${id==='gold'||id==='vix'?'card full-width':'card'} ${diff>=0?'up':'down'} ${isAlert?'alert-active':''}`;
 
         try {
             const h = res.indicators.quote[0].close.filter(v => v !== null);
             if (h.length > 0) renderSparkline(id, h, color);
         } catch(e) {}
         return price;
+    }
+
+    /* 修正：畫布渲染邏輯 */
+    function drawGauge(value, classification) {
+        const canvas = document.getElementById('fngGauge');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        
+        canvas.width = 220 * dpr;
+        canvas.height = 110 * dpr;
+        canvas.style.width = '220px';
+        canvas.style.height = '110px';
+        ctx.scale(dpr, dpr);
+
+        ctx.clearRect(0, 0, 220, 110);
+        
+        // 背景軌道
+        ctx.beginPath();
+        ctx.arc(110, 100, 85, Math.PI, 0);
+        ctx.lineWidth = 14;
+        ctx.strokeStyle = '#333';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 數值彩色條
+        const grad = ctx.createLinearGradient(30, 0, 190, 0);
+        grad.addColorStop(0, '#ff4d4d');   // 恐慌
+        grad.addColorStop(0.5, '#f1c40f'); // 中立
+        grad.addColorStop(1, '#2ecc71');   // 貪婪
+        
+        ctx.beginPath();
+        ctx.arc(110, 100, 85, Math.PI, Math.PI + (Math.PI * (value / 100)));
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        document.getElementById('fngLabel').innerText = classification.toUpperCase();
     }
 
     async function updateAll() {
@@ -209,26 +247,16 @@
             
             if (twd && goldOz) {
                 const ntG = (goldOz * twd) / 31.1035;
-                document.getElementById('calc-gold').innerText = `換算：${Math.round(ntG).toLocaleString()} NT$ / 克`;
+                document.getElementById('calc-gold').innerText = `即時換算：${Math.round(ntG).toLocaleString()} NT$ / 克`;
             }
             if (data.crypto_fng?.data) {
                 const val = parseInt(data.crypto_fng.data[0].value);
+                const cls = data.crypto_fng.data[0].value_classification;
                 document.getElementById('fngValue').innerText = val;
-                drawGauge(val);
+                drawGauge(val, cls);
                 addLog('✅ All Updated');
             }
         } catch (e) { addLog('❌ Sync Error'); }
-    }
-
-    function drawGauge(value) {
-        const canvas = document.getElementById('cnnGauge');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 440; canvas.height = 220; ctx.scale(2, 2);
-        ctx.clearRect(0, 0, 220, 110);
-        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, 0); ctx.lineWidth = 15; ctx.strokeStyle = '#333'; ctx.stroke();
-        const grad = ctx.createLinearGradient(30, 0, 190, 0);
-        grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, Math.PI + (Math.PI * (value / 100))); ctx.strokeStyle = grad; ctx.stroke();
     }
 
     updateAll();
