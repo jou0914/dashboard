@@ -653,34 +653,46 @@ async function fetchGoldOil() {
     }
   }
 
-  // 布蘭特原油：Finnhub BZ=F（NYMEX Brent futures symbol）
-  const oilFH = await safeFetch(
-    `https://finnhub.io/api/v1/quote?symbol=BZ%3DF&token=${FH_KEY}`,
-    'Finnhub Brent BZ=F'
-  );
-  if (oilFH && oilFH.c && oilFH.c > 0) {
-    setVal('oil-val', oilFH.c, 2);
-    setChg('oil-chg', oilFH.d, oilFH.dp);
-    setCardDir('card-oil', oilFH.d);
-    fetchFinnhubCandles('BZ%3DF', 'spark-oil', (oilFH.d||0) >= 0 ? '#22c55e' : '#ef4444');
-    return; // BZ=F 成功，不跑 fallback
+  // 布蘭特原油：依序嘗試多個 symbol
+  // Finnhub 免費版休市時 c=0，需多重嘗試
+  const oilSymbols = [
+    { sym: 'UKOIL',     label: 'Finnhub UKOIL' },
+    { sym: 'BZ%3DF',    label: 'Finnhub BZ=F' },
+    { sym: 'NYMEX:BZG', label: 'Finnhub NYMEX:BZG' }
+  ];
+  let oilDone = false;
+  for (const { sym, label } of oilSymbols) {
+    const oilFH = await safeFetch(
+      `https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`,
+      label
+    );
+    if (oilFH && oilFH.c && oilFH.c > 0) {
+      log(`✓ 原油使用 ${label} c=${oilFH.c}`);
+      setVal('oil-val', oilFH.c, 2);
+      setChg('oil-chg', oilFH.d, oilFH.dp);
+      setCardDir('card-oil', oilFH.d);
+      fetchFinnhubCandles(sym, 'spark-oil', (oilFH.d||0) >= 0 ? '#22c55e' : '#ef4444');
+      oilDone = true;
+      break;
+    } else {
+      log(`⚠ ${label} c=${oilFH ? oilFH.c : 'null'}`);
+    }
   }
-  log('⚠ BZ=F 無數據，改用 AV BNO ETF');
 
-  // Brent fallback: AV WTI crude via commodity ETF (USO)
-  const oilAV = await safeFetch(
-    `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNO&apikey=${AV_KEY}`,
-    'AV BNO ETF (Brent fallback)'
-  );
-  if (oilAV && oilAV['Global Quote'] && oilAV['Global Quote']['05. price']) {
-    const q = oilAV['Global Quote'];
-    const price = parseFloat(q['05. price']);
-    const chg   = parseFloat(q['09. change']);
-    const pct   = parseFloat(q['10. change percent']);
-    setVal('oil-val', price, 2);
-    setChg('oil-chg', chg, pct);
-    setCardDir('card-oil', chg);
-    document.getElementById('oil-chg').textContent += ' ★BNO ETF';
+  // 最終 fallback：Alpha Vantage Brent ETF BNO
+  if (!oilDone) {
+    log('⚠ Finnhub 原油全失，改用 AV BNO ETF');
+    const oilAV = await safeFetch(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNO&apikey=${AV_KEY}`,
+      'AV BNO ETF (final fallback)'
+    );
+    if (oilAV && oilAV['Global Quote'] && oilAV['Global Quote']['05. price']) {
+      const q = oilAV['Global Quote'];
+      setVal('oil-val', parseFloat(q['05. price']), 2);
+      setChg('oil-chg', parseFloat(q['09. change']), parseFloat(q['10. change percent']));
+      setCardDir('card-oil', parseFloat(q['09. change']));
+      document.getElementById('oil-chg').textContent += ' ★BNO ETF';
+    }
   }
 }
 
