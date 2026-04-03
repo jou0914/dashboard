@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v10.1</title>
+    <title>全球投資戰情室 v10.2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
@@ -20,11 +20,15 @@
         .chart-container { width: 100%; height: 55px; margin-top: auto; position: relative; }
         .alert-hint { font-size: 9px; color: var(--alert); font-weight: bold; margin-top: 4px; display: block; }
         .gold-calc { font-size: 0.85rem; color: var(--gold); margin-top: 8px; font-weight: 900; border-top: 1px solid #333; padding-top: 8px; line-height: 1.4; }
-        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 210px; }
+        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 250px; }
         .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin-top: 10px; display: flex; justify-content: center; }
         #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; }
+        /* 按鈕樣式 */
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 25px; }
+        .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 55px; border-radius: 14px; font-size: 11px; font-weight: bold; background: #2c2c2e; border: 1px solid #3a3a3c; text-align: center; transition: background 0.2s; }
+        .btn-link:active { background: #3a3a3c; }
         .btn-refresh { background: #007aff; color: white; border: none; padding: 18px; border-radius: 16px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 17px; cursor: pointer; grid-column: span 2; }
-        #log-window { background: #111; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 90px; overflow-y: auto; width: 100%; max-width: 360px; border-radius: 14px; border: 1px solid #333; margin-top: 15px; white-space: pre-wrap; }
+        #log-window { background: #111; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 80px; overflow-y: auto; width: 100%; max-width: 360px; border-radius: 14px; border: 1px solid #333; margin-top: 15px; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -53,11 +57,17 @@
     <div class="fng-area">
         <div class="label">CRYPTO FEAR & GREED</div>
         <div class="fng-gauge-wrapper"><canvas id="fngGauge"></canvas><div id="fngValue">--</div></div>
+        
+        <div class="btn-row">
+            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link" style="background:#cc0000;border:none;">CNN 恐慌按鈕<br><span style="font-size:9px;color:var(--alert);">指標：< 10</span></a>
+            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">台股 VIX 網頁<br><span style="font-size:9px;color:var(--alert);">指標：> 40</span></a>
+        </div>
+
         <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
     </div>
 </div>
 
-<div id="log-window">System Initializing... v10.1</div>
+<div id="log-window">System Initializing... v10.2</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
@@ -125,7 +135,7 @@
         try {
             const h = res.indicators.quote[0].close.filter(v => v !== null);
             if (h.length > 0) renderSparkline(id, h, color);
-        } catch(e) { console.log(id + " chart error"); }
+        } catch(e) { }
         return price;
     }
 
@@ -162,7 +172,6 @@
                 if (liveTwd) {
                     const ntG = (preciseGold * liveTwd) / 31.1035;
                     const ntQ = ntG * 3.75;
-                    // 這裡加上銀樓牌價 500
                     const storePrice = Math.round(ntQ) + 500;
                     document.getElementById('calc-gold').innerHTML = `換算：${Math.round(ntG).toLocaleString()} NT$ / 克 | 銀樓牌價：${storePrice.toLocaleString()} NT$ / 錢`;
                 }
