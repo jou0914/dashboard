@@ -441,13 +441,18 @@ function copyDebugLog() {
 }
 
 // ─────────────────────────────────────────────
-//  SAFE FETCH with timeout
+//  SAFE FETCH with timeout + redirect follow
 // ─────────────────────────────────────────────
-async function safeFetch(url, label, timeout = 8000) {
+async function safeFetch(url, label, timeout = 10000) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const r = await fetch(url, { signal: ctrl.signal });
+    const r = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      mode: 'cors',
+      headers: { 'Accept': 'application/json' }
+    });
     clearTimeout(tid);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
@@ -616,45 +621,72 @@ async function fetchAV() {
 }
 
 // ─────────────────────────────────────────────
-//  FETCH: Finnhub — Gold, Oil, Dow Futures, VIX
+//  FETCH: Alpha Vantage — Gold & Brent Oil
+// ─────────────────────────────────────────────
+async function fetchGoldOil() {
+  // 黃金：AV XAU/USD 即時匯率
+  const goldSpot = await safeFetch(
+    `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`,
+    'AV Gold XAU/USD'
+  );
+  if (goldSpot && goldSpot['Realtime Currency Exchange Rate']) {
+    const price = parseFloat(goldSpot['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+    setVal('gold-val', price, 2);
+    recalcGold(price);
+  }
+
+  // 黃金歷史 sparkline + 漲跌幅
+  const goldHist = await safeFetch(
+    `https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=XAU&to_symbol=USD&outputsize=compact&apikey=${AV_KEY}`,
+    'AV Gold History'
+  );
+  if (goldHist && goldHist['Time Series FX (Daily)']) {
+    const ts = goldHist['Time Series FX (Daily)'];
+    const keys = Object.keys(ts).sort();
+    const vals = keys.slice(-30).map(k => parseFloat(ts[k]['4. close']));
+    if (vals.length >= 2) {
+      const chg = vals[vals.length-1] - vals[vals.length-2];
+      const pct = (chg / vals[vals.length-2]) * 100;
+      setChg('gold-chg', chg, pct);
+      setCardDir('card-gold', chg);
+      renderSparkline('spark-gold', vals, chg >= 0 ? '#f0b429' : '#ef4444');
+    }
+  }
+
+  // 布蘭特原油：Finnhub BZ=F（NYMEX Brent futures symbol）
+  const oilFH = await safeFetch(
+    `https://finnhub.io/api/v1/quote?symbol=BZ%3DF&token=${FH_KEY}`,
+    'Finnhub Brent BZ=F'
+  );
+  if (oilFH && oilFH.c && oilFH.c > 0) {
+    setVal('oil-val', oilFH.c, 2);
+    setChg('oil-chg', oilFH.d, oilFH.dp);
+    setCardDir('card-oil', oilFH.d);
+    fetchFinnhubCandles('BZ%3DF', 'spark-oil', (oilFH.d||0) >= 0 ? '#22c55e' : '#ef4444');
+    return;
+  }
+
+  // Brent fallback: AV WTI crude via commodity ETF (USO)
+  const oilAV = await safeFetch(
+    `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNO&apikey=${AV_KEY}`,
+    'AV BNO ETF (Brent fallback)'
+  );
+  if (oilAV && oilAV['Global Quote'] && oilAV['Global Quote']['05. price']) {
+    const q = oilAV['Global Quote'];
+    const price = parseFloat(q['05. price']);
+    const chg   = parseFloat(q['09. change']);
+    const pct   = parseFloat(q['10. change percent']);
+    setVal('oil-val', price, 2);
+    setChg('oil-chg', chg, pct);
+    setCardDir('card-oil', chg);
+    document.getElementById('oil-chg').textContent += ' ★BNO ETF';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  FETCH: Finnhub — VIX & Dow Jones
 // ─────────────────────────────────────────────
 async function fetchFinnhub() {
-  const symbols = {
-    gold: 'OANDA:XAU_USD',
-    oil:  'OANDA:BCO_USD',
-    vix:  'INDEX:VIX',
-    dow:  'INDEX:DJI'          // fallback to quote if futures unavailable
-  };
-
-  // Gold
-  const goldData = await safeFetch(
-    `https://finnhub.io/api/v1/quote?symbol=OANDA:XAU_USD&token=${FH_KEY}`,
-    'Finnhub Gold'
-  );
-  if (goldData && goldData.c) {
-    const price = goldData.c;
-    const chg = goldData.d;
-    const pct = goldData.dp;
-    setVal('gold-val', price, 2);
-    setChg('gold-chg', chg, pct);
-    setCardDir('card-gold', chg);
-    recalcGold(price);
-    // Candles for sparkline
-    fetchFinnhubCandles('OANDA:XAU_USD', 'spark-gold', chg >= 0 ? '#f0b429' : '#ef4444');
-  }
-
-  // Oil (Brent)
-  const oilData = await safeFetch(
-    `https://finnhub.io/api/v1/quote?symbol=OANDA:BCO_USD&token=${FH_KEY}`,
-    'Finnhub Brent Oil'
-  );
-  if (oilData && oilData.c) {
-    setVal('oil-val', oilData.c, 2);
-    setChg('oil-chg', oilData.d, oilData.dp);
-    setCardDir('card-oil', oilData.d);
-    fetchFinnhubCandles('OANDA:BCO_USD', 'spark-oil', oilData.d >= 0 ? '#22c55e' : '#ef4444');
-  }
-
   // VIX
   const vixData = await safeFetch(
     `https://finnhub.io/api/v1/quote?symbol=INDEX:VIX&token=${FH_KEY}`,
@@ -668,7 +700,7 @@ async function fetchFinnhub() {
     fetchFinnhubCandles('INDEX:VIX', 'spark-vix', '#00d4ff');
   }
 
-  // Dow Jones (futures fallback to spot)
+  // Dow Jones
   const dowData = await safeFetch(
     `https://finnhub.io/api/v1/quote?symbol=INDEX:DJI&token=${FH_KEY}`,
     'Finnhub DJI'
@@ -677,7 +709,7 @@ async function fetchFinnhub() {
     setVal('dow-val', dowData.c, 0);
     setChg('dow-chg', dowData.d, dowData.dp);
     setCardDir('card-dow', dowData.d);
-    fetchFinnhubCandles('INDEX:DJI', 'spark-dow', dowData.d >= 0 ? '#22c55e' : '#ef4444');
+    fetchFinnhubCandles('INDEX:DJI', 'spark-dow', (dowData.d||0) >= 0 ? '#22c55e' : '#ef4444');
   }
 
   checkExtremeFear();
@@ -685,12 +717,12 @@ async function fetchFinnhub() {
 
 async function fetchFinnhubCandles(symbol, canvasId, color) {
   const now = Math.floor(Date.now() / 1000);
-  const from = now - 7 * 24 * 3600; // 7 days
+  const from = now - 14 * 24 * 3600;
   const data = await safeFetch(
     `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=D&from=${from}&to=${now}&token=${FH_KEY}`,
-    `Finnhub Candles ${symbol}`
+    `Candles ${symbol}`
   );
-  if (data && data.s === 'ok' && data.c) {
+  if (data && data.s === 'ok' && data.c && data.c.length >= 2) {
     renderSparkline(canvasId, data.c, color);
   }
 }
@@ -787,6 +819,7 @@ async function fetchAll() {
     fetchGAS(),
     fetchAV(),
     fetchFinnhub(),
+    fetchGoldOil(),
     fetchCNNFear()
   ]);
 
