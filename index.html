@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>市場儀表板</title>
+<title>市場儀表板 v1.4.0</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -278,7 +278,7 @@ margin-top: 8px;
 <body>
 
 <header>
-  <h1>▸ MARKET DASHBOARD</h1>
+  <h1>▸ MARKET DASHBOARD <span style="font-size:10px;color:var(--muted);font-weight:400;letter-spacing:1px">v1.4.0</span></h1>
   <div class="header-right">
     <span id="last-update">--</span>
     <button class="btn btn-accent" onclick="fetchAll()">↻ REFRESH</button>
@@ -666,16 +666,27 @@ async function fetchGoldOil() {
       `https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`,
       label
     );
-    if (oilFH && oilFH.c && oilFH.c > 0) {
-      log(`✓ 原油使用 ${label} c=${oilFH.c}`);
-      setVal('oil-val', oilFH.c, 2);
-      setChg('oil-chg', oilFH.d, oilFH.dp);
-      setCardDir('card-oil', oilFH.d);
-      fetchFinnhubCandles(sym, 'spark-oil', (oilFH.d||0) >= 0 ? '#22c55e' : '#ef4444');
-      oilDone = true;
-      break;
-    } else {
-      log(`⚠ ${label} c=${oilFH ? oilFH.c : 'null'}`);
+    if (oilFH) {
+      // c=0 休市時用 pc（previous close）
+      const price = (oilFH.c && oilFH.c > 0) ? oilFH.c : oilFH.pc;
+      if (price && price > 0) {
+        const isClosed = !(oilFH.c && oilFH.c > 0);
+        log(`✓ 原油使用 ${label} ${isClosed ? '(休市,末收' + price + ')' : 'c=' + price}`);
+        setVal('oil-val', price, 2);
+        if (isClosed) {
+          document.getElementById('oil-chg').textContent = '休市 最後收盤';
+          document.getElementById('oil-chg').className = 'card-sub';
+          setCardDir('card-oil', null);
+        } else {
+          setChg('oil-chg', oilFH.d, oilFH.dp);
+          setCardDir('card-oil', oilFH.d);
+        }
+        fetchFinnhubCandles(sym, 'spark-oil', '#94a3b8');
+        oilDone = true;
+        break;
+      } else {
+        log(`⚠ ${label} c=${oilFH.c} pc=${oilFH.pc}`);
+      }
     }
   }
 
@@ -705,12 +716,22 @@ async function fetchFinnhub() {
     `https://finnhub.io/api/v1/quote?symbol=INDEX:VIX&token=${FH_KEY}`,
     'Finnhub VIX'
   );
-  if (vixData && vixData.c) {
-    setVal('vix-val', vixData.c, 2);
-    setChg('vix-chg', vixData.d, vixData.dp);
-    setCardDir('card-vix', vixData.d);
-    showWarn('vix-warn', vixData.c > 30);
-    fetchFinnhubCandles('INDEX:VIX', 'spark-vix', '#00d4ff');
+  if (vixData) {
+    const vixPrice = (vixData.c && vixData.c > 0) ? vixData.c : vixData.pc;
+    if (vixPrice && vixPrice > 0) {
+      const isClosed = !(vixData.c && vixData.c > 0);
+      setVal('vix-val', vixPrice, 2);
+      if (isClosed) {
+        document.getElementById('vix-chg').textContent = '休市 最後收盤';
+        document.getElementById('vix-chg').className = 'card-sub';
+        setCardDir('card-vix', null);
+      } else {
+        setChg('vix-chg', vixData.d, vixData.dp);
+        setCardDir('card-vix', vixData.d);
+      }
+      showWarn('vix-warn', vixPrice > 30);
+      fetchFinnhubCandles('INDEX:VIX', 'spark-vix', '#00d4ff');
+    }
   }
 
   // Dow Jones
@@ -718,11 +739,21 @@ async function fetchFinnhub() {
     `https://finnhub.io/api/v1/quote?symbol=INDEX:DJI&token=${FH_KEY}`,
     'Finnhub DJI'
   );
-  if (dowData && dowData.c) {
-    setVal('dow-val', dowData.c, 0);
-    setChg('dow-chg', dowData.d, dowData.dp);
-    setCardDir('card-dow', dowData.d);
-    fetchFinnhubCandles('INDEX:DJI', 'spark-dow', (dowData.d||0) >= 0 ? '#22c55e' : '#ef4444');
+  if (dowData) {
+    const dowPrice = (dowData.c && dowData.c > 0) ? dowData.c : dowData.pc;
+    if (dowPrice && dowPrice > 0) {
+      const isClosed = !(dowData.c && dowData.c > 0);
+      setVal('dow-val', dowPrice, 0);
+      if (isClosed) {
+        document.getElementById('dow-chg').textContent = '休市 最後收盤';
+        document.getElementById('dow-chg').className = 'card-sub';
+        setCardDir('card-dow', null);
+      } else {
+        setChg('dow-chg', dowData.d, dowData.dp);
+        setCardDir('card-dow', dowData.d);
+      }
+      fetchFinnhubCandles('INDEX:DJI', 'spark-dow', isClosed ? '#94a3b8' : (dowData.d||0) >= 0 ? '#22c55e' : '#ef4444');
+    }
   }
 
   checkExtremeFear();
