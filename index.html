@@ -1,165 +1,201 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>高級市場儀表板 v1.4.2</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d1117;
-    --surface: rgba(22, 27, 34, 0.8);
-    --border: #30363d;
-    --accent: #f2c94c; 
-    --accent2: #58a6ff;
-    --green: #3fb950;
-    --red: #f85149;
-    --text: #c9d1d9;
-    --text-muted: #8b949e;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans TC', sans-serif;
-    padding-bottom: 40px;
-  }
-  header {
-    background: rgba(13, 17, 23, 0.9);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0; z-index: 100;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px; padding: 16px;
-  }
-  .section-title {
-    padding: 20px 16px 8px;
-    font-size: 11px;
-    color: var(--accent2);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-weight: 900;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    transition: 0.2s;
-  }
-  .card:hover { transform: translateY(-3px); border-color: var(--text-muted); }
-  .card-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-  .card-value { font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; }
-  .card-sub { font-family: 'Share Tech Mono', monospace; font-size: 12px; margin-top: 4px; }
-  .up { color: var(--green) !important; }
-  .down { color: var(--red) !important; }
-  .sparkline-wrap { height: 50px; margin-top: 10px; }
-  .btn {
-    padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
-    background: var(--accent); color: #000; font-weight: bold; cursor: pointer;
-  }
-  .warn-badge {
-    display: inline-block; padding: 2px 6px; border-radius: 4px;
-    background: rgba(248, 81, 73, 0.1); color: var(--red); font-size: 10px; margin-top: 5px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Financial Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --accent: #38bdf8; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; position: relative; }
+        .val { font-size: 1.5rem; font-weight: bold; margin: 5px 0; }
+        .change { font-size: 0.9rem; }
+        .up { color: #f87171; } .down { color: #4ade80; } /* 台股習慣：紅漲綠跌 */
+        .warning { font-size: 0.75rem; color: #fbbf24; margin-top: 4px; display: block; }
+        canvas { width: 100% !important; height: 50px !important; margin-top: 10px; }
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { background: var(--accent); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .copy-log { background: #64748b; color: white; margin-top: 10px; width: 100%; }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1 style="font-size:16px; color:var(--accent)">📊 MARKET MONITOR</h1>
-  <div style="display:flex; gap:10px; align-items:center">
-    <span id="last-update" style="font-size:11px; font-family:'Share Tech Mono'">--</span>
-    <button class="btn" onclick="fetchAll()">REFRESH</button>
-  </div>
-</header>
+<div class="grid" id="dashboard">
+    <div class="card">
+        <div>7769 鴻勁</div>
+        <div class="val" id="price-7769">--</div>
+        <div class="change" id="change-7769">--</div>
+        <canvas id="chart-7769"></canvas>
+    </div>
 
-<div class="section-title">🇹🇼 台灣市場</div>
-<div class="grid">
-  <div class="card" id="card-twii">
-    <div class="card-label">台股大盤 TWII</div>
-    <div class="card-value" id="twii-val">...</div>
-    <div class="card-sub" id="twii-chg">--</div>
-    <div class="sparkline-wrap"><canvas id="spark-twii"></canvas></div>
-  </div>
-  <div class="card" id="card-7769">
-    <div class="card-label">7769 鴻勁精密</div>
-    <div class="card-value" id="s7769-val">...</div>
-    <div class="card-sub" id="s7769-chg">--</div>
-    <div class="sparkline-wrap"><canvas id="spark-7769"></canvas></div>
-  </div>
+    <div class="card">
+        <div>台股大盤指數</div>
+        <div class="val" id="price-tws">--</div>
+        <div class="change" id="change-tws">--</div>
+        <canvas id="chart-tws"></canvas>
+    </div>
+
+    <div class="card">
+        <div>道瓊期 (YM)</div>
+        <div class="val" id="price-ym">--</div>
+        <div class="change" id="change-ym">--</div>
+        <canvas id="chart-ym"></canvas>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between;">
+            <span>台幣 (USD/TWD)</span>
+            <span>日幣 (USD/JPY)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div class="val" id="price-twd">--</div>
+            <div class="val" id="price-jpy">--</div>
+        </div>
+        <div id="warn-jpy" class="warning"></div>
+        <canvas id="chart-fx"></canvas>
+    </div>
+
+    <div class="card">
+        <div>黃金 (國際盎司/克/錢)</div>
+        <div class="val" id="gold-oz">--</div>
+        <div class="change" id="gold-calc">--</div>
+        <canvas id="chart-gold"></canvas>
+    </div>
+
+    <div class="card">
+        <div>美股 VIX</div>
+        <div class="val" id="price-vix">--</div>
+        <div id="warn-vix" class="warning"></div>
+        <canvas id="chart-vix"></canvas>
+    </div>
+
+    <div class="card">
+        <div>布蘭特原油 (Brent)</div>
+        <div class="val" id="price-oil">--</div>
+        <canvas id="chart-oil"></canvas>
+    </div>
+
+    <div class="card">
+        <div>加密貨幣恐慌指數</div>
+        <div class="val" id="crypto-fear">--</div>
+        <div id="warn-crypto" class="warning"></div>
+    </div>
 </div>
 
-<div class="section-title">🌎 全球商品與匯率</div>
-<div class="grid">
-  <div class="card">
-    <div class="card-label">USD / TWD 台幣</div>
-    <div id="twd-val" class="card-value">...</div>
-    <div id="twd-chg" class="card-sub">--</div>
-    <div class="sparkline-wrap"><canvas id="spark-twd"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="card-label">黃金 (USD/oz)</div>
-    <div id="gold-val" class="card-value">...</div>
-    <div id="gold-chg" class="card-sub">--</div>
-    <div class="sparkline-wrap"><canvas id="spark-gold"></canvas></div>
-  </div>
+<div class="btn-group">
+    <button onclick="refreshData()">REFRESH</button>
+    <button onclick="window.open('https://www.edition.cnn.com/markets/fear-and-greed', '_blank')">CNN 恐慌指數按鈕</button>
+    <button onclick="window.open('https://www.wantgoo.com/index/vixtwn', '_blank')">台股 VIX 網頁</button>
 </div>
+
+<button class="copy-log" onclick="copyLog()">一鍵複製 Log 功能</button>
 
 <script>
-const GAS_URL = '你的_GAS_部署網址'; [span_36](start_span)// 請替換成你的 GAS URL[span_36](end_span)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec";
+const ALPHA_KEY = "12F9YHGH3T1063OB";
+const FINNHUB_KEY = "d76gjvpr01qm4b7u6gj0d76gjvpr01qm4b7u6gjg";
 
-async function fetchAll() {
-  document.getElementById('last-update').textContent = 'UPDATING...';
-  try {
-    const r = await fetch(GAS_URL); [span_37](start_span)[span_38](start_span)//[span_37](end_span)[span_38](end_span)
-    const data = await r.json();
+let logData = "";
+
+// 曲線繪製函式
+function renderSparkline(canvasId, dataPoints) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (window[canvasId] instanceof Chart) { window[canvasId].destroy(); }
     
-    // 更新數值與迷你圖 (以台股為例)
-    updateCard('twii', data.twii, data.twii_chg, data.twii_pct, data.twii_history); [span_39](start_span)[span_40](start_span)//[span_39](end_span)[span_40](end_span)
-    updateCard('s7769', data.s7769, data.s7769_chg, data.s7769_pct, data.s7769_history); [span_41](start_span)[span_42](start_span)//[span_41](end_span)[span_42](end_span)
-    updateCard('twd', data.twd, data.twd_chg, data.twd_pct, data.twd_history, 3); [span_43](start_span)[span_44](start_span)//[span_43](end_span)[span_44](end_span)
-    updateCard('gold', data.gold, data.gold_chg, data.gold_pct, data.gold_history); [span_45](start_span)[span_46](start_span)//[span_45](end_span)[span_46](end_span)
-
-    document.getElementById('last-update').textContent = new Date().toLocaleTimeString(); [span_47](start_span)//[span_47](end_span)
-  } catch (e) { console.error(e); }
+    window[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dataPoints.map((_, i) => i),
+            datasets: [{
+                data: dataPoints,
+                borderColor: '#38bdf8',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } }
+        }
+    });
 }
 
-function updateCard(id, val, chg, pct, history, dec = 2) {
-  const vEl = document.getElementById(id + '-val');
-  const cEl = document.getElementById(id + '-chg');
-  if (vEl && val) vEl.textContent = Number(val).toLocaleString(undefined, {minimumFractionDigits: dec}); [span_48](start_span)//[span_48](end_span)
-  if (cEl && chg !== undefined) {
-    const sign = chg >= 0 ? '+' : '';
-    cEl.textContent = `${sign}${chg.toFixed(2)} (${sign}${pct.toFixed(2)}%)`; [span_49](start_span)//[span_49](end_span)
-    cEl.className = 'card-sub ' + (chg >= 0 ? 'up' : 'down'); [span_50](start_span)//[span_50](end_span)
-  }
-  if (history) renderSparkline('spark-' + id, history, chg >= 0 ? '#3fb950' : '#f85149'); [span_51](start_span)[span_52](start_span)//[span_51](end_span)[span_52](end_span)
+async function refreshData() {
+    try {
+        // 強化容錯：使用 Promise.allSettled 確保個別 API 失敗不卡死全部
+        const [gasRes, cryptoRes] = await Promise.allSettled([
+            fetch(GAS_URL).then(r => r.json()),
+            fetch('https://api.alternative.me/fng/').then(r => r.json())
+        ]);
+
+        if (gasRes.status === 'fulfilled') {
+            const d = gasRes.value;
+            logData = JSON.stringify(d, null, 2);
+
+            // 1. 7769 鴻勁
+            updateUI('7769', d.h7769, d.h7769_hist);
+            // 2. 台股大盤
+            updateUI('tws', d.tws, d.tws_hist);
+            // 3. 道瓊期
+            updateUI('ym', d.ym, d.ym_hist);
+            // 4 & 5. 匯率 (台幣/日幣)
+            document.getElementById('price-twd').innerText = d.twd;
+            document.getElementById('price-jpy').innerText = d.jpy;
+            document.getElementById('warn-jpy').innerText = d.jpy > 159.5 ? "⚠️ 日幣 > 159.5" : "";
+            renderSparkline('chart-fx', d.fx_hist || []);
+
+            // 6. 黃金計算邏輯
+            const goldPrice = parseFloat(d.gold);
+            const twdRate = parseFloat(d.twd);
+            const pricePerGram = (goldPrice * twdRate) / 31.1035;
+            const pricePerQian = pricePerGram * 3.75;
+            document.getElementById('gold-oz').innerText = `$${goldPrice}`;
+            document.getElementById('gold-calc').innerText = `NT$${pricePerGram.toFixed(1)}/g | NT$${pricePerQian.toFixed(0)}/錢`;
+            renderSparkline('chart-gold', d.gold_hist || []);
+
+            // 7. 美股 VIX
+            document.getElementById('price-vix').innerText = d.vix;
+            document.getElementById('warn-vix').innerText = d.vix > 30 ? "⚠️ 美股 VIX > 30" : "";
+            renderSparkline('chart-vix', d.vix_hist || []);
+
+            // 8. 原油
+            document.getElementById('price-oil').innerText = `$${d.oil}`;
+            renderSparkline('chart-oil', d.oil_hist || []);
+        }
+
+        // 加密貨幣恐慌指數
+        if (cryptoRes.status === 'fulfilled') {
+            const fng = cryptoRes.value.data[0].value;
+            document.getElementById('crypto-fear').innerText = fng;
+            document.getElementById('warn-crypto').innerText = fng < 10 ? "⚠️ 極度恐慌 < 10" : "";
+        }
+
+    } catch (e) {
+        console.error("Data Refresh Error", e);
+    }
 }
 
-function renderSparkline(canvasId, dataArr, color) {
-  const ctx = document.getElementById(canvasId).getContext('2d'); [span_53](start_span)//[span_53](end_span)
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: dataArr.map((_, i) => i),
-      datasets: [{ data: dataArr, borderColor: color, borderWidth: 2, pointRadius: 0, fill: false, tension: 0.4 }]
-    },
-    [span_54](start_span)options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } //[span_54](end_span)
-  });
+function updateUI(id, val, hist) {
+    document.getElementById(`price-${id}`).innerText = val || '--';
+    if (hist && hist.length > 0) {
+        renderSparkline(`chart-${id}`, hist);
+    }
 }
 
-fetchAll();
-setInterval(fetchAll, 60000); [span_55](start_span)// 每分鐘自動更新一次[span_55](end_span)
+function copyLog() {
+    navigator.clipboard.writeText(logData);
+    alert("Log 已複製到剪貼簿");
+}
+
+// 初始化
+refreshData();
 </script>
+
 </body>
 </html>
