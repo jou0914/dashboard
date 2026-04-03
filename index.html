@@ -586,173 +586,228 @@ async function fetchGAS() {
 }
 
 // ─────────────────────────────────────────────
-//  FETCH: Alpha Vantage — USD/TWD, USD/JPY
+//  FETCH: Yahoo Finance — 通用 quote 抓取
+// ─────────────────────────────────────────────
+async function yahooQuote(symbol, label) {
+  // Yahoo Finance v8 chart API — 支援股票、ETF、外匯、期貨、指數
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
+  const data = await safeFetch(url, label);
+  if (!data || !data.chart || !data.chart.result || !data.chart.result.length) return null;
+  const r = data.chart.result[0];
+  const meta = r.meta;
+  const closes = (r.indicators.quote[0].close || []).filter(v => v != null);
+  const price  = meta.regularMarketPrice || closes[closes.length - 1];
+  const prev   = meta.previousClose     || meta.chartPreviousClose || closes[closes.length - 2];
+  const chg    = (price && prev) ? price - prev : null;
+  const pct    = (chg && prev)   ? (chg / prev) * 100 : null;
+  const mktState = meta.marketState || 'CLOSED';
+  return { price, prev, chg, pct, history: closes.slice(-30), isClosed: mktState === 'CLOSED' || mktState === 'PRE' };
+}
+
+// ─────────────────────────────────────────────
+//  FETCH: Alpha Vantage — USD/TWD, USD/JPY (即時匯率)
+//  + Yahoo Finance fallback (有歷史曲線)
 // ─────────────────────────────────────────────
 async function fetchAV() {
-  // USD/TWD
+  // ── USD/TWD ──
+  let twdDone = false;
   const twdData = await safeFetch(
     `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=TWD&apikey=${AV_KEY}`,
     'AV USD/TWD'
   );
   if (twdData && twdData['Realtime Currency Exchange Rate']) {
-    const r = twdData['Realtime Currency Exchange Rate'];
-    const rate = parseFloat(r['5. Exchange Rate']);
-    twdRate = rate;
-    setVal('twd-val', rate, 3);
-    document.getElementById('twd-chg').textContent = `台幣兌美元`;
-    setCardDir('card-usdtwd', null);
-    // recalc gold
-    recalcGold();
+    const rate = parseFloat(twdData['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+    if (rate > 0) {
+      twdRate = rate;
+      setVal('twd-val', rate, 3);
+      document.getElementById('twd-chg').textContent = '台幣兌美元';
+      setCardDir('card-usdtwd', null);
+      recalcGold();
+      twdDone = true;
+      // 歷史曲線用 Yahoo
+      yahooQuote('TWD=X', 'Yahoo TWD history').then(q => {
+        if (q && q.history.length >= 2) renderSparkline('spark-twd', q.history, '#94a3b8');
+      });
+    }
+  }
+  if (!twdDone) {
+    const q = await yahooQuote('TWD=X', 'Yahoo USD/TWD');
+    if (q && q.price) {
+      twdRate = q.price;
+      setVal('twd-val', q.price, 3);
+      const label = q.isClosed ? '休市 最後收盤' : (q.chg != null ? `${q.chg>=0?'+':''}${q.chg.toFixed(3)}` : '台幣兌美元');
+      document.getElementById('twd-chg').textContent = label;
+      setCardDir('card-usdtwd', q.isClosed ? null : q.chg);
+      recalcGold();
+      if (q.history.length >= 2) renderSparkline('spark-twd', q.history, '#94a3b8');
+    }
   }
 
-  // USD/JPY
+  // ── USD/JPY ──
+  let jpyDone = false;
   const jpyData = await safeFetch(
     `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=JPY&apikey=${AV_KEY}`,
     'AV USD/JPY'
   );
   if (jpyData && jpyData['Realtime Currency Exchange Rate']) {
-    const r = jpyData['Realtime Currency Exchange Rate'];
-    const rate = parseFloat(r['5. Exchange Rate']);
-    setVal('jpy-val', rate, 2);
-    document.getElementById('jpy-chg').textContent = `日幣兌美元`;
-    showWarn('jpy-warn', rate > 159.5);
-    setCardDir('card-usdjpy', null);
+    const rate = parseFloat(jpyData['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+    if (rate > 0) {
+      setVal('jpy-val', rate, 2);
+      document.getElementById('jpy-chg').textContent = '日幣兌美元';
+      showWarn('jpy-warn', rate > 159.5);
+      setCardDir('card-usdjpy', null);
+      jpyDone = true;
+      yahooQuote('JPY=X', 'Yahoo JPY history').then(q => {
+        if (q && q.history.length >= 2) renderSparkline('spark-jpy', q.history, '#94a3b8');
+      });
+    }
+  }
+  if (!jpyDone) {
+    const q = await yahooQuote('JPY=X', 'Yahoo USD/JPY');
+    if (q && q.price) {
+      setVal('jpy-val', q.price, 2);
+      const label = q.isClosed ? '休市 最後收盤' : '日幣兌美元';
+      document.getElementById('jpy-chg').textContent = label;
+      showWarn('jpy-warn', q.price > 159.5);
+      setCardDir('card-usdjpy', q.isClosed ? null : q.chg);
+      if (q.history.length >= 2) renderSparkline('spark-jpy', q.history, '#94a3b8');
+    }
   }
 }
 
 // ─────────────────────────────────────────────
-//  FETCH: Alpha Vantage — Gold & Brent Oil
+//  FETCH: Gold & Brent Oil
 // ─────────────────────────────────────────────
 async function fetchGoldOil() {
-  // 黃金：AV XAU/USD 即時匯率
-  const goldSpot = await safeFetch(
-    `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`,
-    'AV Gold XAU/USD'
-  );
-  if (goldSpot && goldSpot['Realtime Currency Exchange Rate']) {
-    const price = parseFloat(goldSpot['Realtime Currency Exchange Rate']['5. Exchange Rate']);
-    setVal('gold-val', price, 2);
-    recalcGold(price);
+  // ── 黃金：Yahoo Finance GC=F（COMEX Gold Futures）──
+  let goldDone = false;
+  const goldY = await yahooQuote('GC%3DF', 'Yahoo Gold GC=F');
+  if (goldY && goldY.price && goldY.price > 0) {
+    setVal('gold-val', goldY.price, 2);
+    if (goldY.isClosed) {
+      document.getElementById('gold-chg').textContent = '休市 最後收盤';
+      document.getElementById('gold-chg').className = 'card-sub';
+      setCardDir('card-gold', null);
+    } else {
+      setChg('gold-chg', goldY.chg, goldY.pct);
+      setCardDir('card-gold', goldY.chg);
+    }
+    recalcGold(goldY.price);
+    if (goldY.history.length >= 2) renderSparkline('spark-gold', goldY.history, goldY.isClosed ? '#f0b429' : (goldY.chg||0) >= 0 ? '#f0b429' : '#ef4444');
+    goldDone = true;
   }
-
-  // 黃金歷史 sparkline + 漲跌幅
-  const goldHist = await safeFetch(
-    `https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=XAU&to_symbol=USD&outputsize=compact&apikey=${AV_KEY}`,
-    'AV Gold History'
-  );
-  if (goldHist && goldHist['Time Series FX (Daily)']) {
-    const ts = goldHist['Time Series FX (Daily)'];
-    const keys = Object.keys(ts).sort();
-    const vals = keys.slice(-30).map(k => parseFloat(ts[k]['4. close']));
-    if (vals.length >= 2) {
-      const chg = vals[vals.length-1] - vals[vals.length-2];
-      const pct = (chg / vals[vals.length-2]) * 100;
-      setChg('gold-chg', chg, pct);
-      setCardDir('card-gold', chg);
-      renderSparkline('spark-gold', vals, chg >= 0 ? '#f0b429' : '#ef4444');
+  // AV fallback
+  if (!goldDone) {
+    const goldSpot = await safeFetch(
+      `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`,
+      'AV Gold XAU/USD fallback'
+    );
+    if (goldSpot && goldSpot['Realtime Currency Exchange Rate']) {
+      const price = parseFloat(goldSpot['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+      setVal('gold-val', price, 2);
+      document.getElementById('gold-chg').textContent = '休市 最後收盤';
+      document.getElementById('gold-chg').className = 'card-sub';
+      recalcGold(price);
     }
   }
 
-  // 布蘭特原油：依序嘗試多個 symbol
-  // Finnhub 免費版休市時 c=0，需多重嘗試
-  const oilSymbols = [
-    { sym: 'UKOIL',     label: 'Finnhub UKOIL' },
-    { sym: 'BZ%3DF',    label: 'Finnhub BZ=F' },
-    { sym: 'NYMEX:BZG', label: 'Finnhub NYMEX:BZG' }
-  ];
+  // ── 布蘭特原油：Yahoo Finance BZ=F（NYMEX Brent，有歷史+休市收盤）──
   let oilDone = false;
-  for (const { sym, label } of oilSymbols) {
-    const oilFH = await safeFetch(
-      `https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`,
-      label
-    );
-    if (oilFH) {
-      // c=0 休市時用 pc（previous close）
-      const price = (oilFH.c && oilFH.c > 0) ? oilFH.c : oilFH.pc;
-      if (price && price > 0) {
-        const isClosed = !(oilFH.c && oilFH.c > 0);
-        log(`✓ 原油使用 ${label} ${isClosed ? '(休市,末收' + price + ')' : 'c=' + price}`);
-        setVal('oil-val', price, 2);
-        if (isClosed) {
-          document.getElementById('oil-chg').textContent = '休市 最後收盤';
-          document.getElementById('oil-chg').className = 'card-sub';
-          setCardDir('card-oil', null);
-        } else {
-          setChg('oil-chg', oilFH.d, oilFH.dp);
-          setCardDir('card-oil', oilFH.d);
-        }
-        fetchFinnhubCandles(sym, 'spark-oil', '#94a3b8');
+  const oilY = await yahooQuote('BZ%3DF', 'Yahoo Brent BZ=F');
+  if (oilY && oilY.price && oilY.price > 0) {
+    setVal('oil-val', oilY.price, 2);
+    if (oilY.isClosed) {
+      document.getElementById('oil-chg').textContent = '休市 最後收盤';
+      document.getElementById('oil-chg').className = 'card-sub';
+      setCardDir('card-oil', null);
+    } else {
+      setChg('oil-chg', oilY.chg, oilY.pct);
+      setCardDir('card-oil', oilY.chg);
+    }
+    if (oilY.history.length >= 2) renderSparkline('spark-oil', oilY.history, oilY.isClosed ? '#94a3b8' : (oilY.chg||0) >= 0 ? '#22c55e' : '#ef4444');
+    oilDone = true;
+  }
+  // Finnhub fallback
+  if (!oilDone) {
+    for (const sym of ['UKOIL','BZ%3DF']) {
+      const oilFH = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`, `Finnhub ${sym} oil fallback`);
+      if (oilFH && ((oilFH.c && oilFH.c > 0) || (oilFH.pc && oilFH.pc > 0))) {
+        const p = (oilFH.c && oilFH.c > 0) ? oilFH.c : oilFH.pc;
+        setVal('oil-val', p, 2);
+        document.getElementById('oil-chg').textContent = '休市 最後收盤';
+        document.getElementById('oil-chg').className = 'card-sub';
+        setCardDir('card-oil', null);
         oilDone = true;
         break;
-      } else {
-        log(`⚠ ${label} c=${oilFH.c} pc=${oilFH.pc}`);
       }
     }
   }
-
-  // 最終 fallback：Alpha Vantage Brent ETF BNO
-  if (!oilDone) {
-    log('⚠ Finnhub 原油全失，改用 AV BNO ETF');
-    const oilAV = await safeFetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNO&apikey=${AV_KEY}`,
-      'AV BNO ETF (final fallback)'
-    );
-    if (oilAV && oilAV['Global Quote'] && oilAV['Global Quote']['05. price']) {
-      const q = oilAV['Global Quote'];
-      setVal('oil-val', parseFloat(q['05. price']), 2);
-      setChg('oil-chg', parseFloat(q['09. change']), parseFloat(q['10. change percent']));
-      setCardDir('card-oil', parseFloat(q['09. change']));
-      document.getElementById('oil-chg').textContent += ' ★BNO ETF';
-    }
-  }
+  if (!oilDone) log('⚠ 原油數據全部失敗');
 }
 
 // ─────────────────────────────────────────────
-//  FETCH: Finnhub — VIX & Dow Jones
+//  FETCH: VIX & Dow Jones (Yahoo primary, Finnhub fallback)
 // ─────────────────────────────────────────────
 async function fetchFinnhub() {
-  // VIX
-  const vixData = await safeFetch(
-    `https://finnhub.io/api/v1/quote?symbol=INDEX:VIX&token=${FH_KEY}`,
-    'Finnhub VIX'
-  );
-  if (vixData) {
-    const vixPrice = (vixData.c && vixData.c > 0) ? vixData.c : vixData.pc;
-    if (vixPrice && vixPrice > 0) {
-      const isClosed = !(vixData.c && vixData.c > 0);
-      setVal('vix-val', vixPrice, 2);
-      if (isClosed) {
-        document.getElementById('vix-chg').textContent = '休市 最後收盤';
-        document.getElementById('vix-chg').className = 'card-sub';
-        setCardDir('card-vix', null);
-      } else {
-        setChg('vix-chg', vixData.d, vixData.dp);
-        setCardDir('card-vix', vixData.d);
+  // ── 美股 VIX ──
+  // 先嘗試 Yahoo Finance ^VIX（有歷史、有休市收盤）
+  let vixDone = false;
+  const vixY = await yahooQuote('%5EVIX', 'Yahoo VIX');
+  if (vixY && vixY.price && vixY.price > 0) {
+    setVal('vix-val', vixY.price, 2);
+    if (vixY.isClosed) {
+      document.getElementById('vix-chg').textContent = '休市 最後收盤';
+      document.getElementById('vix-chg').className = 'card-sub';
+      setCardDir('card-vix', null);
+    } else {
+      setChg('vix-chg', vixY.chg, vixY.pct);
+      setCardDir('card-vix', vixY.chg);
+    }
+    showWarn('vix-warn', vixY.price > 30);
+    if (vixY.history.length >= 2) renderSparkline('spark-vix', vixY.history, '#00d4ff');
+    vixDone = true;
+  }
+  // Finnhub fallback
+  if (!vixDone) {
+    const vixF = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=INDEX:VIX&token=${FH_KEY}`, 'Finnhub VIX');
+    if (vixF) {
+      const p = (vixF.c && vixF.c > 0) ? vixF.c : vixF.pc;
+      if (p && p > 0) {
+        setVal('vix-val', p, 2);
+        const closed = !(vixF.c && vixF.c > 0);
+        if (closed) { document.getElementById('vix-chg').textContent = '休市 最後收盤'; document.getElementById('vix-chg').className = 'card-sub'; setCardDir('card-vix', null); }
+        else { setChg('vix-chg', vixF.d, vixF.dp); setCardDir('card-vix', vixF.d); }
+        showWarn('vix-warn', p > 30);
       }
-      showWarn('vix-warn', vixPrice > 30);
-      fetchFinnhubCandles('INDEX:VIX', 'spark-vix', '#00d4ff');
     }
   }
 
-  // Dow Jones
-  const dowData = await safeFetch(
-    `https://finnhub.io/api/v1/quote?symbol=INDEX:DJI&token=${FH_KEY}`,
-    'Finnhub DJI'
-  );
-  if (dowData) {
-    const dowPrice = (dowData.c && dowData.c > 0) ? dowData.c : dowData.pc;
-    if (dowPrice && dowPrice > 0) {
-      const isClosed = !(dowData.c && dowData.c > 0);
-      setVal('dow-val', dowPrice, 0);
-      if (isClosed) {
-        document.getElementById('dow-chg').textContent = '休市 最後收盤';
-        document.getElementById('dow-chg').className = 'card-sub';
-        setCardDir('card-dow', null);
-      } else {
-        setChg('dow-chg', dowData.d, dowData.dp);
-        setCardDir('card-dow', dowData.d);
+  // ── 道瓊指數 ──
+  let dowDone = false;
+  const dowY = await yahooQuote('%5EDJI', 'Yahoo DJI');
+  if (dowY && dowY.price && dowY.price > 0) {
+    setVal('dow-val', dowY.price, 0);
+    if (dowY.isClosed) {
+      document.getElementById('dow-chg').textContent = '休市 最後收盤';
+      document.getElementById('dow-chg').className = 'card-sub';
+      setCardDir('card-dow', null);
+    } else {
+      setChg('dow-chg', dowY.chg, dowY.pct);
+      setCardDir('card-dow', dowY.chg);
+    }
+    if (dowY.history.length >= 2) renderSparkline('spark-dow', dowY.history, dowY.isClosed ? '#94a3b8' : (dowY.chg||0) >= 0 ? '#22c55e' : '#ef4444');
+    dowDone = true;
+  }
+  if (!dowDone) {
+    const dowF = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=INDEX:DJI&token=${FH_KEY}`, 'Finnhub DJI');
+    if (dowF) {
+      const p = (dowF.c && dowF.c > 0) ? dowF.c : dowF.pc;
+      if (p && p > 0) {
+        setVal('dow-val', p, 0);
+        const closed = !(dowF.c && dowF.c > 0);
+        if (closed) { document.getElementById('dow-chg').textContent = '休市 最後收盤'; document.getElementById('dow-chg').className = 'card-sub'; setCardDir('card-dow', null); }
+        else { setChg('dow-chg', dowF.d, dowF.dp); setCardDir('card-dow', dowF.d); }
       }
-      fetchFinnhubCandles('INDEX:DJI', 'spark-dow', isClosed ? '#94a3b8' : (dowData.d||0) >= 0 ? '#22c55e' : '#ef4444');
     }
   }
 
