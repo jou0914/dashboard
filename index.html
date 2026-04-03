@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>市場儀表板 v1.4.1</title>
+<title>市場儀表板 v1.4.2</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -412,8 +412,8 @@ margin-top: 8px;
 //  CONFIG
 // ─────────────────────────────────────────────
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
-const AV_KEY   = '12F9YHGH3T1063OB';
-const FH_KEY   = 'd76gjvpr01qm4b7u6gj0d76gjvpr01qm4b7u6gjg';
+const AV_KEY  = '12F9YHGH3T1063OB';
+const FH_KEY  = 'd76gjvpr01qm4b7u6gj0d76gjvpr01qm4b7u6gjg';
 
 // ─────────────────────────────────────────────
 //  DEBUG LOG
@@ -423,42 +423,33 @@ function log(msg) {
   const ts = new Date().toLocaleTimeString('zh-TW');
   const line = `[${ts}] ${msg}`;
   logLines.push(line);
-  if (logLines.length > 200) logLines.shift();
+  if (logLines.length > 300) logLines.shift();
   document.getElementById('debug-log').textContent = logLines.join('\n');
 }
 function copyDebugLog() {
-  navigator.clipboard.writeText(logLines.join('\n'))
-    .then(() => alert('Debug log 已複製！'))
-    .catch(() => {
-      const el = document.createElement('textarea');
-      el.value = logLines.join('\n');
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      alert('Debug log 已複製！');
-    });
+  const txt = logLines.join('\n');
+  navigator.clipboard.writeText(txt).then(() => alert('Debug log 已複製！')).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = txt; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    alert('Debug log 已複製！');
+  });
 }
 
 // ─────────────────────────────────────────────
-//  SAFE FETCH with timeout + redirect follow
+//  SAFE FETCH
 // ─────────────────────────────────────────────
-async function safeFetch(url, label, timeout = 10000) {
+async function safeFetch(url, label, timeout = 12000) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const r = await fetch(url, {
-      signal: ctrl.signal,
-      redirect: 'follow',
-      mode: 'cors',
-      headers: { 'Accept': 'application/json' }
-    });
+    const r = await fetch(url, { signal: ctrl.signal, redirect: 'follow' });
     clearTimeout(tid);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     log(`✓ ${label}`);
     return data;
-  } catch (e) {
+  } catch(e) {
     clearTimeout(tid);
     log(`✗ ${label}: ${e.message}`);
     return null;
@@ -466,74 +457,58 @@ async function safeFetch(url, label, timeout = 10000) {
 }
 
 // ─────────────────────────────────────────────
-//  SPARKLINE via Chart.js
+//  SPARKLINE
 // ─────────────────────────────────────────────
 const sparkCharts = {};
-function renderSparkline(canvasId, dataArr, color = '#f0b429') {
+function renderSparkline(canvasId, dataArr, color) {
   if (!dataArr || dataArr.length < 2) return;
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const nums = dataArr.map(Number).filter(n => !isNaN(n));
   if (nums.length < 2) return;
-
-  if (sparkCharts[canvasId]) {
-    sparkCharts[canvasId].destroy();
-  }
-
+  if (sparkCharts[canvasId]) sparkCharts[canvasId].destroy();
   const ctx = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 40);
-  grad.addColorStop(0, color + '55');
-  grad.addColorStop(1, color + '00');
-
+  grad.addColorStop(0, (color || '#f0b429') + '55');
+  grad.addColorStop(1, (color || '#f0b429') + '00');
   sparkCharts[canvasId] = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: nums.map((_, i) => i),
-      datasets: [{
-        data: nums,
-        borderColor: color,
-        borderWidth: 1.5,
-        backgroundColor: grad,
-        fill: true,
-        pointRadius: 0,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      scales: {
-        x: { display: false },
-        y: { display: false }
-      },
-      elements: { line: { borderCapStyle: 'round' } }
-    }
+    data: { labels: nums.map((_, i) => i), datasets: [{ data: nums, borderColor: color, borderWidth: 1.5, backgroundColor: grad, fill: true, pointRadius: 0, tension: 0.3 }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
   });
 }
 
 // ─────────────────────────────────────────────
 //  DISPLAY HELPERS
 // ─────────────────────────────────────────────
-function setVal(id, val, decimals = 2) {
+function fmt(val, dec) {
+  if (val == null || isNaN(val)) return '--';
+  return Number(val).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function setVal(id, val, dec) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.textContent = val != null ? Number(val).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : '--';
+  el.textContent = fmt(val, dec != null ? dec : 2);
   el.classList.remove('loading');
 }
 function setChg(id, chg, pct) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (chg == null || pct == null) { el.textContent = '--'; return; }
+  if (chg == null || isNaN(chg)) { el.textContent = '--'; el.className = 'card-sub'; return; }
   const sign = chg >= 0 ? '+' : '';
-  el.textContent = `${sign}${Number(chg).toFixed(2)}  ${sign}${Number(pct).toFixed(2)}%`;
+  el.textContent = `${sign}${Number(chg).toFixed(2)}  ${sign}${Number(pct || 0).toFixed(2)}%`;
   el.className = 'card-sub ' + (chg >= 0 ? 'up' : 'down');
+}
+function setClosed(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '休市 最後收盤';
+  el.className = 'card-sub';
 }
 function setCardDir(cardId, chg) {
   const el = document.getElementById(cardId);
   if (!el) return;
-  el.className = 'card ' + (chg == null ? 'neutral' : chg >= 0 ? 'up' : 'down');
+  el.className = 'card ' + (chg == null || isNaN(chg) ? 'neutral' : chg >= 0 ? 'up' : 'down');
 }
 function showWarn(id, condition) {
   const el = document.getElementById(id);
@@ -544,31 +519,41 @@ function showWarn(id, condition) {
 //  STATE
 // ─────────────────────────────────────────────
 let twdRate = null;
+let _goldUSD = null;
+
+function recalcGold(priceUSD) {
+  if (priceUSD != null) _goldUSD = priceUSD;
+  if (_goldUSD == null || twdRate == null) return;
+  const gramTWD = (_goldUSD * twdRate) / 31.1035;
+  const qianTWD = gramTWD * 3.75;
+  document.getElementById('gold-gram').textContent = `每克 TWD: ${Math.round(gramTWD).toLocaleString('en-US')}`;
+  document.getElementById('gold-qian').textContent = `每錢 TWD: ${Math.round(qianTWD).toLocaleString('en-US')}`;
+}
 
 // ─────────────────────────────────────────────
-//  FETCH: GAS (TWII, 7769, 台股VIX from GAS)
+//  FETCH ALL FROM GAS (主數據源)
 // ─────────────────────────────────────────────
 async function fetchGAS() {
   const data = await safeFetch(GAS_URL, 'GAS');
   if (!data) return;
 
-  // TWII
+  // ── 台股大盤 ──
   if (data.twii != null) {
     setVal('twii-val', data.twii, 2);
-    setChg('twii-chg', data.twii_chg, data.twii_pct);
+    data.twii_chg != null ? setChg('twii-chg', data.twii_chg, data.twii_pct) : setClosed('twii-chg');
     setCardDir('card-twii', data.twii_chg);
-    if (data.twii_history) renderSparkline('spark-twii', data.twii_history, data.twii_chg >= 0 ? '#22c55e' : '#ef4444');
+    if (data.twii_history) renderSparkline('spark-twii', data.twii_history, (data.twii_chg||0) >= 0 ? '#22c55e' : '#ef4444');
   }
 
-  // 7769
+  // ── 7769 鴻勁 ──
   if (data.s7769 != null) {
     setVal('s7769-val', data.s7769, 2);
-    setChg('s7769-chg', data.s7769_chg, data.s7769_pct);
+    data.s7769_chg != null ? setChg('s7769-chg', data.s7769_chg, data.s7769_pct) : setClosed('s7769-chg');
     setCardDir('card-7769', data.s7769_chg);
-    if (data.s7769_history) renderSparkline('spark-7769', data.s7769_history, data.s7769_chg >= 0 ? '#22c55e' : '#ef4444');
+    if (data.s7769_history) renderSparkline('spark-7769', data.s7769_history, (data.s7769_chg||0) >= 0 ? '#22c55e' : '#ef4444');
   }
 
-  // Taiwan VIX from GAS
+  // ── 台股 VIX ──
   if (data.twvix != null) {
     setVal('twvix-val', data.twvix, 2);
     document.getElementById('twvix-sub').textContent = '台股波動指數';
@@ -577,293 +562,86 @@ async function fetchGAS() {
     if (data.twvix_history) renderSparkline('spark-twvix', data.twvix_history, '#f97316');
   }
 
-  // CNN fear from GAS
-  if (data.cnn != null) {
-    updateCNN(data.cnn, data.cnn_label, data.cnn_history);
-  }
-
-  checkExtremeFear();
-}
-
-// ─────────────────────────────────────────────
-//  FETCH: Yahoo Finance — 通用 quote 抓取
-// ─────────────────────────────────────────────
-async function yahooQuote(symbol, label) {
-  // Yahoo Finance v8 chart API — 支援股票、ETF、外匯、期貨、指數
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
-  const data = await safeFetch(url, label);
-  if (!data || !data.chart || !data.chart.result || !data.chart.result.length) return null;
-  const r = data.chart.result[0];
-  const meta = r.meta;
-  const closes = (r.indicators.quote[0].close || []).filter(v => v != null);
-  const price  = meta.regularMarketPrice || closes[closes.length - 1];
-  const prev   = meta.previousClose     || meta.chartPreviousClose || closes[closes.length - 2];
-  const chg    = (price && prev) ? price - prev : null;
-  const pct    = (chg && prev)   ? (chg / prev) * 100 : null;
-  const mktState = meta.marketState || 'CLOSED';
-  return { price, prev, chg, pct, history: closes.slice(-30), isClosed: mktState === 'CLOSED' || mktState === 'PRE' };
-}
-
-// ─────────────────────────────────────────────
-//  FETCH: Alpha Vantage — USD/TWD, USD/JPY (即時匯率)
-//  + Yahoo Finance fallback (有歷史曲線)
-// ─────────────────────────────────────────────
-async function fetchAV() {
   // ── USD/TWD ──
-  let twdDone = false;
-  const twdData = await safeFetch(
-    `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=TWD&apikey=${AV_KEY}`,
-    'AV USD/TWD'
-  );
-  if (twdData && twdData['Realtime Currency Exchange Rate']) {
-    const rate = parseFloat(twdData['Realtime Currency Exchange Rate']['5. Exchange Rate']);
-    if (rate > 0) {
-      twdRate = rate;
-      setVal('twd-val', rate, 3);
-      document.getElementById('twd-chg').textContent = '台幣兌美元';
-      setCardDir('card-usdtwd', null);
-      recalcGold();
-      twdDone = true;
-      // 歷史曲線用 Yahoo
-      yahooQuote('TWD=X', 'Yahoo TWD history').then(q => {
-        if (q && q.history.length >= 2) renderSparkline('spark-twd', q.history, '#94a3b8');
-      });
-    }
-  }
-  if (!twdDone) {
-    const q = await yahooQuote('TWD=X', 'Yahoo USD/TWD');
-    if (q && q.price) {
-      twdRate = q.price;
-      setVal('twd-val', q.price, 3);
-      const label = q.isClosed ? '休市 最後收盤' : (q.chg != null ? `${q.chg>=0?'+':''}${q.chg.toFixed(3)}` : '台幣兌美元');
-      document.getElementById('twd-chg').textContent = label;
-      setCardDir('card-usdtwd', q.isClosed ? null : q.chg);
-      recalcGold();
-      if (q.history.length >= 2) renderSparkline('spark-twd', q.history, '#94a3b8');
-    }
+  if (data.twd != null) {
+    twdRate = data.twd;
+    setVal('twd-val', data.twd, 3);
+    if (data.twd_closed) setClosed('twd-chg');
+    else data.twd_chg != null ? setChg('twd-chg', data.twd_chg, data.twd_pct) : (document.getElementById('twd-chg').textContent = '台幣兌美元');
+    setCardDir('card-usdtwd', data.twd_closed ? null : data.twd_chg);
+    if (data.twd_history) renderSparkline('spark-twd', data.twd_history, '#94a3b8');
+    recalcGold();
   }
 
   // ── USD/JPY ──
-  let jpyDone = false;
-  const jpyData = await safeFetch(
-    `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=JPY&apikey=${AV_KEY}`,
-    'AV USD/JPY'
-  );
-  if (jpyData && jpyData['Realtime Currency Exchange Rate']) {
-    const rate = parseFloat(jpyData['Realtime Currency Exchange Rate']['5. Exchange Rate']);
-    if (rate > 0) {
-      setVal('jpy-val', rate, 2);
-      document.getElementById('jpy-chg').textContent = '日幣兌美元';
-      showWarn('jpy-warn', rate > 159.5);
-      setCardDir('card-usdjpy', null);
-      jpyDone = true;
-      yahooQuote('JPY=X', 'Yahoo JPY history').then(q => {
-        if (q && q.history.length >= 2) renderSparkline('spark-jpy', q.history, '#94a3b8');
-      });
-    }
-  }
-  if (!jpyDone) {
-    const q = await yahooQuote('JPY=X', 'Yahoo USD/JPY');
-    if (q && q.price) {
-      setVal('jpy-val', q.price, 2);
-      const label = q.isClosed ? '休市 最後收盤' : '日幣兌美元';
-      document.getElementById('jpy-chg').textContent = label;
-      showWarn('jpy-warn', q.price > 159.5);
-      setCardDir('card-usdjpy', q.isClosed ? null : q.chg);
-      if (q.history.length >= 2) renderSparkline('spark-jpy', q.history, '#94a3b8');
-    }
-  }
-}
-
-// ─────────────────────────────────────────────
-//  FETCH: Gold & Brent Oil
-// ─────────────────────────────────────────────
-async function fetchGoldOil() {
-  // ── 黃金：Yahoo Finance GC=F（COMEX Gold Futures）──
-  let goldDone = false;
-  const goldY = await yahooQuote('GC%3DF', 'Yahoo Gold GC=F');
-  if (goldY && goldY.price && goldY.price > 0) {
-    setVal('gold-val', goldY.price, 2);
-    if (goldY.isClosed) {
-      document.getElementById('gold-chg').textContent = '休市 最後收盤';
-      document.getElementById('gold-chg').className = 'card-sub';
-      setCardDir('card-gold', null);
-    } else {
-      setChg('gold-chg', goldY.chg, goldY.pct);
-      setCardDir('card-gold', goldY.chg);
-    }
-    recalcGold(goldY.price);
-    if (goldY.history.length >= 2) renderSparkline('spark-gold', goldY.history, goldY.isClosed ? '#f0b429' : (goldY.chg||0) >= 0 ? '#f0b429' : '#ef4444');
-    goldDone = true;
-  }
-  // AV fallback
-  if (!goldDone) {
-    const goldSpot = await safeFetch(
-      `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`,
-      'AV Gold XAU/USD fallback'
-    );
-    if (goldSpot && goldSpot['Realtime Currency Exchange Rate']) {
-      const price = parseFloat(goldSpot['Realtime Currency Exchange Rate']['5. Exchange Rate']);
-      setVal('gold-val', price, 2);
-      document.getElementById('gold-chg').textContent = '休市 最後收盤';
-      document.getElementById('gold-chg').className = 'card-sub';
-      recalcGold(price);
-    }
+  if (data.jpy != null) {
+    setVal('jpy-val', data.jpy, 2);
+    if (data.jpy_closed) setClosed('jpy-chg');
+    else data.jpy_chg != null ? setChg('jpy-chg', data.jpy_chg, data.jpy_pct) : (document.getElementById('jpy-chg').textContent = '日幣兌美元');
+    showWarn('jpy-warn', data.jpy > 159.5);
+    setCardDir('card-usdjpy', data.jpy_closed ? null : data.jpy_chg);
+    if (data.jpy_history) renderSparkline('spark-jpy', data.jpy_history, '#94a3b8');
   }
 
-  // ── 布蘭特原油：Yahoo Finance BZ=F（NYMEX Brent，有歷史+休市收盤）──
-  let oilDone = false;
-  const oilY = await yahooQuote('BZ%3DF', 'Yahoo Brent BZ=F');
-  if (oilY && oilY.price && oilY.price > 0) {
-    setVal('oil-val', oilY.price, 2);
-    if (oilY.isClosed) {
-      document.getElementById('oil-chg').textContent = '休市 最後收盤';
-      document.getElementById('oil-chg').className = 'card-sub';
-      setCardDir('card-oil', null);
-    } else {
-      setChg('oil-chg', oilY.chg, oilY.pct);
-      setCardDir('card-oil', oilY.chg);
-    }
-    if (oilY.history.length >= 2) renderSparkline('spark-oil', oilY.history, oilY.isClosed ? '#94a3b8' : (oilY.chg||0) >= 0 ? '#22c55e' : '#ef4444');
-    oilDone = true;
+  // ── 道瓊 ──
+  if (data.dji != null) {
+    setVal('dow-val', data.dji, 0);
+    if (data.dji_closed) setClosed('dow-chg');
+    else data.dji_chg != null ? setChg('dow-chg', data.dji_chg, data.dji_pct) : null;
+    setCardDir('card-dow', data.dji_closed ? null : data.dji_chg);
+    if (data.dji_history) renderSparkline('spark-dow', data.dji_history, data.dji_closed ? '#94a3b8' : (data.dji_chg||0) >= 0 ? '#22c55e' : '#ef4444');
   }
-  // Finnhub fallback
-  if (!oilDone) {
-    for (const sym of ['UKOIL','BZ%3DF']) {
-      const oilFH = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`, `Finnhub ${sym} oil fallback`);
-      if (oilFH && ((oilFH.c && oilFH.c > 0) || (oilFH.pc && oilFH.pc > 0))) {
-        const p = (oilFH.c && oilFH.c > 0) ? oilFH.c : oilFH.pc;
-        setVal('oil-val', p, 2);
-        document.getElementById('oil-chg').textContent = '休市 最後收盤';
-        document.getElementById('oil-chg').className = 'card-sub';
-        setCardDir('card-oil', null);
-        oilDone = true;
-        break;
-      }
-    }
-  }
-  if (!oilDone) log('⚠ 原油數據全部失敗');
-}
 
-// ─────────────────────────────────────────────
-//  FETCH: VIX & Dow Jones (Yahoo primary, Finnhub fallback)
-// ─────────────────────────────────────────────
-async function fetchFinnhub() {
   // ── 美股 VIX ──
-  // 先嘗試 Yahoo Finance ^VIX（有歷史、有休市收盤）
-  let vixDone = false;
-  const vixY = await yahooQuote('%5EVIX', 'Yahoo VIX');
-  if (vixY && vixY.price && vixY.price > 0) {
-    setVal('vix-val', vixY.price, 2);
-    if (vixY.isClosed) {
-      document.getElementById('vix-chg').textContent = '休市 最後收盤';
-      document.getElementById('vix-chg').className = 'card-sub';
-      setCardDir('card-vix', null);
-    } else {
-      setChg('vix-chg', vixY.chg, vixY.pct);
-      setCardDir('card-vix', vixY.chg);
-    }
-    showWarn('vix-warn', vixY.price > 30);
-    if (vixY.history.length >= 2) renderSparkline('spark-vix', vixY.history, '#00d4ff');
-    vixDone = true;
-  }
-  // Finnhub fallback
-  if (!vixDone) {
-    const vixF = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=INDEX:VIX&token=${FH_KEY}`, 'Finnhub VIX');
-    if (vixF) {
-      const p = (vixF.c && vixF.c > 0) ? vixF.c : vixF.pc;
-      if (p && p > 0) {
-        setVal('vix-val', p, 2);
-        const closed = !(vixF.c && vixF.c > 0);
-        if (closed) { document.getElementById('vix-chg').textContent = '休市 最後收盤'; document.getElementById('vix-chg').className = 'card-sub'; setCardDir('card-vix', null); }
-        else { setChg('vix-chg', vixF.d, vixF.dp); setCardDir('card-vix', vixF.d); }
-        showWarn('vix-warn', p > 30);
-      }
-    }
+  if (data.vix != null) {
+    setVal('vix-val', data.vix, 2);
+    if (data.vix_closed) setClosed('vix-chg');
+    else data.vix_chg != null ? setChg('vix-chg', data.vix_chg, data.vix_pct) : null;
+    showWarn('vix-warn', data.vix > 30);
+    setCardDir('card-vix', data.vix_closed ? null : data.vix_chg);
+    if (data.vix_history) renderSparkline('spark-vix', data.vix_history, '#00d4ff');
   }
 
-  // ── 道瓊指數 ──
-  let dowDone = false;
-  const dowY = await yahooQuote('%5EDJI', 'Yahoo DJI');
-  if (dowY && dowY.price && dowY.price > 0) {
-    setVal('dow-val', dowY.price, 0);
-    if (dowY.isClosed) {
-      document.getElementById('dow-chg').textContent = '休市 最後收盤';
-      document.getElementById('dow-chg').className = 'card-sub';
-      setCardDir('card-dow', null);
-    } else {
-      setChg('dow-chg', dowY.chg, dowY.pct);
-      setCardDir('card-dow', dowY.chg);
-    }
-    if (dowY.history.length >= 2) renderSparkline('spark-dow', dowY.history, dowY.isClosed ? '#94a3b8' : (dowY.chg||0) >= 0 ? '#22c55e' : '#ef4444');
-    dowDone = true;
+  // ── 黃金 ──
+  if (data.gold != null) {
+    setVal('gold-val', data.gold, 2);
+    if (data.gold_closed) setClosed('gold-chg');
+    else data.gold_chg != null ? setChg('gold-chg', data.gold_chg, data.gold_pct) : null;
+    setCardDir('card-gold', data.gold_closed ? null : data.gold_chg);
+    if (data.gold_history) renderSparkline('spark-gold', data.gold_history, (data.gold_chg||0) >= 0 ? '#f0b429' : '#ef4444');
+    recalcGold(data.gold);
   }
-  if (!dowDone) {
-    const dowF = await safeFetch(`https://finnhub.io/api/v1/quote?symbol=INDEX:DJI&token=${FH_KEY}`, 'Finnhub DJI');
-    if (dowF) {
-      const p = (dowF.c && dowF.c > 0) ? dowF.c : dowF.pc;
-      if (p && p > 0) {
-        setVal('dow-val', p, 0);
-        const closed = !(dowF.c && dowF.c > 0);
-        if (closed) { document.getElementById('dow-chg').textContent = '休市 最後收盤'; document.getElementById('dow-chg').className = 'card-sub'; setCardDir('card-dow', null); }
-        else { setChg('dow-chg', dowF.d, dowF.dp); setCardDir('card-dow', dowF.d); }
-      }
-    }
+
+  // ── 布蘭特原油 ──
+  if (data.oil != null) {
+    setVal('oil-val', data.oil, 2);
+    if (data.oil_closed) setClosed('oil-chg');
+    else data.oil_chg != null ? setChg('oil-chg', data.oil_chg, data.oil_pct) : null;
+    setCardDir('card-oil', data.oil_closed ? null : data.oil_chg);
+    if (data.oil_history) renderSparkline('spark-oil', data.oil_history, data.oil_closed ? '#94a3b8' : (data.oil_chg||0) >= 0 ? '#22c55e' : '#ef4444');
+  }
+
+  // ── CNN 恐慌 ──
+  if (data.cnn != null) {
+    setVal('cnn-val', data.cnn, 0);
+    document.getElementById('cnn-label').textContent = data.cnn_label || fgLabel(data.cnn);
+    showWarn('cnn-warn', Number(data.cnn) < 10);
+    setCardDir('card-cnn', Number(data.cnn) >= 50 ? 1 : -1);
+    if (data.cnn_history) renderSparkline('spark-cnn', data.cnn_history, '#f97316');
   }
 
   checkExtremeFear();
 }
 
-async function fetchFinnhubCandles(symbol, canvasId, color) {
-  const now = Math.floor(Date.now() / 1000);
-  const from = now - 14 * 24 * 3600;
-  const data = await safeFetch(
-    `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=D&from=${from}&to=${now}&token=${FH_KEY}`,
-    `Candles ${symbol}`
-  );
-  if (data && data.s === 'ok' && data.c && data.c.length >= 2) {
-    renderSparkline(canvasId, data.c, color);
-  }
-}
-
 // ─────────────────────────────────────────────
-//  Gold recalc using live TWD rate
+//  加密貨幣恐慌（直接呼叫，無 CORS 問題）
 // ─────────────────────────────────────────────
-let _goldUSD = null;
-function recalcGold(priceUSD) {
-  if (priceUSD != null) _goldUSD = priceUSD;
-  if (_goldUSD == null || twdRate == null) return;
-  const gramTWD = (_goldUSD * twdRate) / 31.1035;
-  const qianTWD = gramTWD * 3.75;
-  document.getElementById('gold-gram').textContent = `每克 TWD: ${gramTWD.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
-  document.getElementById('gold-qian').textContent = `每錢 TWD: ${qianTWD.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
-}
-
-// ─────────────────────────────────────────────
-//  CNN Fear & Greed
-// ─────────────────────────────────────────────
-function updateCNN(val, label, history) {
-  if (val == null) return;
-  setVal('cnn-val', val, 0);
-  document.getElementById('cnn-label').textContent = label || fgLabel(val);
-  showWarn('cnn-warn', Number(val) < 10);
-  setCardDir('card-cnn', Number(val) >= 50 ? 1 : -1);
-  if (history) renderSparkline('spark-cnn', history, '#f97316');
-  checkExtremeFear();
-}
-
-async function fetchCNNFear() {
-  // Try RapidAPI endpoint via GAS proxy first (handled in GAS)
-  // Fallback: alternative.me crypto fear (proxy)
-  const data = await safeFetch(
-    'https://api.alternative.me/fng/?limit=30',
-    'alternative.me Fear'
-  );
+async function fetchCryptoFear() {
+  const data = await safeFetch('https://api.alternative.me/fng/?limit=30', 'Crypto Fear');
   if (data && data.data && data.data.length > 0) {
     const latest = data.data[0];
     const history = data.data.map(d => parseInt(d.value)).reverse();
-    document.getElementById('crypto-val').textContent = latest.value;
-    document.getElementById('crypto-val').classList.remove('loading');
+    setVal('crypto-val', parseInt(latest.value), 0);
     document.getElementById('crypto-label').textContent = latest.value_classification;
     showWarn('crypto-warn', parseInt(latest.value) < 10);
     setCardDir('card-crypto', parseInt(latest.value) >= 50 ? 1 : -1);
@@ -873,25 +651,25 @@ async function fetchCNNFear() {
 }
 
 // ─────────────────────────────────────────────
-//  Extreme fear check
+//  極度恐慌檢查
 // ─────────────────────────────────────────────
 function checkExtremeFear() {
-  const cnnVal = parseFloat(document.getElementById('cnn-val').textContent);
-  const cryptoVal = parseFloat(document.getElementById('crypto-val').textContent);
-  const vixVal = parseFloat(document.getElementById('vix-val').textContent);
-  const twvixVal = parseFloat(document.getElementById('twvix-val').textContent);
-  const jpyVal = parseFloat(document.getElementById('jpy-val').textContent.replace(/,/g, ''));
+  const cnnVal    = parseFloat(document.getElementById('cnn-val').textContent.replace(/,/g,''));
+  const cryptoVal = parseFloat(document.getElementById('crypto-val').textContent.replace(/,/g,''));
+  const vixVal    = parseFloat(document.getElementById('vix-val').textContent.replace(/,/g,''));
+  const twvixVal  = parseFloat(document.getElementById('twvix-val').textContent.replace(/,/g,''));
+  const jpyVal    = parseFloat(document.getElementById('jpy-val').textContent.replace(/,/g,''));
 
-  const triggered = (cnnVal < 10) || (cryptoVal < 10) || (vixVal > 30) || (twvixVal > 40) || (jpyVal > 159.5);
+  const reasons = [];
+  if (!isNaN(cnnVal)    && cnnVal < 10)    reasons.push(`CNN恐慌 ${cnnVal}`);
+  if (!isNaN(cryptoVal) && cryptoVal < 10) reasons.push(`加密恐慌 ${cryptoVal}`);
+  if (!isNaN(vixVal)    && vixVal > 30)    reasons.push(`美股VIX ${vixVal}`);
+  if (!isNaN(twvixVal)  && twvixVal > 40)  reasons.push(`台股VIX ${twvixVal}`);
+  if (!isNaN(jpyVal)    && jpyVal > 159.5) reasons.push(`日幣 ${jpyVal}`);
+
   const banner = document.getElementById('extreme-banner');
-  if (triggered) {
+  if (reasons.length > 0) {
     banner.classList.add('visible');
-    let reasons = [];
-    if (cnnVal < 10) reasons.push(`CNN恐慌 ${cnnVal}`);
-    if (cryptoVal < 10) reasons.push(`加密恐慌 ${cryptoVal}`);
-    if (vixVal > 30) reasons.push(`美股VIX ${vixVal}`);
-    if (twvixVal > 40) reasons.push(`台股VIX ${twvixVal}`);
-    if (jpyVal > 159.5) reasons.push(`日幣 ${jpyVal}`);
     banner.innerHTML = `⚠️ <strong>極度恐慌指標觸發</strong>：${reasons.join('、')} — 請留意風險`;
   } else {
     banner.classList.remove('visible');
@@ -913,23 +691,11 @@ function fgLabel(v) {
 async function fetchAll() {
   document.getElementById('last-update').textContent = '更新中…';
   log('── 開始抓取所有數據 ──');
-
-  await Promise.allSettled([
-    fetchGAS(),
-    fetchAV(),
-    fetchFinnhub(),
-    fetchGoldOil(),
-    fetchCNNFear()
-  ]);
-
-  document.getElementById('last-update').textContent =
-    '更新：' + new Date().toLocaleTimeString('zh-TW');
+  await Promise.allSettled([fetchGAS(), fetchCryptoFear()]);
+  document.getElementById('last-update').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
   log('── 抓取完成 ──');
 }
 
-// ─────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────
 fetchAll();
 setInterval(fetchAll, 30000);
 </script>
