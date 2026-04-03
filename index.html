@@ -663,8 +663,9 @@ async function fetchGoldOil() {
     setChg('oil-chg', oilFH.d, oilFH.dp);
     setCardDir('card-oil', oilFH.d);
     fetchFinnhubCandles('BZ%3DF', 'spark-oil', (oilFH.d||0) >= 0 ? '#22c55e' : '#ef4444');
-    return;
+    return; // BZ=F 成功，不跑 fallback
   }
+  log('⚠ BZ=F 無數據，改用 AV BNO ETF');
 
   // Brent fallback: AV WTI crude via commodity ETF (USO)
   const oilAV = await safeFetch(
