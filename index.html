@@ -2,176 +2,200 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v9.8</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Financial Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .card { background: var(--card); padding: 12px; border-radius: 18px; border-left: 4px solid #444; height: 145px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; position: relative; }
-        .full-width { grid-column: span 2; height: 165px; }
-        .card.up { border-left-color: var(--red); }
-        .card.down { border-left-color: var(--green); }
-        .card.alert-active { border-left-color: var(--alert); box-shadow: inset 0 0 15px rgba(255, 204, 0, 0.2); }
-        .label { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 2px; }
-        .main-val { font-size: 1.3rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; }
-        .sub-val { font-size: 0.75rem; font-weight: 600; margin-top: 2px; }
-        .chart-container { width: 100%; height: 50px; margin-top: auto; }
-        .alert-hint { font-size: 9px; color: var(--alert); font-weight: bold; margin-top: 4px; display: block; }
-        .gold-calc { font-size: 0.85rem; color: var(--gold); margin-top: 8px; font-weight: bold; border-top: 1px solid #333; padding-top: 8px; line-height: 1.4; }
-        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 210px; position: relative; }
-        .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin-top: 10px; display: flex; justify-content: center; }
-        #fngValue { font-size: 2.8rem; font-weight: bold; position: absolute; bottom: 5px; width: 100%; text-align: center; z-index: 10; }
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 25px; }
-        .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 55px; border-radius: 14px; font-size: 11px; font-weight: bold; background: #2c2c2e; border: 1px solid #3a3a3c; }
-        .btn-refresh { background: #007aff; color: white; border: none; padding: 18px; border-radius: 16px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 17px; cursor: pointer; grid-column: span 2; }
-        #log-window { background: #111; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 90px; overflow-y: auto; width: 100%; max-width: 360px; border-radius: 14px; border: 1px solid #333; margin-top: 15px; white-space: pre-wrap; }
+        :root { --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --accent: #38bdf8; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; position: relative; }
+        .val { font-size: 1.5rem; font-weight: bold; margin: 5px 0; }
+        .change { font-size: 0.9rem; }
+        .up { color: #f87171; } .down { color: #4ade80; } /* 台股習慣：紅漲綠跌 */
+        .warning { font-size: 0.75rem; color: #fbbf24; margin-top: 4px; display: block; }
+        canvas { width: 100% !important; height: 50px !important; margin-top: 10px; }
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { background: var(--accent); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .copy-log { background: #64748b; color: white; margin-top: 10px; width: 100%; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div id="card-twii" class="card"><div class="label">台股大盤 (^TWII)</div><div id="p-twii" class="main-val">--</div><div id="diff-twii" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twii"></canvas></div></div>
-    <div id="card-ym" class="card"><div class="label">道瓊期貨 (YM=F)</div><div id="p-ym" class="main-val">--</div><div id="diff-ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ym"></canvas></div></div>
-    <div id="card-7769" class="card"><div class="label">鴻勁 (7769.TW)</div><div id="p-7769" class="main-val">--</div><div id="diff-7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-7769"></canvas></div></div>
-    <div id="card-oil" class="card"><div class="label">布蘭特原油 (BZ=F)</div><div id="p-oil" class="main-val">--</div><div id="diff-oil" class="sub-val">--</div><div class="chart-container"><canvas id="chart-oil"></canvas></div></div>
-    
-    <div id="card-vix" class="card full-width">
-        <div class="label">美股 VIX 指數</div><div id="p-vix" class="main-val">--</div><div id="diff-vix" class="sub-val">--</div>
-        <div class="alert-hint">⚠️ 指標：> 30 極度恐慌</div>
-        <div class="chart-container"><canvas id="chart-vix"></canvas></div>
+<div class="grid" id="dashboard">
+    <div class="card">
+        <div>7769 鴻勁</div>
+        <div class="val" id="price-7769">--</div>
+        <div class="change" id="change-7769">--</div>
+        <canvas id="chart-7769"></canvas>
     </div>
 
-    <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
-    <div id="card-jpy" class="card"><div class="label">USD / JPY</div><div id="p-jpy" class="main-val">--</div><div id="diff-jpy" class="sub-val">--</div><div class="alert-hint">⚠️ 警戒：> 159.5</div><div class="chart-container"><canvas id="chart-jpy"></canvas></div></div>
-
-    <div id="card-gold" class="card full-width">
-        <div class="label">國際現貨黃金 (oz)</div><div id="p-gold" class="main-val">--</div><div id="diff-gold" class="sub-val">--</div>
-        <div id="calc-gold" class="gold-calc">換算：-- NT$ / 克</div>
-        <div class="chart-container" style="height: 35px;"><canvas id="chart-gold"></canvas></div>
+    <div class="card">
+        <div>台股大盤指數</div>
+        <div class="val" id="price-tws">--</div>
+        <div class="change" id="change-tws">--</div>
+        <canvas id="chart-tws"></canvas>
     </div>
 
-    <div class="fng-area">
-        <div class="label">CRYPTO FEAR & GREED</div>
-        <div class="fng-gauge-wrapper"><canvas id="fngGauge"></canvas><div id="fngValue">--</div></div>
-        <div class="alert-hint" style="margin-top:20px;">⚠️ 極度恐慌指標：< 10</div>
-        <div class="btn-row">
-            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link" style="background:#cc0000;border:none;">CNN 恐慌按鈕<span style="font-size:9px;color:var(--alert);">指標：< 10</span></a>
-            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">台股 VIX 網頁<span style="font-size:9px;color:var(--alert);">指標：> 40</span></a>
+    <div class="card">
+        <div>道瓊期 (YM)</div>
+        <div class="val" id="price-ym">--</div>
+        <div class="change" id="change-ym">--</div>
+        <canvas id="chart-ym"></canvas>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between;">
+            <span>台幣 (USD/TWD)</span>
+            <span>日幣 (USD/JPY)</span>
         </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div class="val" id="price-twd">--</div>
+            <div class="val" id="price-jpy">--</div>
+        </div>
+        <div id="warn-jpy" class="warning"></div>
+        <canvas id="chart-fx"></canvas>
     </div>
-    <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
+
+    <div class="card">
+        <div>黃金 (國際盎司/克/錢)</div>
+        <div class="val" id="gold-oz">--</div>
+        <div class="change" id="gold-calc">--</div>
+        <canvas id="chart-gold"></canvas>
+    </div>
+
+    <div class="card">
+        <div>美股 VIX</div>
+        <div class="val" id="price-vix">--</div>
+        <div id="warn-vix" class="warning"></div>
+        <canvas id="chart-vix"></canvas>
+    </div>
+
+    <div class="card">
+        <div>布蘭特原油 (Brent)</div>
+        <div class="val" id="price-oil">--</div>
+        <canvas id="chart-oil"></canvas>
+    </div>
+
+    <div class="card">
+        <div>加密貨幣恐慌指數</div>
+        <div class="val" id="crypto-fear">--</div>
+        <div id="warn-crypto" class="warning"></div>
+    </div>
 </div>
 
-<div id="log-window">Connecting... v9.8</div>
-<button onclick="copyLog()" style="width:100%; max-width:380px; margin-top:5px; background:#333; color:#ccc; border:none; padding:8px; border-radius:8px; font-size:12px; cursor:pointer;">一鍵複製 LOG</button>
+<div class="btn-group">
+    <button onclick="refreshData()">REFRESH</button>
+    <button onclick="window.open('https://www.edition.cnn.com/markets/fear-and-greed', '_blank')">CNN 恐慌指數按鈕</button>
+    <button onclick="window.open('https://www.wantgoo.com/index/vixtwn', '_blank')">台股 VIX 網頁</button>
+</div>
+
+<button class="copy-log" onclick="copyLog()">一鍵複製 Log 功能</button>
 
 <script>
-    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
-    let charts = {};
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec";
+const ALPHA_KEY = "12F9YHGH3T1063OB";
+const FINNHUB_KEY = "d76gjvpr01qm4b7u6gj0d76gjvpr01qm4b7u6gjg";
 
-    function addLog(msg) { document.getElementById('log-window').innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log-window').innerHTML; }
-    function copyLog() { navigator.clipboard.writeText(document.getElementById('log-window').innerText).then(() => alert('Log 已複製')); }
+let logData = "";
 
-    function renderSparkline(id, historyData, color) {
-        const canvas = document.getElementById(`chart-${id}`);
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (charts[id]) charts[id].destroy();
-        charts[id] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: historyData.map((_, i) => i),
-                datasets: [{
-                    data: historyData, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true,
-                    backgroundColor: (c) => {
-                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 50);
-                        g.addColorStop(0, color + '22'); g.addColorStop(1, color + '00'); return g;
-                    },
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
-        });
-    }
+// 曲線繪製函式
+function renderSparkline(canvasId, dataPoints) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (window[canvasId] instanceof Chart) { window[canvasId].destroy(); }
+    
+    window[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dataPoints.map((_, i) => i),
+            datasets: [{
+                data: dataPoints,
+                borderColor: '#38bdf8',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } }
+        }
+    });
+}
 
-    function drawGauge(value) {
-        const canvas = document.getElementById('fngGauge');
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = 220 * dpr; canvas.height = 110 * dpr;
-        canvas.style.width = '220px'; canvas.style.height = '110px';
-        ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, 220, 110);
-        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, 0);
-        ctx.lineWidth = 14; ctx.strokeStyle = '#333'; ctx.lineCap = 'round'; ctx.stroke();
-        const grad = ctx.createLinearGradient(30, 0, 190, 0);
-        grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f1c40f'); grad.addColorStop(1, '#2ecc71');
-        ctx.beginPath(); ctx.arc(110, 100, 85, Math.PI, Math.PI + (Math.PI * (value / 100)));
-        ctx.strokeStyle = grad; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.stroke();
-    }
+async function refreshData() {
+    try {
+        // 強化容錯：使用 Promise.allSettled 確保個別 API 失敗不卡死全部
+        const [gasRes, cryptoRes] = await Promise.allSettled([
+            fetch(GAS_URL).then(r => r.json()),
+            fetch('https://api.alternative.me/fng/').then(r => r.json())
+        ]);
 
-    function updateCard(id, data) {
-        if (!data || data.error || !data.chart?.result) { addLog(`⚠️ ${id} 數據異常`); return null; }
-        const res = data.chart.result[0];
-        let price = res.meta.regularMarketPrice;
-        
-        // 核心修正：黃金價格倍增過濾邏輯
-        if (id === 'gold' && price > 4000) { price = price / 2; addLog('💡 已校正重複加總之金價'); }
+        if (gasRes.status === 'fulfilled') {
+            const d = gasRes.value;
+            logData = JSON.stringify(d, null, 2);
 
-        const prev = res.meta.previousClose || price;
-        const diff = price - prev;
-        const perc = prev !== 0 ? (diff / prev) * 100 : 0;
-        let color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#2ecc71' : '#e0e0e0');
-        
-        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id.includes('twd')||id.includes('jpy')?3:2)});
-        document.getElementById(`p-${id}`).style.color = color;
-        if(document.getElementById(`diff-${id}`)) {
-            document.getElementById(`diff-${id}`).innerText = `${diff > 0 ? '▲' : (diff < 0 ? '▼' : '-')} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-            document.getElementById(`diff-${id}`).style.color = color;
+            // 1. 7769 鴻勁
+            updateUI('7769', d.h7769, d.h7769_hist);
+            // 2. 台股大盤
+            updateUI('tws', d.tws, d.tws_hist);
+            // 3. 道瓊期
+            updateUI('ym', d.ym, d.ym_hist);
+            // 4 & 5. 匯率 (台幣/日幣)
+            document.getElementById('price-twd').innerText = d.twd;
+            document.getElementById('price-jpy').innerText = d.jpy;
+            document.getElementById('warn-jpy').innerText = d.jpy > 159.5 ? "⚠️ 日幣 > 159.5" : "";
+            renderSparkline('chart-fx', d.fx_hist || []);
+
+            // 6. 黃金計算邏輯
+            const goldPrice = parseFloat(d.gold);
+            const twdRate = parseFloat(d.twd);
+            const pricePerGram = (goldPrice * twdRate) / 31.1035;
+            const pricePerQian = pricePerGram * 3.75;
+            document.getElementById('gold-oz').innerText = `$${goldPrice}`;
+            document.getElementById('gold-calc').innerText = `NT$${pricePerGram.toFixed(1)}/g | NT$${pricePerQian.toFixed(0)}/錢`;
+            renderSparkline('chart-gold', d.gold_hist || []);
+
+            // 7. 美股 VIX
+            document.getElementById('price-vix').innerText = d.vix;
+            document.getElementById('warn-vix').innerText = d.vix > 30 ? "⚠️ 美股 VIX > 30" : "";
+            renderSparkline('chart-vix', d.vix_hist || []);
+
+            // 8. 原油
+            document.getElementById('price-oil').innerText = `$${d.oil}`;
+            renderSparkline('chart-oil', d.oil_hist || []);
         }
 
-        const isAlert = (id === 'jpy' && price > 159.5) || (id === 'vix' && price > 30);
-        document.getElementById(`card-${id}`).className = `card ${(id==='gold'||id==='vix'?'full-width':'')} ${diff>0?'up':(diff<0?'down':'')} ${isAlert?'alert-active':''}`;
+        // 加密貨幣恐慌指數
+        if (cryptoRes.status === 'fulfilled') {
+            const fng = cryptoRes.value.data[0].value;
+            document.getElementById('crypto-fear').innerText = fng;
+            document.getElementById('warn-crypto').innerText = fng < 10 ? "⚠️ 極度恐慌 < 10" : "";
+        }
 
-        try {
-            const h = res.indicators.quote[0].close.filter(v => v !== null);
-            if (h.length > 0) renderSparkline(id, h, color === '#e0e0e0' ? '#555' : color);
-        } catch(e) { addLog(`⚠️ ${id} 曲線渲染失敗`); }
-        return price;
+    } catch (e) {
+        console.error("Data Refresh Error", e);
     }
+}
 
-    async function updateAll() {
-        addLog('正在同步最新市場報價...');
-        try {
-            const res = await fetch(PROXY_URL);
-            const data = await res.json();
-            updateCard('twii', data.stock_twii);
-            updateCard('ym', data.stock_ym);
-            updateCard('7769', data.stock_7769);
-            updateCard('oil', data.oil_brent);
-            updateCard('vix', data.vix_index);
-            const liveTwd = updateCard('twd', data.usd_twd);
-            updateCard('jpy', data.usd_jpy);
-            
-            const liveGold = updateCard('gold', data.gold_price);
-            if (liveTwd && liveGold) {
-                const ntG = (liveGold * liveTwd) / 31.1035;
-                const ntQ = ntG * 3.75;
-                document.getElementById('calc-gold').innerHTML = `即時換算：${Math.round(ntG).toLocaleString()} NT$ / 克<br>即時換算：${Math.round(ntQ).toLocaleString()} NT$ / 錢`;
-            }
-            if (data.crypto_fng?.data) {
-                const val = parseInt(data.crypto_fng.data[0].value);
-                document.getElementById('fngValue').innerText = val;
-                drawGauge(val);
-                addLog('✅ 全數據同步完成');
-            }
-        } catch (e) { addLog('❌ 連線錯誤: ' + e.message); }
+function updateUI(id, val, hist) {
+    document.getElementById(`price-${id}`).innerText = val || '--';
+    if (hist && hist.length > 0) {
+        renderSparkline(`chart-${id}`, hist);
     }
+}
 
-    updateAll();
-    setInterval(updateAll, 300000);
+function copyLog() {
+    navigator.clipboard.writeText(logData);
+    alert("Log 已複製到剪貼簿");
+}
+
+// 初始化
+refreshData();
 </script>
+
 </body>
 </html>
