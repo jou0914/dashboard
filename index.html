@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v9.3</title>
+    <title>全球投資戰情室 v9.4</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --red: #ff4d4d; --green: #2ecc71; --bg: #000; --card: #1c1c1e; --text: #e0e0e0; --gold: #f1c40f; --alert: #ffcc00; }
@@ -11,7 +11,7 @@
         
         .dashboard { width: 100%; max-width: 380px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .card { background: var(--card); padding: 12px; border-radius: 18px; border-left: 4px solid #444; height: 145px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; position: relative; }
-        .full-width { grid-column: span 2; height: 185px; }
+        .full-width { grid-column: span 2; height: 165px; }
         .card.up { border-left-color: var(--red); }
         .card.down { border-left-color: var(--green); }
         .card.alert-active { border-left-color: var(--alert); box-shadow: inset 0 0 15px rgba(255, 204, 0, 0.3); }
@@ -22,16 +22,16 @@
         .chart-container { width: 100%; height: 45px; margin-top: auto; }
         .alert-hint { font-size: 9px; color: var(--alert); font-weight: bold; margin-top: 4px; display: block; }
         
-        .gold-calc-area { margin-top: 10px; border-top: 1px solid #333; padding-top: 8px; }
-        .gold-row { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 900; color: var(--gold); margin-bottom: 4px; }
-        .gold-meta { font-size: 10px; color: #666; text-align: right; margin-top: 2px; }
+        /* 黃金換算專用 */
+        .gold-calc-row { font-size: 0.85rem; color: var(--gold); font-weight: 900; border-top: 1px solid #333; margin-top: 8px; padding-top: 6px; line-height: 1.4; }
 
-        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 210px; position: relative; }
+        .fng-area { grid-column: span 2; display: flex; flex-direction: column; align-items: center; background: var(--card); border-radius: 20px; padding: 15px; border-left: 4px solid var(--gold); min-height: 220px; position: relative; }
         .fng-gauge-wrapper { position: relative; width: 220px; height: 110px; margin-top: 10px; display: flex; justify-content: center; }
         #fngValue { font-size: 3rem; font-weight: bold; position: absolute; bottom: 0; width: 100%; text-align: center; }
 
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 30px; }
         .btn-link { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 55px; border-radius: 14px; font-size: 11px; font-weight: bold; text-align: center; background: #2c2c2e; border: 1px solid #3a3a3c; }
+
         .btn-refresh { background: #007aff; color: white; border: none; padding: 18px; border-radius: 16px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 17px; cursor: pointer; grid-column: span 2; }
         #log-window { background: #111; padding: 12px; font-family: monospace; font-size: 10px; color: #00ff00; height: 80px; overflow-y: auto; width: 100%; max-width: 360px; border-radius: 14px; border: 1px solid #333; margin-top: 15px; white-space: pre-wrap; }
     </style>
@@ -43,27 +43,36 @@
     <div id="card-ym" class="card"><div class="label">道瓊期貨 (YM=F)</div><div id="p-ym" class="main-val">--</div><div id="diff-ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ym"></canvas></div></div>
     <div id="card-7769" class="card"><div class="label">鴻勁 (7769.TW)</div><div id="p-7769" class="main-val">--</div><div id="diff-7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-7769"></canvas></div></div>
     <div id="card-oil" class="card"><div class="label">布蘭特原油 (Brent)</div><div id="p-oil" class="main-val">--</div><div id="diff-oil" class="sub-val">--</div><div class="chart-container"><canvas id="chart-oil"></canvas></div></div>
-    <div id="card-vix" class="card full-width"><div class="label">美股 VIX 指數</div><div id="p-vix" class="main-val">--</div><div id="diff-vix" class="sub-val">--</div><div class="alert-hint">⚠️ 指標：> 30 極度恐慌</div><div class="chart-container"><canvas id="chart-vix"></canvas></div></div>
+    
+    <div id="card-vix" class="card full-width">
+        <div class="label">美股 VIX 指數</div>
+        <div id="p-vix" class="main-val">--</div>
+        <div id="diff-vix" class="sub-val">--</div>
+        <div class="alert-hint">⚠️ 極度恐慌參考：> 30</div>
+        <div class="chart-container"><canvas id="chart-vix"></canvas></div>
+    </div>
 
     <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
-    <div id="card-jpy" class="card"><div class="label">USD / JPY</div><div id="p-jpy" class="main-val">--</div><div id="diff-jpy" class="sub-val">--</div><div class="alert-hint">⚠️ 警戒：> 159.5</div><div class="chart-container"><canvas id="chart-jpy"></canvas></div></div>
+    <div id="card-jpy" class="card">
+        <div class="label">USD / JPY</div>
+        <div id="p-jpy" class="main-val">--</div>
+        <div id="diff-jpy" class="sub-val">--</div>
+        <div class="alert-hint">⚠️ 指標：> 159.5</div>
+        <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
+    </div>
 
     <div id="card-gold" class="card full-width">
-        <div class="label">國際現貨黃金 (XAU/USD)</div>
+        <div class="label">國際現貨黃金 (oz)</div>
         <div id="p-gold" class="main-val">--</div>
         <div id="diff-gold" class="sub-val">--</div>
-        <div class="gold-calc-area">
-            <div class="gold-row"><span>即時台幣基準 (克):</span><span id="gold-g">-- NT$</span></div>
-            <div class="gold-row"><span>即時台幣基準 (錢):</span><span id="gold-q">-- NT$</span></div>
-            <div id="gold-rate-info" class="gold-meta">使用即時匯率: --</div>
-        </div>
+        <div id="gold-calc" class="gold-calc-row">等待同步匯率換算...</div>
         <div class="chart-container" style="height: 30px;"><canvas id="chart-gold"></canvas></div>
     </div>
 
     <div id="fng-container" class="fng-area">
         <div class="label">CRYPTO FEAR & GREED</div>
         <div class="fng-gauge-wrapper"><canvas id="fngGauge"></canvas><div id="fngValue">--</div></div>
-        <div class="alert-hint" style="margin-top:25px;">⚠️ 指標 < 10：極度恐慌</div>
+        <div class="alert-hint" style="margin-top:25px;">⚠️ 極度恐慌參考：< 10</div>
         <div class="btn-row">
             <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link" style="background:#cc0000;border:none;">CNN 恐慌按鈕<span style="font-size:9px;font-weight:normal;">指標：< 10</span></a>
             <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">台股 VIX 網頁<span style="font-size:9px;font-weight:normal;">指標：> 40</span></a>
@@ -73,7 +82,7 @@
     <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
 </div>
 
-<div id="log-window">Connecting... v9.3</div>
+<div id="log-window">Connecting to Market... v9.4</div>
 <button onclick="copyLog()" style="width:100%; max-width:380px; margin-top:5px; background:#333; color:#ccc; border:none; padding:8px; border-radius:8px; cursor:pointer;">一鍵複製 LOG</button>
 
 <script>
@@ -122,63 +131,4 @@
         document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, {minimumFractionDigits: (id.includes('twd')||id.includes('jpy')?3:2)});
         document.getElementById(`p-${id}`).style.color = color;
         document.getElementById(`diff-${id}`).innerText = `${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-        document.getElementById(`diff-${id}`).style.color = color;
-
-        if (id === 'jpy' || id === 'vix') {
-            document.getElementById(`card-${id}`).className = `card ${(id === 'vix' ? 'full-width' : '')} ${diff >= 0 ? 'up' : 'down'} ${(price > (id === 'jpy' ? 159.5 : 30) ? 'alert-active' : '')}`;
-        } else {
-            document.getElementById(`card-${id}`).className = `card ${(id === 'gold' || id === 'vix' ? 'full-width' : '')} ${diff >= 0 ? 'up' : 'down'}`;
-        }
-
-        try {
-            const h = res.indicators.quote[0].close.filter(v => v !== null);
-            if (h.length > 0) renderSparkline(id, h, color);
-        } catch(e) {}
-        return price;
-    }
-
-    async function updateAll() {
-        addLog('Syncing Market Data...');
-        try {
-            const xauRes = await fetch("https://api.gold-api.com/price/XAU");
-            const xauData = await xauRes.json();
-            const res = await fetch(PROXY_URL);
-            const data = await res.json();
-
-            updateCard('twii', data.stock_twii);
-            updateCard('ym', data.stock_ym);
-            updateCard('7769', data.stock_7769);
-            updateCard('oil', data.oil_brent);
-            updateCard('vix', data.vix_index);
-            const liveTwd = updateCard('twd', data.usd_twd); // 取得即時匯率
-            updateCard('jpy', data.usd_jpy);
-
-            if (liveTwd && xauData.price) {
-                const goldXAU = xauData.price;
-                const perG = (goldXAU / 31.1035) * liveTwd; // 使用即時匯率計算
-                const perQ = perG * 3.75;
-                
-                document.getElementById('p-gold').innerText = goldXAU.toLocaleString();
-                document.getElementById('gold-g').innerText = `${Math.round(perG).toLocaleString()} NT$`;
-                document.getElementById('gold-q').innerText = `${Math.round(perQ).toLocaleString()} NT$`;
-                document.getElementById('gold-rate-info').innerText = `使用即時匯率: ${liveTwd.toFixed(3)}`;
-                
-                if(data.gold_price?.chart?.result[0]) {
-                    const h = data.gold_price.chart.result[0].indicators.quote[0].close.filter(v => v !== null);
-                    renderSparkline('gold', h, '#f1c40f');
-                }
-            }
-
-            if (data.crypto_fng?.data) {
-                const val = parseFloat(data.crypto_fng.data[0].value);
-                document.getElementById('fngValue').innerText = val;
-                addLog(`✅ Updated Crypto: ${val}`);
-            }
-        } catch (e) { addLog('❌ Sync Error: ' + e.message); }
-    }
-
-    updateAll();
-    setInterval(updateAll, 300000);
-</script>
-</body>
-</html>
+        document.getElementById(`diff-${
