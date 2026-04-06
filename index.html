@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v10.5</title>
+    <title>全球投資戰情室 v10.6</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
             --border: rgba(255,255,255,0.09);
             --border-bright: rgba(255,255,255,0.18);
         }
-        
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -91,6 +91,12 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+    .span-all {
+        grid-column: 1 / -1;
+        margin: 6px 0 2px;
+        width: auto;
+        max-width: none;
     }
     .section-label::after {
         content: '';
@@ -372,57 +378,49 @@
     <div class="version-badge">v10.5</div>
 </div>
 
-<div class="section-label">亞股 / ASIA</div>
-
-<div class="dashboard">
-    <div id="card-twii" class="card">
-        <div class="label">^TWII · 台股大盤</div>
-        <div id="p-twii" class="main-val loading">--</div>
-        <div id="diff-twii" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-twii"></canvas></div>
-    </div>
-
+<div class="dashboard"
+    
+<!-- ── 亞股 ── -->
+<div class="section-label span-all">亞股 / ASIA</div>
+<div id="card-twii" class="card">
+    <div class="label">^TWII · 台股大盤</div>
+    <div id="p-twii" class="main-val loading">--</div>
+    <div id="diff-twii" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-twii"></canvas></div>
+</div>
 <div id="card-n225" class="card">
     <div class="label">^N225 · 日經225</div>
     <div id="p-n225" class="main-val loading">--</div>
     <div id="diff-n225" class="sub-val">--</div>
     <div class="chart-container"><canvas id="chart-n225"></canvas></div>
 </div>
-
 <div id="card-ks11" class="card">
     <div class="label">^KS11 · 韓國綜合</div>
     <div id="p-ks11" class="main-val loading">--</div>
     <div id="diff-ks11" class="sub-val">--</div>
     <div class="chart-container"><canvas id="chart-ks11"></canvas></div>
 </div>
-
 <div id="card-7769" class="card">
     <div class="label">7769.TW · 鴻勁</div>
     <div id="p-7769" class="main-val loading">--</div>
     <div id="diff-7769" class="sub-val">--</div>
     <div class="chart-container"><canvas id="chart-7769"></canvas></div>
 </div>
-```
 
+<!-- ── 美股 ── -->
+<div class="section-label span-all">美股 / US MARKET</div>
+<div id="card-ym" class="card">
+    <div class="label">YM=F · 道瓊期貨</div>
+    <div id="p-ym" class="main-val loading">--</div>
+    <div id="diff-ym" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-ym"></canvas></div>
 </div>
-
-<div class="section-label">美股 / US MARKET</div>
-
-<div class="dashboard">
-    <div id="card-ym" class="card">
-        <div class="label">YM=F · 道瓊期貨</div>
-        <div id="p-ym" class="main-val loading">--</div>
-        <div id="diff-ym" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-ym"></canvas></div>
-    </div>
-
 <div id="card-oil" class="card">
     <div class="label">BZ=F · 布蘭特原油</div>
     <div id="p-oil" class="main-val loading">--</div>
     <div id="diff-oil" class="sub-val">--</div>
     <div class="chart-container"><canvas id="chart-oil"></canvas></div>
 </div>
-
 <div id="card-vix" class="card full-width">
     <div class="label">^VIX · 美股恐慌指數</div>
     <div id="p-vix" class="main-val loading">--</div>
@@ -431,19 +429,14 @@
     <div class="chart-container" style="height:42px; margin-top:8px;"><canvas id="chart-vix"></canvas></div>
 </div>
 
+<!-- ── 外匯 ── -->
+<div class="section-label span-all">外匯 / FX</div>
+<div id="card-twd" class="card">
+    <div class="label">USD / TWD</div>
+    <div id="p-twd" class="main-val loading">--</div>
+    <div id="diff-twd" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-twd"></canvas></div>
 </div>
-
-<div class="section-label">外匯 / FX</div>
-
-<div class="dashboard">
-    <div id="card-twd" class="card">
-        <div class="label">USD / TWD</div>
-        <div id="p-twd" class="main-val loading">--</div>
-        <div id="diff-twd" class="sub-val">--</div>
-        <div class="chart-container"><canvas id="chart-twd"></canvas></div>
-    </div>
-
-```
 <div id="card-jpy" class="card">
     <div class="label">USD / JPY</div>
     <div id="p-jpy" class="main-val loading">--</div>
@@ -452,34 +445,27 @@
     <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
 </div>
 
-</div>
-
-<div class="section-label">商品 / COMMODITIES</div>
-
-<div class="dashboard">
-    <div id="card-gold" class="card full-width" style="height:auto;">
-        <div class="label">XAU · 國際現貨黃金</div>
-        <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
-            <div id="p-gold" class="main-val loading">--</div>
-            <div id="diff-gold" class="sub-val">--</div>
-        </div>
-        <div id="calc-gold" class="gold-calc">計算中...</div>
-        <div class="chart-container" style="height:38px; margin-top:10px;"><canvas id="chart-gold"></canvas></div>
+<!-- ── 商品 ── -->
+<div class="section-label span-all">商品 / COMMODITIES</div>
+<div id="card-gold" class="card full-width">
+    <div class="label">XAU · 國際現貨黃金</div>
+    <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+        <div id="p-gold" class="main-val loading">--</div>
+        <div id="diff-gold" class="sub-val">--</div>
     </div>
+    <div id="calc-gold" class="gold-calc">計算中...</div>
+    <div class="chart-container" style="height:38px; margin-top:10px;"><canvas id="chart-gold"></canvas></div>
 </div>
 
-<div class="section-label">情緒 / SENTIMENT</div>
-
-<div class="dashboard">
-    <div class="fng-area">
-        <div class="fng-title">Crypto Fear &amp; Greed Index</div>
-        <div class="fng-gauge-wrapper">
-            <canvas id="fngGauge"></canvas>
-            <div id="fngValue">--</div>
-        </div>
-        <div id="fngLabel">-- --</div>
-
-```
+<!-- ── 情緒 ── -->
+<div class="section-label span-all">情緒 / SENTIMENT</div>
+<div class="fng-area">
+    <div class="fng-title">Crypto Fear &amp; Greed Index</div>
+    <div class="fng-gauge-wrapper">
+        <canvas id="fngGauge"></canvas>
+        <div id="fngValue">--</div>
+    </div>
+    <div id="fngLabel">-- --</div>
     <div class="btn-row">
         <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">
             CNN 恐慌指數
@@ -490,9 +476,9 @@
             <span class="btn-alert-hint">警戒：&gt; 40</span>
         </a>
     </div>
-
     <button class="btn-refresh" onclick="updateAll()">⟳ &nbsp;FORCE REFRESH</button>
 </div>
+```
 
 </div>
 
