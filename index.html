@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>全球投資戰情室 v11 Pro</title>
+<title>全球投資戰情室 v12 交易版</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Noto+Sans+TC:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,7 +17,6 @@
     --text:#e6edf3;
     --muted:#7f8da3;
     --blue:#3ea6ff;
-    --gold:#f7c948;
     --border:rgba(255,255,255,0.08);
 }
 
@@ -31,7 +30,7 @@ body{
 }
 
 .header{
-    max-width:900px;margin:auto;
+    max-width:1000px;margin:auto;
     display:flex;justify-content:space-between;align-items:center;
 }
 
@@ -39,11 +38,11 @@ body{
 .header-sub{font-size:10px;color:var(--muted)}
 
 .dashboard{
-    max-width:900px;margin:10px auto;
+    max-width:1000px;margin:10px auto;
     display:grid;grid-template-columns:1fr 1fr;gap:10px;
 }
 
-@media(min-width:600px){
+@media(min-width:700px){
 .dashboard{grid-template-columns:repeat(4,1fr)}
 }
 
@@ -58,15 +57,25 @@ body{
 }
 
 .card:hover{transform:translateY(-3px)}
-.card.up{box-shadow:0 0 20px rgba(255,80,80,.2)}
-.card.down{box-shadow:0 0 20px rgba(0,230,118,.2)}
+.card.up{box-shadow:0 0 20px rgba(255,80,80,.25)}
+.card.down{box-shadow:0 0 20px rgba(0,230,118,.25)}
 
 .label{font-size:10px;color:var(--muted)}
 
 .main-val{
     font-family:'Rajdhani';
-    font-size:1.8rem;
+    font-size:1.9rem;
     margin-top:6px;
+    transition:0.2s;
+}
+
+.flash {
+    animation: flash 0.4s;
+}
+
+@keyframes flash {
+    0%{opacity:0.2}
+    100%{opacity:1}
 }
 
 .sub-val{font-size:11px;margin-top:4px}
@@ -78,22 +87,22 @@ body{
     color:var(--muted);
 }
 
-.chart-container{height:50px}
+.chart-container{height:60px}
 
-.fng{
+.ai-box{
     grid-column:1/-1;
-    text-align:center;
-    padding:20px;
+    padding:14px;
+    border-radius:14px;
     background:linear-gradient(135deg,#0c1220,#0a0f1a);
-    border-radius:16px;
+    font-size:12px;
+    line-height:1.6;
 }
-
-#fngValue{font-size:3rem}
 
 button{
     width:100%;padding:12px;
     border:none;border-radius:10px;
     background:var(--blue);color:#fff;
+    margin-top:10px;
 }
 
 </style>
@@ -103,71 +112,110 @@ button{
 
 <div class="header">
 <div>
-<div class="header-title">戰情室 v11</div>
+<div class="header-title">戰情室 v12</div>
 <div id="time" class="header-sub"></div>
 </div>
-<div class="header-sub">● LIVE</div>
+<div class="header-sub">● LIVE TRADING</div>
 </div>
 
 <div class="dashboard">
 
-<div class="section-label">台股</div>
-<div class="card"><div class="label">加權指數</div><div id="twii" class="main-val">--</div></div>
-<div class="card"><div class="label">日經</div><div id="n225" class="main-val">--</div></div>
-<div class="card"><div class="label">韓國</div><div id="ks11" class="main-val">--</div></div>
-<div class="card"><div class="label">鴻勁</div><div id="s7769" class="main-val">--</div></div>
-
-<div class="section-label">美股</div>
-<div class="card"><div class="label">道瓊期</div><div id="ym" class="main-val">--</div></div>
-<div class="card"><div class="label">原油</div><div id="oil" class="main-val">--</div></div>
-<div class="card"><div class="label">VIX</div><div id="vix" class="main-val">--</div></div>
+<div class="section-label">市場</div>
+<div class="card" id="c-twii"><div class="label">台股</div><div id="twii" class="main-val">--</div><canvas id="k1"></canvas></div>
+<div class="card" id="c-ym"><div class="label">道瓊期</div><div id="ym" class="main-val">--</div><canvas id="k2"></canvas></div>
+<div class="card" id="c-vix"><div class="label">VIX</div><div id="vix" class="main-val">--</div><canvas id="k3"></canvas></div>
+<div class="card" id="c-gold"><div class="label">黃金</div><div id="gold" class="main-val">--</div><canvas id="k4"></canvas></div>
 
 <div class="section-label">外匯</div>
-<div class="card"><div class="label">USD/TWD</div><div id="twd" class="main-val">--</div></div>
-<div class="card"><div class="label">USD/JPY</div><div id="jpy" class="main-val">--</div></div>
+<div class="card" id="c-twd"><div class="label">USD/TWD</div><div id="twd" class="main-val">--</div></div>
+<div class="card" id="c-jpy"><div class="label">USD/JPY</div><div id="jpy" class="main-val">--</div></div>
 
-<div class="section-label">情緒</div>
-<div class="fng">
-<div>Fear & Greed</div>
-<div id="fngValue">--</div>
-<button onclick="updateAll()">Refresh</button>
+<div class="section-label">AI 判斷</div>
+<div class="ai-box" id="ai">
+AI 分析中...
 </div>
+
+<button onclick="updateAll()">⟳ 手動刷新</button>
 
 </div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
+let charts={};
 
 function updateTime(){
 document.getElementById('time').innerText=new Date().toLocaleString();
 }
 setInterval(updateTime,1000);
 
+function flash(id){
+const el=document.getElementById(id);
+el.classList.add('flash');
+setTimeout(()=>el.classList.remove('flash'),300);
+}
+
+function render(id,data,color){
+const ctx=document.getElementById(id);
+if(!ctx) return;
+if(charts[id]) charts[id].destroy();
+charts[id]=new Chart(ctx,{type:'line',data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,pointRadius:0}]},options:{plugins:{legend:false},scales:{x:{display:false},y:{display:false}}}});
+}
+
+function parse(d){return d?.chart?.result?.[0];}
+
+function setCard(id,key,data,chartId){
+let r=parse(data);
+if(!r) return;
+let price=r.meta.regularMarketPrice;
+let prev=r.meta.previousClose||price;
+let diff=price-prev;
+let color=diff>0?'#ff4d6d':'#00e676';
+
+let el=document.getElementById(id);
+el.innerText=price;
+el.style.color=color;
+flash(id);
+
+let card=document.getElementById('c-'+key);
+card.classList.toggle('up',diff>0);
+card.classList.toggle('down',diff<0);
+
+let h=r.indicators.quote[0].close.filter(v=>v);
+render(chartId,h,color);
+
+return {price,diff};
+}
+
+function aiLogic(vix,usd){
+let text='';
+if(vix>30) text+='⚠ 市場恐慌\n';
+else text+='✅ 情緒穩定\n';
+
+if(usd>32) text+='💵 台幣偏弱\n';
+
+if(vix<20 && usd<31.5) text+='🚀 偏多格局';
+
+return text;
+}
+
 async function updateAll(){
-try{
 let res=await fetch(API);
-let data=await res.json();
+let d=await res.json();
 
-function set(id,val){document.getElementById(id).innerText=val}
+let twii=setCard('twii','twii',d.stock_twii,'k1');
+let ym=setCard('ym','ym',d.stock_ym,'k2');
+let vix=setCard('vix','vix',d.vix_index,'k3');
+let gold=setCard('gold','gold',d.gold_price,'k4');
+let twd=setCard('twd','twd',d.usd_twd);
+let jpy=setCard('jpy','jpy',d.usd_jpy);
 
-set('twii',data.stock_twii?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('n225',data.stock_n225?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('ks11',data.stock_ks11?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('s7769',data.stock_7769?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('ym',data.stock_ym?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('oil',data.oil_brent?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('vix',data.vix_index?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('twd',data.usd_twd?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-set('jpy',data.usd_jpy?.chart?.result?.[0]?.meta?.regularMarketPrice||'--');
-
-let fng=data.crypto_fng?.data?.[0]?.value;
-if(fng) document.getElementById('fngValue').innerText=fng;
-
-}catch(e){console.log(e)}
+if(vix && twd){
+document.getElementById('ai').innerText=aiLogic(vix.price,twd.price);
+}
 }
 
 updateAll();
-setInterval(updateAll,300000);
+setInterval(updateAll,15000);
 </script>
 
 </body>
