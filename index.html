@@ -11,19 +11,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --red: #ff4d4d;
-            --green: #00e676;
+            --red: #ff6060;
+            --green: #2eeb82;
             --bg: #080a0f;
-            --card: #0d1117;
-            --card2: #111722;
-            --text: #cdd9e5;
-            --muted: #5a6980;
-            --gold: #f0b429;
+            --card: #0f1318;
+            --card2: #141a24;
+            --text: #e8edf2;
+            --muted: #8a9ab5;
+            --gold: #f5c842;
             --gold2: #ffd970;
-            --alert: #ffcc00;
-            --blue: #58a6ff;
-            --border: rgba(255,255,255,0.06);
-            --border-bright: rgba(255,255,255,0.12);
+            --alert: #ffdd00;
+            --blue: #6cb8ff;
+            --border: rgba(255,255,255,0.09);
+            --border-bright: rgba(255,255,255,0.18);
         }
 
 ```
@@ -36,7 +36,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 16px 12px 32px;
+        padding: 16px 16px 32px;
         min-height: 100vh;
         background-image:
             radial-gradient(ellipse 80% 40% at 50% -10%, rgba(88,166,255,0.07) 0%, transparent 70%),
@@ -46,7 +46,7 @@
     /* ── HEADER ── */
     .header {
         width: 100%;
-        max-width: 400px;
+        max-width: 900px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -63,8 +63,8 @@
     }
     .header-sub {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 9px;
-        color: var(--muted);
+        font-size: 10px;
+        color: #8a9ab5;
         letter-spacing: 1px;
         margin-top: 2px;
     }
@@ -82,10 +82,10 @@
     /* ── SECTION LABEL ── */
     .section-label {
         width: 100%;
-        max-width: 400px;
+        max-width: 900px;
         font-family: 'JetBrains Mono', monospace;
-        font-size: 9px;
-        color: var(--muted);
+        font-size: 10px;
+        color: #8a9ab5;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin: 14px 0 8px 2px;
@@ -103,10 +103,10 @@
     /* ── DASHBOARD GRID ── */
     .dashboard {
         width: 100%;
-        max-width: 400px;
+        max-width: 900px;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
     }
 
     /* ── CARD ── */
@@ -114,7 +114,7 @@
         background: var(--card);
         border-radius: 14px;
         border: 1px solid var(--border);
-        height: 150px;
+        min-height: 150px;
         display: flex;
         flex-direction: column;
         padding: 14px 14px 10px;
@@ -139,14 +139,14 @@
     }
     .card.alert-active::before { background: linear-gradient(90deg, var(--alert), transparent); }
 
-    .full-width { grid-column: span 2; height: auto; min-height: 130px; }
+    .full-width { grid-column: 1 / -1; height: auto; min-height: 130px; }
 
     /* ── CARD CONTENT ── */
     .label {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 9.5px;
-        color: var(--muted);
-        font-weight: 400;
+        font-size: 10px;
+        color: #9bafc8;
+        font-weight: 500;
         letter-spacing: 0.5px;
         margin-bottom: 6px;
     }
@@ -161,17 +161,18 @@
     }
     .sub-val {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 10px;
-        font-weight: 400;
+        font-size: 11px;
+        font-weight: 500;
         margin-top: 4px;
-        opacity: 0.85;
+        opacity: 1;
     }
     .alert-hint {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 8.5px;
+        font-size: 10px;
         color: var(--alert);
         margin-top: 3px;
-        opacity: 0.8;
+        opacity: 1;
+        font-weight: 600;
     }
 
     /* ── SPARKLINE ── */
@@ -185,12 +186,13 @@
     /* ── GOLD CARD ── */
     .gold-calc {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 9.5px;
+        font-size: 11px;
         color: var(--gold);
         margin-top: 8px;
         padding-top: 8px;
-        border-top: 1px solid var(--border);
+        border-top: 1px solid rgba(255,255,255,0.1);
         line-height: 1.8;
+        font-weight: 500;
     }
 
     /* ── VIX CARD ── */
@@ -198,7 +200,7 @@
 
     /* ── FEAR & GREED ── */
     .fng-area {
-        grid-column: span 2;
+        grid-column: 1 / -1;
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 14px;
@@ -219,10 +221,10 @@
     }
     .fng-title {
         font-family: 'Rajdhani', sans-serif;
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 600;
         letter-spacing: 2.5px;
-        color: var(--muted);
+        color: #9bafc8;
         text-transform: uppercase;
         margin-bottom: 2px;
     }
@@ -247,11 +249,12 @@
     }
     #fngLabel {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
+        font-size: 11px;
+        color: #9bafc8;
         text-align: center;
         margin-top: 6px;
         letter-spacing: 1px;
+        font-weight: 500;
     }
 
     /* ── BUTTONS ── */
@@ -263,7 +266,7 @@
         margin-top: 16px;
     }
     .btn-link {
-        color: var(--text);
+        color: #d0dcea;
         text-decoration: none;
         display: flex;
         flex-direction: column;
@@ -272,19 +275,19 @@
         height: 54px;
         border-radius: 10px;
         font-family: 'JetBrains Mono', monospace;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.5px;
         background: var(--card2);
-        border: 1px solid var(--border);
+        border: 1px solid rgba(255,255,255,0.1);
         text-align: center;
         transition: all 0.2s;
         gap: 3px;
     }
     .btn-link:active { background: #1a2234; transform: scale(0.97); }
-    .btn-cnn { background: rgba(180,0,0,0.15) !important; border-color: rgba(220,50,50,0.3) !important; color: #ff7070 !important; }
-    .btn-hint { font-size: 8px; color: var(--muted); font-weight: 400; }
-    .btn-alert-hint { font-size: 8px; color: var(--alert); font-weight: 400; }
+    .btn-cnn { background: rgba(180,0,0,0.2) !important; border-color: rgba(220,50,50,0.35) !important; color: #ff8888 !important; }
+    .btn-hint { font-size: 9px; color: #8a9ab5; font-weight: 400; }
+    .btn-alert-hint { font-size: 9px; color: var(--alert); font-weight: 600; }
 
     .btn-refresh {
         background: linear-gradient(135deg, #1a6fe0, #0051b5);
@@ -316,7 +319,7 @@
         height: 72px;
         overflow-y: auto;
         width: 100%;
-        max-width: 400px;
+        max-width: 900px;
         border-radius: 10px;
         border: 1px solid var(--border);
         margin-top: 12px;
