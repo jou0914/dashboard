@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        [span_12](start_span)/* 保留 v10.6 的配色與根設定[span_12](end_span) */
         :root {
             --red: #ff6060; --green: #2eeb82; --bg: #080a0f;
             --card: #0f1318; --card2: #141a24; --text: #e8edf2;
@@ -25,8 +26,9 @@
         }
         .header, .dashboard, .section-label, #log-window { width: 100%; max-width: 900px; }
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (min-width: 600px) { .dashboard { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 600px) { .dashboard { grid-template-columns: repeat(4, 1fr); [span_13](start_span)} }[span_13](end_span)
         
+        [span_14](start_span)/* 卡片設計[span_14](end_span) */
         .card {
             background: var(--card); border-radius: 14px; border: 1px solid var(--border);
             min-height: 150px; display: flex; flex-direction: column; padding: 14px;
@@ -35,21 +37,19 @@
         .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; transition: background 0.3s; }
         .card.up::before { background: linear-gradient(90deg, var(--red), transparent); }
         .card.down::before { background: linear-gradient(90deg, var(--green), transparent); }
-        .full-width { grid-column: 1 / -1; height: auto; }
+        .full-width { grid-column: 1 / -1; [span_15](start_span)[span_16](start_span)}
         
+        /* 字體規範[span_15](end_span)[span_16](end_span) */
         .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #9bafc8; margin-bottom: 6px; }
         .main-val { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1; }
         .sub-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-top: 4px; }
-        .chart-container { width: 100%; height: 48px; margin-top: auto; }
-        
-        /* 費城半導體特殊亮色邊框 */
-        #card-sox { border-color: rgba(108, 184, 255, 0.3); }
+        .chart-container { width: 100%; height: 48px; margin-top: auto; [span_17](start_span)}
 
         .fng-area { grid-column: 1 / -1; background: var(--card); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border); }
-        .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; cursor: pointer; grid-column: span 2; margin-top: 15px; }
+        .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }[span_17](end_span)
         
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #log-window { background: #080c12; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #3fb950; height: 72px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 12px; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); [span_18](start_span)} }[span_18](end_span)
+        #log-window { background: #080c12; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #3fb950; height: 72px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 12px; [span_19](start_span)}[span_19](end_span)
     </style>
 </head>
 <body>
@@ -84,13 +84,28 @@
     </div>
 </div>
 
-<div id="log-window">▶ System Ready...</div>
+<div id="log-window">▶ System Initializing...</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
     let charts = {};
 
     function addLog(msg) { const el = document.getElementById('log-window'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerHTML; }
+
+    function renderSparkline(id, historyData, color) {
+        const canvas = document.getElementById(`chart-${id}`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (charts[id]) charts[id].destroy();
+        charts[id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: historyData.map((_, i) => i),
+                datasets: [{ data: historyData, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+        });
+    }
 
     function updateCard(id, data) {
         if (!data || data.error || !data.chart?.result) return null;
@@ -112,6 +127,9 @@
             dEl.style.color = color;
         }
         document.getElementById(`card-${id}`).className = `card ${id==='gold'||id==='vix'?'full-width':''} ${diff>0?'up':'down'}`;
+        
+        const h = res.indicators.quote[0].close.filter(v => v !== null);
+        if (h.length > 0) renderSparkline(id, h, color);
         return price;
     }
 
@@ -124,7 +142,7 @@
             updateCard('n225', data.stock_n225);
             updateCard('ks11', data.stock_ks11);
             updateCard('7769', data.stock_7769);
-            updateCard('sox', data.stock_sox); [span_7](start_span)// 更新費半數據[span_7](end_span)
+            updateCard('sox', data.stock_sox); // 新增費半
             updateCard('ym', data.stock_ym);
             updateCard('oil', data.oil_brent);
             updateCard('vix', data.vix_index);
