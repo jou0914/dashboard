@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -9,88 +10,501 @@
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        [span_12](start_span)/* 保留 v10.6 的配色與根設定[span_12](end_span) */
         :root {
-            --red: #ff6060; --green: #2eeb82; --bg: #080a0f;
-            --card: #0f1318; --card2: #141a24; --text: #e8edf2;
-            --muted: #8a9ab5; --gold: #f5c842; --alert: #ffdd00;
-            --blue: #6cb8ff; --border: rgba(255,255,255,0.09);
+            --red: #ff6060;
+            --green: #2eeb82;
+            --bg: #080a0f;
+            --card: #0f1318;
+            --card2: #141a24;
+            --text: #e8edf2;
+            --muted: #8a9ab5;
+            --gold: #f5c842;
+            --gold2: #ffd970;
+            --alert: #ffdd00;
+            --blue: #6cb8ff;
+            --border: rgba(255,255,255,0.09);
+            --border-bright: rgba(255,255,255,0.18);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--bg); color: var(--text);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 16px 16px 32px; min-height: 100vh;
-            background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(88,166,255,0.07) 0%, transparent 70%);
-        }
-        .header, .dashboard, .section-label, #log-window { width: 100%; max-width: 900px; }
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (min-width: 600px) { .dashboard { grid-template-columns: repeat(4, 1fr); [span_13](start_span)} }[span_13](end_span)
-        
-        [span_14](start_span)/* 卡片設計[span_14](end_span) */
-        .card {
-            background: var(--card); border-radius: 14px; border: 1px solid var(--border);
-            min-height: 150px; display: flex; flex-direction: column; padding: 14px;
-            position: relative; overflow: hidden; animation: fadeUp 0.4s ease both;
-        }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; transition: background 0.3s; }
-        .card.up::before { background: linear-gradient(90deg, var(--red), transparent); }
-        .card.down::before { background: linear-gradient(90deg, var(--green), transparent); }
-        .full-width { grid-column: 1 / -1; [span_15](start_span)[span_16](start_span)}
-        
-        /* 字體規範[span_15](end_span)[span_16](end_span) */
-        .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #9bafc8; margin-bottom: 6px; }
-        .main-val { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1; }
-        .sub-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-top: 4px; }
-        .chart-container { width: 100%; height: 48px; margin-top: auto; [span_17](start_span)}
 
-        .fng-area { grid-column: 1 / -1; background: var(--card); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border); }
-        .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; cursor: pointer; margin-top: 15px; }[span_17](end_span)
-        
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); [span_18](start_span)} }[span_18](end_span)
-        #log-window { background: #080c12; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #3fb950; height: 72px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 12px; [span_19](start_span)}[span_19](end_span)
-    </style>
+```
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 16px 32px;
+    min-height: 100vh;
+    background-image:
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(88,166,255,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 90% 60%, rgba(240,180,41,0.04) 0%, transparent 60%);
+}
+
+/* ── HEADER ── */
+.header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding: 0 2px;
+}
+.header-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #fff;
+    text-transform: uppercase;
+}
+.header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a9ab5;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+.version-badge {
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.25);
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+    width: 100%;
+    max-width: 900px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a9ab5;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 14px 0 8px 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.span-all {
+    grid-column: 1 / -1;
+    margin: 6px 0 2px;
+    width: auto;
+    max-width: none;
+}
+.section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── DASHBOARD GRID ── */
+.dashboard {
+    width: 100%;
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+@media (min-width: 600px) {
+    .dashboard { grid-template-columns: 1fr 1fr 1fr 1fr; }
+}
+canvas { display: block; }
+
+/* ── CARD ── */
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 14px 10px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 14px 14px 0 0;
+    background: transparent;
+    transition: background 0.3s;
+}
+.card.up::before { background: linear-gradient(90deg, var(--red), transparent); }
+.card.down::before { background: linear-gradient(90deg, var(--green), transparent); }
+.card.alert-active {
+    border-color: rgba(255,204,0,0.3);
+    background: linear-gradient(135deg, #0d1117 0%, rgba(255,204,0,0.04) 100%);
+}
+.card.alert-active::before { background: linear-gradient(90deg, var(--alert), transparent); }
+
+.full-width { grid-column: 1 / -1; height: auto; min-height: 130px; }
+
+/* ── CARD CONTENT ── */
+.label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #9bafc8;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+.main-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0px;
+    color: #fff;
+    transition: color 0.3s;
+}
+.sub-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+    opacity: 1;
+}
+.alert-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--alert);
+    margin-top: 3px;
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* ── SPARKLINE ── */
+.chart-container {
+    width: 100%;
+    height: 48px;
+    margin-top: auto;
+    position: relative;
+}
+
+/* ── GOLD CARD ── */
+.gold-calc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    line-height: 1.8;
+    font-weight: 500;
+}
+
+/* ── VIX CARD ── */
+#card-vix .main-val { font-size: 2rem; }
+
+/* ── FEAR & GREED ── */
+.fng-area {
+    grid-column: 1 / -1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+.fng-area::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(90deg, var(--gold), var(--green), transparent);
+}
+.fng-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    color: #9bafc8;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+.fng-gauge-wrapper {
+    position: relative;
+    width: 210px;
+    height: 108px;
+    margin: 8px 0 0;
+    display: flex;
+    justify-content: center;
+}
+#fngValue {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    letter-spacing: -1px;
+}
+#fngLabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #9bafc8;
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+/* ── BUTTONS ── */
+.btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 16px;
+}
+.btn-link {
+    color: #d0dcea;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 54px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: var(--card2);
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    transition: all 0.2s;
+    gap: 3px;
+}
+.btn-link:active { background: #1a2234; transform: scale(0.97); }
+.btn-cnn { background: rgba(180,0,0,0.2) !important; border-color: rgba(220,50,50,0.35) !important; color: #ff8888 !important; }
+.btn-hint { font-size: 9px; color: #8a9ab5; font-weight: 400; }
+.btn-alert-hint { font-size: 9px; color: var(--alert); font-weight: 600; }
+
+.btn-refresh {
+    background: linear-gradient(135deg, #1a6fe0, #0051b5);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    width: 100%;
+    margin-top: 10px;
+    cursor: pointer;
+    grid-column: span 2;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(26,111,224,0.25);
+}
+.btn-refresh:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(26,111,224,0.2); }
+
+/* ── LOG ── */
+#log-window {
+    background: #080c12;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: #3fb950;
+    height: 72px;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-top: 12px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+#log-window::-webkit-scrollbar { width: 3px; }
+#log-window::-webkit-scrollbar-track { background: transparent; }
+#log-window::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 3px; }
+
+/* ── LOADING SHIMMER ── */
+@keyframes shimmer {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+.loading { animation: shimmer 1.5s infinite; }
+
+/* ── ENTRANCE ANIMATION ── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.card, .fng-area, .section-label {
+    animation: fadeUp 0.4s ease both;
+}
+.dashboard > *:nth-child(1) { animation-delay: 0.05s; }
+.dashboard > *:nth-child(2) { animation-delay: 0.1s; }
+.dashboard > *:nth-child(3) { animation-delay: 0.15s; }
+.dashboard > *:nth-child(4) { animation-delay: 0.2s; }
+.dashboard > *:nth-child(5) { animation-delay: 0.25s; }
+.dashboard > *:nth-child(6) { animation-delay: 0.3s; }
+.dashboard > *:nth-child(7) { animation-delay: 0.35s; }
+.dashboard > *:nth-child(8) { animation-delay: 0.4s; }
+.dashboard > *:nth-child(9) { animation-delay: 0.45s; }
+.dashboard > *:nth-child(10) { animation-delay: 0.5s; }
+```
+
+</style>
+
 </head>
 <body>
 
-<div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-    <div><div style="font-family:'Rajdhani'; font-size:20px; font-weight:700; letter-spacing:2px;">戰情室</div><div style="font-family:'JetBrains Mono'; font-size:10px; color:#8a9ab5;">GLOBAL MARKET MONITOR</div></div>
-    <div style="background:rgba(88,166,255,0.1); color:var(--blue); font-size:10px; padding:3px 8px; border-radius:20px; border:1px solid rgba(88,166,255,0.25);">v10.7</div>
+<div class="header">
+    <div>
+        <div class="header-title">戰情室</div>
+        <div class="header-sub">GLOBAL MARKET MONITOR</div>
+    </div>
+    <div class="version-badge">v10.7</div>
 </div>
 
 <div class="dashboard">
-    <div class="section-label span-all" style="grid-column:1/-1; font-size:10px; color:#8a9ab5; margin:10px 0;">亞股 / ASIA</div>
-    <div id="card-twii" class="card"><div class="label">^TWII · 台股大盤</div><div id="p-twii" class="main-val">--</div><div id="diff-twii" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twii"></canvas></div></div>
-    <div id="card-n225" class="card"><div class="label">^N225 · 日經225</div><div id="p-n225" class="main-val">--</div><div id="diff-n225" class="sub-val">--</div><div class="chart-container"><canvas id="chart-n225"></canvas></div></div>
-    <div id="card-ks11" class="card"><div class="label">^KS11 · 韓國綜合</div><div id="p-ks11" class="main-val">--</div><div id="diff-ks11" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ks11"></canvas></div></div>
-    <div id="card-7769" class="card"><div class="label">7769.TW · 鴻勁</div><div id="p-7769" class="main-val">--</div><div id="diff-7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-7769"></canvas></div></div>
 
-    <div class="section-label span-all" style="grid-column:1/-1; font-size:10px; color:#8a9ab5; margin:10px 0;">美股 / US MARKET</div>
-    <div id="card-sox" class="card"><div class="label">^SOX · 費城半導體</div><div id="p-sox" class="main-val">--</div><div id="diff-sox" class="sub-val">--</div><div class="chart-container"><canvas id="chart-sox"></canvas></div></div>
-    <div id="card-ym" class="card"><div class="label">YM=F · 道瓊期貨</div><div id="p-ym" class="main-val">--</div><div id="diff-ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ym"></canvas></div></div>
-    <div id="card-oil" class="card"><div class="label">BZ=F · 布蘭特原油</div><div id="p-oil" class="main-val">--</div><div id="diff-oil" class="sub-val">--</div><div class="chart-container"><canvas id="chart-oil"></canvas></div></div>
-    <div id="card-vix" class="card full-width"><div class="label">^VIX · 美股恐慌指數</div><div id="p-vix" class="main-val">--</div><div id="diff-vix" class="sub-val">--</div><div class="chart-container"><canvas id="chart-vix"></canvas></div></div>
+<!-- ── 亞股 ── -->
 
-    <div class="section-label span-all" style="grid-column:1/-1; font-size:10px; color:#8a9ab5; margin:10px 0;">外匯與商品 / FX & GOLD</div>
-    <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
-    <div id="card-jpy" class="card"><div class="label">USD / JPY</div><div id="p-jpy" class="main-val">--</div><div id="diff-jpy" class="sub-val">--</div><div class="chart-container"><canvas id="chart-jpy"></canvas></div></div>
-    <div id="card-gold" class="card full-width"><div class="label">XAU · 國際黃金</div><div id="p-gold" class="main-val">--</div><div id="diff-gold" class="sub-val">--</div><div id="calc-gold" class="gold-calc">計算中...</div><div class="chart-container"><canvas id="chart-gold"></canvas></div></div>
-
-    <div class="fng-area">
-        <div class="fng-title">Crypto Fear & Greed</div>
-        <div style="font-size:3rem; font-weight:700;" id="fngValue">--</div>
-        <button class="btn-refresh" onclick="updateAll()">FORCE REFRESH</button>
-    </div>
+<div class="section-label span-all">亞股 / ASIA</div>
+<div id="card-twii" class="card">
+    <div class="label">^TWII · 台股大盤</div>
+    <div id="p-twii" class="main-val loading">--</div>
+    <div id="diff-twii" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-twii"></canvas></div>
+</div>
+<div id="card-n225" class="card">
+    <div class="label">^N225 · 日經225</div>
+    <div id="p-n225" class="main-val loading">--</div>
+    <div id="diff-n225" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-n225"></canvas></div>
+</div>
+<div id="card-ks11" class="card">
+    <div class="label">^KS11 · 韓國綜合</div>
+    <div id="p-ks11" class="main-val loading">--</div>
+    <div id="diff-ks11" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-ks11"></canvas></div>
+</div>
+<div id="card-7769" class="card">
+    <div class="label">7769.TW · 鴻勁</div>
+    <div id="p-7769" class="main-val loading">--</div>
+    <div id="diff-7769" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-7769"></canvas></div>
 </div>
 
-<div id="log-window">▶ System Initializing...</div>
+<!-- ── 美股 ── -->
+
+<div class="section-label span-all">美股 / US MARKET</div>
+<div id="card-ym" class="card">
+    <div class="label">YM=F · 道瓊期貨</div>
+    <div id="p-ym" class="main-val loading">--</div>
+    <div id="diff-ym" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-ym"></canvas></div>
+</div>
+<div id="card-sox" class="card">
+    <div class="label">^SOX · 費城半導體</div>
+    <div id="p-sox" class="main-val loading">--</div>
+    <div id="diff-sox" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-sox"></canvas></div>
+</div>
+<div id="card-oil" class="card">
+    <div class="label">BZ=F · 布蘭特原油</div>
+    <div id="p-oil" class="main-val loading">--</div>
+    <div id="diff-oil" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-oil"></canvas></div>
+</div>
+<div id="card-vix" class="card full-width">
+    <div class="label">^VIX · 美股恐慌指數</div>
+    <div id="p-vix" class="main-val loading">--</div>
+    <div id="diff-vix" class="sub-val">--</div>
+    <div class="alert-hint">⚠ 警戒線：> 30 極度恐慌</div>
+    <div class="chart-container" style="height:42px; margin-top:8px;"><canvas id="chart-vix"></canvas></div>
+</div>
+
+<!-- ── 外匯 ── -->
+
+<div class="section-label span-all">外匯 / FX</div>
+<div id="card-twd" class="card">
+    <div class="label">USD / TWD</div>
+    <div id="p-twd" class="main-val loading">--</div>
+    <div id="diff-twd" class="sub-val">--</div>
+    <div class="chart-container"><canvas id="chart-twd"></canvas></div>
+</div>
+<div id="card-jpy" class="card">
+    <div class="label">USD / JPY</div>
+    <div id="p-jpy" class="main-val loading">--</div>
+    <div id="diff-jpy" class="sub-val">--</div>
+    <div class="alert-hint">⚠ 警戒：> 159.5</div>
+    <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
+</div>
+
+<!-- ── 商品 ── -->
+
+<div class="section-label span-all">商品 / COMMODITIES</div>
+<div id="card-gold" class="card full-width">
+    <div class="label">XAU · 國際現貨黃金</div>
+    <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+        <div id="p-gold" class="main-val loading">--</div>
+        <div id="diff-gold" class="sub-val">--</div>
+    </div>
+    <div id="calc-gold" class="gold-calc">計算中...</div>
+    <div class="chart-container" style="height:38px; margin-top:10px;"><canvas id="chart-gold"></canvas></div>
+</div>
+
+<!-- ── 情緒 ── -->
+
+<div class="section-label span-all">情緒 / SENTIMENT</div>
+<div class="fng-area">
+    <div class="fng-title">Crypto Fear &amp; Greed Index</div>
+    <div class="fng-gauge-wrapper">
+        <canvas id="fngGauge"></canvas>
+        <div id="fngValue">--</div>
+    </div>
+    <div id="fngLabel">-- --</div>
+    <div class="btn-row">
+        <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">
+            CNN 恐慌指數
+            <span class="btn-alert-hint">警戒：&lt; 10</span>
+        </a>
+        <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">
+            台股 VIX
+            <span class="btn-alert-hint">警戒：&gt; 40</span>
+        </a>
+    </div>
+    <button class="btn-refresh" onclick="updateAll()">⟳ &nbsp;FORCE REFRESH</button>
+</div>
+
+</div>
+
+<div id="log-window">▶ System Initializing... v10.7</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
     let charts = {};
 
-    function addLog(msg) { const el = document.getElementById('log-window'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerHTML; }
+    function addLog(msg) {
+        const el = document.getElementById('log-window');
+        el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerHTML;
+    }
 
     function renderSparkline(id, historyData, color) {
         const canvas = document.getElementById(`chart-${id}`);
@@ -101,10 +515,77 @@
             type: 'line',
             data: {
                 labels: historyData.map((_, i) => i),
-                datasets: [{ data: historyData, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 }]
+                datasets: [{
+                    data: historyData,
+                    borderColor: color,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: (c) => {
+                        const g = c.chart.ctx.createLinearGradient(0, 0, 0, 50);
+                        g.addColorStop(0, color + '30');
+                        g.addColorStop(1, color + '00');
+                        return g;
+                    },
+                    tension: 0.4
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } },
+                animation: { duration: 600 }
+            }
         });
+    }
+
+    function drawGauge(value) {
+        const canvas = document.getElementById('fngGauge');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 210 * dpr; canvas.height = 108 * dpr;
+        canvas.style.width = '210px'; canvas.style.height = '108px';
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, 210, 108);
+
+        // Track
+        ctx.beginPath();
+        ctx.arc(105, 98, 80, Math.PI, 0);
+        ctx.lineWidth = 12;
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Gradient arc
+        const grad = ctx.createLinearGradient(25, 0, 185, 0);
+        grad.addColorStop(0, '#ff4d4d');
+        grad.addColorStop(0.25, '#ff8c00');
+        grad.addColorStop(0.5, '#f0b429');
+        grad.addColorStop(0.75, '#a8e063');
+        grad.addColorStop(1, '#00e676');
+        ctx.beginPath();
+        ctx.arc(105, 98, 80, Math.PI, Math.PI + (Math.PI * value / 100));
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Needle dot
+        const angle = Math.PI + (Math.PI * value / 100);
+        const nx = 105 + 80 * Math.cos(angle);
+        const ny = 98 + 80 * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(nx, ny, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+    }
+
+    function getFngLabel(val) {
+        if (val <= 24) return 'EXTREME FEAR 極度恐懼';
+        if (val <= 44) return 'FEAR 恐懼';
+        if (val <= 55) return 'NEUTRAL 中性';
+        if (val <= 74) return 'GREED 貪婪';
+        return 'EXTREME GREED 極度貪婪';
     }
 
     function updateCard(id, data) {
@@ -114,47 +595,89 @@
         const prev = res.meta.previousClose || price;
         const diff = price - prev;
         const perc = (diff / prev) * 100;
-        const color = diff > 0 ? '#ff4d4d' : '#00e676';
-        
-        const pEl = document.getElementById(`p-${id}`);
-        if(pEl) {
-            pEl.innerText = price.toLocaleString(undefined, { minimumFractionDigits: (id.includes('twd')||id.includes('jpy')?3:2) });
-            pEl.style.color = color;
+        const color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#00e676' : '#cdd9e5');
+        const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
+
+        const decimals = (id === 'twd' || id === 'jpy') ? 3 : 2;
+        document.getElementById(`p-${id}`).innerText = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        document.getElementById(`p-${id}`).style.color = color;
+        document.getElementById(`p-${id}`).classList.remove('loading');
+
+        if (document.getElementById(`diff-${id}`)) {
+            document.getElementById(`diff-${id}`).innerText = `${arrow} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+            document.getElementById(`diff-${id}`).style.color = color;
         }
-        const dEl = document.getElementById(`diff-${id}`);
-        if(dEl) {
-            dEl.innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
-            dEl.style.color = color;
-        }
-        document.getElementById(`card-${id}`).className = `card ${id==='gold'||id==='vix'?'full-width':''} ${diff>0?'up':'down'}`;
-        
-        const h = res.indicators.quote[0].close.filter(v => v !== null);
-        if (h.length > 0) renderSparkline(id, h, color);
+
+        const isAlert = (id === 'jpy' && price > 159.5) || (id === 'vix' && price > 30);
+        const isFullWidth = ['gold', 'vix'].includes(id);
+        document.getElementById(`card-${id}`).className = `card${isFullWidth ? ' full-width' : ''} ${diff > 0 ? 'up' : (diff < 0 ? 'down' : '')}${isAlert ? ' alert-active' : ''}`;
+
+        try {
+            const h = res.indicators.quote[0].close.filter(v => v !== null);
+            if (h.length > 0) renderSparkline(id, h, color);
+        } catch (e) {}
         return price;
     }
 
     async function updateAll() {
-        addLog('▶ Syncing data...');
+        addLog('▶ Syncing market data...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
+
             updateCard('twii', data.stock_twii);
             updateCard('n225', data.stock_n225);
             updateCard('ks11', data.stock_ks11);
-            updateCard('7769', data.stock_7769);
-            updateCard('sox', data.stock_sox); // 新增費半
             updateCard('ym', data.stock_ym);
+            updateCard('sox', data.stock_sox);
+            updateCard('7769', data.stock_7769);
             updateCard('oil', data.oil_brent);
             updateCard('vix', data.vix_index);
-            updateCard('twd', data.usd_twd);
+            const liveTwd = updateCard('twd', data.usd_twd);
             updateCard('jpy', data.usd_jpy);
-            if(data.crypto_fng) document.getElementById('fngValue').innerText = data.crypto_fng.data[0].value;
-            addLog('✅ All systems synced.');
-        } catch (e) { addLog('❌ Error: ' + e.message); }
+
+            if (data.gold_price) {
+                const gData = data.gold_price.chart.result[0];
+                const price = gData.meta.regularMarketPrice;
+                const prev = gData.meta.previousClose;
+                const diff = price - prev;
+                const perc = (diff / prev) * 100;
+                const color = diff > 0 ? '#ff4d4d' : '#00e676';
+                const arrow = diff > 0 ? '▲' : '▼';
+
+                document.getElementById('p-gold').innerText = price.toLocaleString();
+                document.getElementById('p-gold').style.color = color;
+                document.getElementById('p-gold').classList.remove('loading');
+                document.getElementById('diff-gold').innerText = `${arrow} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+                document.getElementById('diff-gold').style.color = color;
+
+                const h = gData.indicators.quote[0].close.filter(v => v !== null);
+                renderSparkline('gold', h, color);
+
+                if (liveTwd) {
+                    const ntG = (price * liveTwd) / 31.1035;
+                    const ntQ = ntG * 3.75;
+                    const storePrice = Math.round(ntQ) + 500;
+                    document.getElementById('calc-gold').innerHTML =
+                        `換算 &nbsp;${Math.round(ntG).toLocaleString()} NT$ / 克<br>銀樓牌價 ${storePrice.toLocaleString()} NT$ / 錢`;
+                }
+            }
+
+            if (data.crypto_fng?.data) {
+                const val = parseInt(data.crypto_fng.data[0].value);
+                document.getElementById('fngValue').innerText = val;
+                document.getElementById('fngLabel').innerText = getFngLabel(val);
+                drawGauge(val);
+                addLog('✅ All systems synced.');
+            }
+        } catch (e) {
+            addLog('❌ Error: ' + e.message);
+        }
     }
 
     updateAll();
     setInterval(updateAll, 300000);
 </script>
+
 </body>
 </html>
