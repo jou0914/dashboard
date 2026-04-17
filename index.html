@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v11.2</title>
+    <title>全球投資戰情室 v12.2 Flash</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -31,20 +31,24 @@
         .card.up::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--red), transparent); }
         .card.down::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent); }
         .card.alert-active { border-color: rgba(255,204,0,0.4); background: linear-gradient(135deg, #0d1117 0%, rgba(255,204,0,0.05) 100%); }
-        .card.alert-active::before { background: linear-gradient(90deg, var(--alert), transparent) !important; }
         .full-width { grid-column: 1 / -1; height: auto; min-height: 130px; }
         .label { font-family: 'JetBrains Mono'; font-size: 10px; color: #9bafc8; margin-bottom: 6px; }
         .main-val { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1; color: #fff; }
         .sub-val { font-family: 'JetBrains Mono'; font-size: 11px; margin-top: 4px; }
         .alert-hint { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--alert); margin-top: 3px; font-weight: 600; }
         .chart-container { width: 100%; height: 48px; margin-top: auto; }
-        .fng-area { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
+        
+        /* AI Section */
+        .ai-section { grid-column: 1 / -1; background: linear-gradient(145deg, #0f172a, #0f1318); border: 1px solid rgba(108, 184, 255, 0.3); border-radius: 14px; padding: 20px; margin-top: 10px; }
+        .ai-title { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .ai-content { font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap; }
+
+        .fng-area { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .fng-gauge-wrapper { position: relative; width: 210px; height: 108px; margin-top: 10px; }
         #fngValue { font-family: 'Rajdhani', sans-serif; font-size: 3rem; font-weight: 700; position: absolute; bottom: 0; width: 100%; text-align: center; color: #fff; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 16px; }
         .btn-link { color: #d0dcea; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 54px; border-radius: 10px; background: var(--card2); border: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; }
-        .btn-cnn { background: rgba(180,0,0,0.2) !important; color: #ff8888 !important; }
-        .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; margin-top: 10px; cursor: pointer; grid-column: span 2; letter-spacing: 2px; }
+        .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; margin-top: 10px; cursor: pointer; grid-column: span 2; }
         #log-window { background: #080c12; padding: 10px; font-family: 'JetBrains Mono'; font-size: 9px; color: #3fb950; height: 64px; overflow-y: auto; width: 100%; max-width: 900px; border-radius: 10px; margin-top: 12px; white-space: pre-wrap; border: 1px solid var(--border); }
         .loading { animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -55,9 +59,9 @@
 <div class="header">
     <div>
         <div class="header-title">戰情室</div>
-        <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">GLOBAL MARKET MONITOR</div>
+        <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">AI-POWERED MARKET MONITOR</div>
     </div>
-    <div class="version-badge">v11.2</div>
+    <div class="version-badge">v12.2</div>
 </div>
 
 <div class="dashboard">
@@ -74,8 +78,7 @@
     <div id="card-oil" class="card"><div class="label">BZ=F · 布蘭特原油</div><div id="p-oil" class="main-val loading">--</div><div id="diff-oil" class="sub-val">--</div><div class="chart-container"><canvas id="chart-oil"></canvas></div></div>
     <div id="card-vix" class="card full-width">
         <div class="label">^VIX · 美股恐慌指數</div>
-        <div id="p-vix" class="main-val loading">--</div>
-        <div id="diff-vix" class="sub-val">--</div>
+        <div id="p-vix" class="main-val loading">--</div><div id="diff-vix" class="sub-val">--</div>
         <div class="alert-hint">⚠ 警戒線：> 30 極度恐慌</div>
         <div class="chart-container" style="height:40px;"><canvas id="chart-vix"></canvas></div>
     </div>
@@ -84,8 +87,7 @@
     <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
     <div id="card-jpy" class="card">
         <div class="label">USD / JPY</div>
-        <div id="p-jpy" class="main-val loading">--</div>
-        <div id="diff-jpy" class="sub-val">--</div>
+        <div id="p-jpy" class="main-val loading">--</div><div id="diff-jpy" class="sub-val">--</div>
         <div class="alert-hint">⚠ 警戒：> 159.5</div>
         <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
     </div>
@@ -98,23 +100,27 @@
         <div class="chart-container" style="height:35px;"><canvas id="chart-gold"></canvas></div>
     </div>
 
+    <!-- AI 顧問報告 -->
+    <div class="section-label span-all">AI 戰略顧問 / AI INSIGHT</div>
+    <div class="ai-section">
+        <div class="ai-title">GEMINI FLASH STRATEGY REPORT</div>
+        <div id="ai-content" class="ai-content">正在分析全球市場數據，請稍候...</div>
+    </div>
+
     <div class="section-label span-all">情緒 / SENTIMENT</div>
     <div class="fng-area">
         <div class="label">Crypto Fear & Greed Index</div>
-        <div class="fng-gauge-wrapper">
-            <canvas id="fngGauge"></canvas>
-            <div id="fngValue">--</div>
-        </div>
+        <div class="fng-gauge-wrapper"><canvas id="fngGauge"></canvas><div id="fngValue">--</div></div>
         <div id="fngLabel" style="font-family:'JetBrains Mono'; font-size:11px; margin-top:10px;">--</div>
         <div class="btn-row">
-            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">CNN 恐慌指數 <span style="font-size:9px;opacity:0.8">警戒: < 10</span></a>
-            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">台股 VIX <span style="font-size:9px;opacity:0.8">警戒: > 40</span></a>
+            <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link" style="background:rgba(180,0,0,0.2); color:#ff8888;">CNN 恐慌指數</a>
+            <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link">台股 VIX</a>
         </div>
         <button class="btn-refresh" onclick="updateAll()">⟳ FORCE REFRESH</button>
     </div>
 </div>
 
-<div id="log-window">▶ System Ready...</div>
+<div id="log-window">▶ System Initializing...</div>
 
 <script>
     const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
@@ -194,7 +200,7 @@
     }
 
     async function updateAll() {
-        addLog('▶ Syncing Markets...');
+        addLog('▶ Syncing Markets & AI Analysis...');
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
@@ -224,15 +230,21 @@
                 document.getElementById('fngValue').innerText = val;
                 document.getElementById('fngLabel').innerText = data.crypto_fng.data[0].value_classification.toUpperCase();
                 drawGauge(val);
-                addLog('✅ All systems online.');
             }
+
+            if (data.ai_analysis) {
+                document.getElementById('ai-content').innerText = data.ai_analysis;
+                addLog('✅ AI Analysis Updated.');
+            }
+
+            addLog('✅ All systems synced.');
         } catch (e) {
             addLog('❌ Sync Error: ' + e.message);
         }
     }
 
     updateAll();
-    setInterval(updateAll, 300000);
+    setInterval(updateAll, 600000);
 </script>
 </body>
 </html>
