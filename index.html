@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v12.3 AI-Pro</title>
+    <title>全球投資戰情室 v12.4 AI-Manual</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -44,13 +44,17 @@
 
         /* AI Section */
         .ai-section { grid-column: 1 / -1; background: linear-gradient(145deg, #0f172a, #0f1318); border: 1px solid rgba(108, 184, 255, 0.3); border-radius: 14px; padding: 20px; margin-top: 10px; position: relative; }
-        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
         .ai-title { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; }
-        .ai-title::before { content: '●'; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
-        .btn-copy { background: rgba(108, 184, 255, 0.1); border: 1px solid rgba(108, 184, 255, 0.3); color: var(--blue); font-family: 'JetBrains Mono'; font-size: 10px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .ai-btn-group { display: flex; gap: 8px; }
+        .btn-run { background: linear-gradient(135deg, #6cb8ff, #1a6fe0); border: none; color: #000; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn-run:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(108, 184, 255, 0.4); }
+        .btn-run:disabled { background: #2a3a4a; color: #5a6a7a; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .btn-copy { background: rgba(108, 184, 255, 0.1); border: 1px solid rgba(108, 184, 255, 0.3); color: var(--blue); font-family: 'JetBrains Mono'; font-size: 10px; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
         .btn-copy:hover { background: var(--blue); color: #000; }
+
         .ai-content { font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap; font-family: 'Noto Sans TC', sans-serif; min-height: 60px; }
         .ai-loading-dots { display: inline-block; width: 8px; height: 8px; background: var(--blue); border-radius: 50%; margin-left: 4px; animation: pulse 1s infinite; }
 
@@ -75,7 +79,7 @@
         <div class="header-title">戰情室</div>
         <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">AI-POWERED MARKET MONITOR</div>
     </div>
-    <div class="version-badge">v12.3</div>
+    <div class="version-badge">v12.4</div>
 </div>
 
 <div class="dashboard">
@@ -123,9 +127,12 @@
     <div class="ai-section">
         <div class="ai-header">
             <div class="ai-title">GEMINI FLASH STRATEGY REPORT</div>
-            <button class="btn-copy" onclick="copyAIReport()">COPY REPORT</button>
+            <div class="ai-btn-group">
+                <button id="btn-run-ai" class="btn-run" onclick="fetchAIAnalysis()">RUN ANALYSIS</button>
+                <button class="btn-copy" onclick="copyAIReport()">COPY</button>
+            </div>
         </div>
-        <div id="ai-content" class="ai-content">正在同步市場即時數據...</div>
+        <div id="ai-content" class="ai-content">市場數據已就緒，點擊上方按鈕開始 AI 深度分析報告。</div>
     </div>
 
     <!-- 情緒 -->
@@ -254,10 +261,6 @@
                 drawGauge(val);
             }
             addLog('✅ 市場數據已更新。');
-
-            // 啟動 AI 分析
-            fetchAIAnalysis();
-
         } catch (e) {
             addLog('❌ 數據同步失敗: ' + e.message);
         }
@@ -265,6 +268,10 @@
 
     async function fetchAIAnalysis() {
         const aiEl = document.getElementById('ai-content');
+        const runBtn = document.getElementById('btn-run-ai');
+        
+        runBtn.disabled = true;
+        runBtn.innerText = 'ANALYZING...';
         aiEl.innerHTML = 'AI 顧問正在分析歷史趨勢與即時數據 <span class="ai-loading-dots"></span>';
         addLog('▶ 正在請求 AI 深度分析報告...');
 
@@ -281,6 +288,9 @@
                         aiEl.innerText += text.charAt(i);
                         i++;
                         setTimeout(typeWriter, 5);
+                    } else {
+                        runBtn.disabled = false;
+                        runBtn.innerText = 'RUN ANALYSIS';
                     }
                 }
                 typeWriter();
@@ -288,6 +298,8 @@
             }
         } catch (e) {
             aiEl.innerText = 'AI 分析暫時無法讀取。';
+            runBtn.disabled = false;
+            runBtn.innerText = 'RUN ANALYSIS';
             addLog('❌ AI 分析請求失敗。');
         }
     }
