@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v12.5 AI-Manual</title>
+    <title>全球投資戰情室 v12.8 AI-Manual</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,27 +22,21 @@
         .header { width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
         .header-title { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 2px; }
         .version-badge { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.25); color: var(--blue); font-family: 'JetBrains Mono'; font-size: 10px; padding: 3px 8px; border-radius: 20px; }
-        
         .section-label { width: 100%; max-width: 900px; font-family: 'JetBrains Mono'; font-size: 10px; color: var(--muted); letter-spacing: 2px; margin: 14px 0 8px 2px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
         .span-all { grid-column: 1 / -1; }
         .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
         .dashboard { width: 100%; max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (min-width: 600px) { .dashboard { grid-template-columns: 1fr 1fr 1fr 1fr; } }
-
         .card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); min-height: 150px; display: flex; flex-direction: column; padding: 14px; position: relative; overflow: hidden; }
         .card.up::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--red), transparent); }
         .card.down::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent); }
         .card.alert-active { border-color: rgba(255,204,0,0.4); background: linear-gradient(135deg, #0d1117 0%, rgba(255,204,0,0.05) 100%); }
         .full-width { grid-column: 1 / -1; height: auto; min-height: 130px; }
-
         .label { font-family: 'JetBrains Mono'; font-size: 10px; color: #9bafc8; margin-bottom: 6px; }
         .main-val { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1; color: #fff; }
         .sub-val { font-family: 'JetBrains Mono'; font-size: 11px; margin-top: 4px; }
         .alert-hint { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--alert); margin-top: 3px; font-weight: 600; }
         .chart-container { width: 100%; height: 48px; margin-top: auto; }
-
-        /* AI Section */
         .ai-section { grid-column: 1 / -1; background: linear-gradient(145deg, #0f172a, #0f1318); border: 1px solid rgba(108, 184, 255, 0.3); border-radius: 14px; padding: 20px; margin-top: 10px; position: relative; }
         .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
         .ai-title { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; }
@@ -52,15 +46,12 @@
         .btn-copy { background: rgba(108, 184, 255, 0.1); border: 1px solid rgba(108, 184, 255, 0.3); color: var(--blue); font-family: 'JetBrains Mono'; font-size: 10px; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
         .ai-content { font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap; font-family: 'Noto Sans TC', sans-serif; min-height: 60px; }
         .ai-loading-dots { display: inline-block; width: 8px; height: 8px; background: var(--blue); border-radius: 50%; margin-left: 4px; animation: pulse 1s infinite; }
-
-        /* Sentiment & Buttons */
         .fng-area { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .fng-gauge-wrapper { position: relative; width: 210px; height: 108px; margin-top: 10px; }
         #fngValue { font-family: 'Rajdhani', sans-serif; font-size: 3rem; font-weight: 700; position: absolute; bottom: 0; width: 100%; text-align: center; color: #fff; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 16px; }
         .btn-link { color: #d0dcea; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 54px; border-radius: 10px; background: var(--card2); border: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; }
         .btn-refresh { background: linear-gradient(135deg, #1a6fe0, #0051b5); color: white; border: none; padding: 16px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700; width: 100%; margin-top: 10px; cursor: pointer; grid-column: span 2; letter-spacing: 2px; }
-        
         #log-window { background: #080c12; padding: 10px; font-family: 'JetBrains Mono'; font-size: 9px; color: #3fb950; height: 64px; overflow-y: auto; width: 100%; max-width: 900px; border-radius: 10px; margin-top: 12px; white-space: pre-wrap; border: 1px solid var(--border); }
         .loading { animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -74,18 +65,16 @@
         <div class="header-title">戰情室</div>
         <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">AI-POWERED MARKET MONITOR</div>
     </div>
-    <div class="version-badge">v12.5</div>
+    <div class="version-badge">v12.8</div>
 </div>
 
 <div class="dashboard">
-    <!-- 亞股 -->
     <div class="section-label span-all">亞股 / ASIA</div>
     <div id="card-twii" class="card"><div class="label">^TWII · 台股大盤</div><div id="p-twii" class="main-val loading">--</div><div id="diff-twii" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twii"></canvas></div></div>
     <div id="card-n225" class="card"><div class="label">^N225 · 日經225</div><div id="p-n225" class="main-val loading">--</div><div id="diff-n225" class="sub-val">--</div><div class="chart-container"><canvas id="chart-n225"></canvas></div></div>
     <div id="card-ks11" class="card"><div class="label">^KS11 · 韓國綜合</div><div id="p-ks11" class="main-val loading">--</div><div id="diff-ks11" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ks11"></canvas></div></div>
     <div id="card-7769" class="card"><div class="label">7769.TW · 鴻勁</div><div id="p-7769" class="main-val loading">--</div><div id="diff-7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-7769"></canvas></div></div>
 
-    <!-- 美股 -->
     <div class="section-label span-all">美股 / US MARKET</div>
     <div id="card-ym" class="card"><div class="label">YM=F · 道瓊期貨</div><div id="p-ym" class="main-val loading">--</div><div id="diff-ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ym"></canvas></div></div>
     <div id="card-sox" class="card"><div class="label">^SOX · 費半指數</div><div id="p-sox" class="main-val loading">--</div><div id="diff-sox" class="sub-val">--</div><div class="chart-container"><canvas id="chart-sox"></canvas></div></div>
@@ -98,7 +87,6 @@
         <div class="chart-container" style="height:40px;"><canvas id="chart-vix"></canvas></div>
     </div>
 
-    <!-- 外匯 -->
     <div class="section-label span-all">外匯 / FX</div>
     <div id="card-usdindex" class="card"><div class="label">DXY · 美元指數</div><div id="p-usdindex" class="main-val loading">--</div><div id="diff-usdindex" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdindex"></canvas></div></div>
     <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
@@ -109,7 +97,6 @@
         <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
     </div>
 
-    <!-- 商品 -->
     <div class="section-label span-all">商品 / COMMODITIES</div>
     <div id="card-gold" class="card full-width">
         <div class="label">XAU · 國際現貨黃金</div>
@@ -118,7 +105,6 @@
         <div class="chart-container" style="height:35px;"><canvas id="chart-gold"></canvas></div>
     </div>
 
-    <!-- AI 顧問報告 -->
     <div class="section-label span-all">AI 戰略顧問 / AI INSIGHT</div>
     <div class="ai-section">
         <div class="ai-header">
@@ -131,7 +117,6 @@
         <div id="ai-content" class="ai-content">市場數據已就緒，點擊上方按鈕開始 AI 深度分析報告。</div>
     </div>
 
-    <!-- 情緒 -->
     <div class="section-label span-all">情緒 / SENTIMENT</div>
     <div class="fng-area">
         <div class="label">Crypto Fear & Greed Index</div>
@@ -193,10 +178,41 @@
     }
 
     function updateCard(id, data) {
-        if (!data || data.error || !data.chart?.result) return null;
+        if (!data || data.error || !data.chart?.result) {
+            addLog(`⚠️ ${id} 數據讀取失敗`);
+            return null;
+        }
+        
         const res = data.chart.result[0];
-        const price = res.meta.regularMarketPrice;
-        const prev = res.meta.previousClose || price;
+        
+        // --- 終極備援價格抓取邏輯 ---
+        let price = res.meta.regularMarketPrice;
+        
+        // 備援 1: 從歷史序列中找最後一個非空值
+        if (price === undefined || price === null || price === 0) {
+            try {
+                const closeArr = res.indicators.quote[0].close;
+                for (let i = closeArr.length - 1; i >= 0; i--) {
+                    if (closeArr[i] !== null && closeArr[i] !== undefined) {
+                        price = closeArr[i];
+                        break;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // 備援 2: 強制使用 meta 中的收盤價
+        if (price === null || price === undefined || price === 0) {
+            price = res.meta.chartPreviousClose || res.meta.previousClose;
+        }
+
+        // 最終檢查：如果還是沒數字，顯示 0 並報錯
+        if (price === null || price === undefined) {
+            addLog(`⚠️ ${id} 無法取得有效價格`);
+            return null;
+        }
+
+        const prev = res.meta.previousClose || res.meta.chartPreviousClose || price;
         const diff = price - prev;
         const perc = (diff / prev) * 100;
         const color = diff > 0 ? '#ff6060' : (diff < 0 ? '#2eeb82' : '#8a9ab5');
@@ -239,7 +255,7 @@
             updateCard('usbond', data.us_bond);
             updateCard('oil', data.oil_brent);
             updateCard('vix', data.vix_index);
-            updateCard('usdindex', data.usd_index); // 美元指數
+            updateCard('usdindex', data.usd_index);
             const liveTwd = updateCard('twd', data.usd_twd);
             updateCard('jpy', data.usd_jpy);
 
@@ -266,16 +282,13 @@
     async function fetchAIAnalysis() {
         const aiEl = document.getElementById('ai-content');
         const runBtn = document.getElementById('btn-run-ai');
-        
         runBtn.disabled = true;
         runBtn.innerText = 'ANALYZING...';
         aiEl.innerHTML = 'AI 顧問正在分析歷史趨勢與即時數據 <span class="ai-loading-dots"></span>';
         addLog('▶ 正在請求 AI 深度分析報告...');
-
         try {
             const res = await fetch(`${PROXY_URL}?action=ai`);
             const data = await res.json();
-
             if (data.ai_analysis) {
                 aiEl.innerText = '';
                 let i = 0;
