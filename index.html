@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v12.4 AI-Manual</title>
+    <title>全球投資戰情室 v12.5 AI-Manual</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -46,15 +46,10 @@
         .ai-section { grid-column: 1 / -1; background: linear-gradient(145deg, #0f172a, #0f1318); border: 1px solid rgba(108, 184, 255, 0.3); border-radius: 14px; padding: 20px; margin-top: 10px; position: relative; }
         .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
         .ai-title { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: 2px; display: flex; align-items: center; gap: 8px; }
-        
         .ai-btn-group { display: flex; gap: 8px; }
-        .btn-run { background: linear-gradient(135deg, #6cb8ff, #1a6fe0); border: none; color: #000; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .btn-run:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(108, 184, 255, 0.4); }
-        .btn-run:disabled { background: #2a3a4a; color: #5a6a7a; cursor: not-allowed; transform: none; box-shadow: none; }
-        
+        .btn-run { background: linear-gradient(135deg, #6cb8ff, #1a6fe0); border: none; color: #000; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+        .btn-run:disabled { background: #2a3a4a; color: #5a6a7a; cursor: not-allowed; }
         .btn-copy { background: rgba(108, 184, 255, 0.1); border: 1px solid rgba(108, 184, 255, 0.3); color: var(--blue); font-family: 'JetBrains Mono'; font-size: 10px; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
-        .btn-copy:hover { background: var(--blue); color: #000; }
-
         .ai-content { font-size: 13px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap; font-family: 'Noto Sans TC', sans-serif; min-height: 60px; }
         .ai-loading-dots { display: inline-block; width: 8px; height: 8px; background: var(--blue); border-radius: 50%; margin-left: 4px; animation: pulse 1s infinite; }
 
@@ -79,7 +74,7 @@
         <div class="header-title">戰情室</div>
         <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">AI-POWERED MARKET MONITOR</div>
     </div>
-    <div class="version-badge">v12.4</div>
+    <div class="version-badge">v12.5</div>
 </div>
 
 <div class="dashboard">
@@ -105,6 +100,7 @@
 
     <!-- 外匯 -->
     <div class="section-label span-all">外匯 / FX</div>
+    <div id="card-usdindex" class="card"><div class="label">DXY · 美元指數</div><div id="p-usdindex" class="main-val loading">--</div><div id="diff-usdindex" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdindex"></canvas></div></div>
     <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
     <div id="card-jpy" class="card">
         <div class="label">USD / JPY</div>
@@ -204,7 +200,7 @@
         const diff = price - prev;
         const perc = (diff / prev) * 100;
         const color = diff > 0 ? '#ff6060' : (diff < 0 ? '#2eeb82' : '#8a9ab5');
-        const decimals = (id === 'twd' || id === 'jpy' || id === 'usbond') ? 3 : 2;
+        const decimals = (id === 'twd' || id === 'jpy' || id === 'usbond' || id === 'usdindex') ? 3 : 2;
         
         let displayPrice = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         if (id === 'usbond') displayPrice += '%';
@@ -243,6 +239,7 @@
             updateCard('usbond', data.us_bond);
             updateCard('oil', data.oil_brent);
             updateCard('vix', data.vix_index);
+            updateCard('usdindex', data.usd_index); // 美元指數
             const liveTwd = updateCard('twd', data.usd_twd);
             updateCard('jpy', data.usd_jpy);
 
