@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v12.8 AI-Manual</title>
+    <title>全球投資戰情室 v12.9 AI-Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -65,16 +65,18 @@
         <div class="header-title">戰情室</div>
         <div style="font-size:10px; color:var(--muted); font-family:'JetBrains Mono'">AI-POWERED MARKET MONITOR</div>
     </div>
-    <div class="version-badge">v12.8</div>
+    <div class="version-badge">v12.9</div>
 </div>
 
 <div class="dashboard">
+    <!-- 亞股 -->
     <div class="section-label span-all">亞股 / ASIA</div>
     <div id="card-twii" class="card"><div class="label">^TWII · 台股大盤</div><div id="p-twii" class="main-val loading">--</div><div id="diff-twii" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twii"></canvas></div></div>
     <div id="card-n225" class="card"><div class="label">^N225 · 日經225</div><div id="p-n225" class="main-val loading">--</div><div id="diff-n225" class="sub-val">--</div><div class="chart-container"><canvas id="chart-n225"></canvas></div></div>
     <div id="card-ks11" class="card"><div class="label">^KS11 · 韓國綜合</div><div id="p-ks11" class="main-val loading">--</div><div id="diff-ks11" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ks11"></canvas></div></div>
-    <div id="card-7769" class="card"><div class="label">7769.TW · 鴻勁</div><div id="p-7769" class="main-val loading">--</div><div id="diff-7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-7769"></canvas></div></div>
+    <div id="card-stock_7769" class="card"><div class="label">7769 · 鴻勁 (富果)</div><div id="p-stock_7769" class="main-val loading">--</div><div id="diff-stock_7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_7769"></canvas></div></div>
 
+    <!-- 美股 -->
     <div class="section-label span-all">美股 / US MARKET</div>
     <div id="card-ym" class="card"><div class="label">YM=F · 道瓊期貨</div><div id="p-ym" class="main-val loading">--</div><div id="diff-ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-ym"></canvas></div></div>
     <div id="card-sox" class="card"><div class="label">^SOX · 費半指數</div><div id="p-sox" class="main-val loading">--</div><div id="diff-sox" class="sub-val">--</div><div class="chart-container"><canvas id="chart-sox"></canvas></div></div>
@@ -87,9 +89,11 @@
         <div class="chart-container" style="height:40px;"><canvas id="chart-vix"></canvas></div>
     </div>
 
+    <!-- 外匯 -->
     <div class="section-label span-all">外匯 / FX</div>
+    <div id="card-usdt" class="card"><div class="label">USDT / TWD (MAX)</div><div id="p-usdt" class="main-val loading">--</div><div id="diff-usdt" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdt"></canvas></div></div>
     <div id="card-usdindex" class="card"><div class="label">DXY · 美元指數</div><div id="p-usdindex" class="main-val loading">--</div><div id="diff-usdindex" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdindex"></canvas></div></div>
-    <div id="card-twd" class="card"><div class="label">USD / TWD</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
+    <div id="card-twd" class="card"><div class="label">USD / TWD (Yahoo)</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
     <div id="card-jpy" class="card">
         <div class="label">USD / JPY</div>
         <div id="p-jpy" class="main-val loading">--</div><div id="diff-jpy" class="sub-val">--</div>
@@ -97,6 +101,7 @@
         <div class="chart-container"><canvas id="chart-jpy"></canvas></div>
     </div>
 
+    <!-- 商品 -->
     <div class="section-label span-all">商品 / COMMODITIES</div>
     <div id="card-gold" class="card full-width">
         <div class="label">XAU · 國際現貨黃金</div>
@@ -105,6 +110,7 @@
         <div class="chart-container" style="height:35px;"><canvas id="chart-gold"></canvas></div>
     </div>
 
+    <!-- AI 顧問報告 -->
     <div class="section-label span-all">AI 戰略顧問 / AI INSIGHT</div>
     <div class="ai-section">
         <div class="ai-header">
@@ -117,6 +123,7 @@
         <div id="ai-content" class="ai-content">市場數據已就緒，點擊上方按鈕開始 AI 深度分析報告。</div>
     </div>
 
+    <!-- 情緒 -->
     <div class="section-label span-all">情緒 / SENTIMENT</div>
     <div class="fng-area">
         <div class="label">Crypto Fear & Greed Index</div>
@@ -182,13 +189,8 @@
             addLog(`⚠️ ${id} 數據讀取失敗`);
             return null;
         }
-        
         const res = data.chart.result[0];
-        
-        // --- 終極備援價格抓取邏輯 ---
         let price = res.meta.regularMarketPrice;
-        
-        // 備援 1: 從歷史序列中找最後一個非空值
         if (price === undefined || price === null || price === 0) {
             try {
                 const closeArr = res.indicators.quote[0].close;
@@ -200,23 +202,16 @@
                 }
             } catch(e) {}
         }
-
-        // 備援 2: 強制使用 meta 中的收盤價
         if (price === null || price === undefined || price === 0) {
             price = res.meta.chartPreviousClose || res.meta.previousClose;
         }
-
-        // 最終檢查：如果還是沒數字，顯示 0 並報錯
-        if (price === null || price === undefined) {
-            addLog(`⚠️ ${id} 無法取得有效價格`);
-            return null;
-        }
+        if (price === null || price === undefined) return null;
 
         const prev = res.meta.previousClose || res.meta.chartPreviousClose || price;
         const diff = price - prev;
         const perc = (diff / prev) * 100;
         const color = diff > 0 ? '#ff6060' : (diff < 0 ? '#2eeb82' : '#8a9ab5');
-        const decimals = (id === 'twd' || id === 'jpy' || id === 'usbond' || id === 'usdindex') ? 3 : 2;
+        const decimals = (id === 'twd' || id === 'jpy' || id === 'usbond' || id === 'usdindex' || id === 'usdt') ? 3 : 2;
         
         let displayPrice = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         if (id === 'usbond') displayPrice += '%';
@@ -249,12 +244,13 @@
             updateCard('twii', data.stock_twii);
             updateCard('n225', data.stock_n225);
             updateCard('ks11', data.stock_ks11);
-            updateCard('7769', data.stock_7769);
+            updateCard('stock_7769', data.stock_7769); // 富果數據
             updateCard('ym', data.stock_ym);
             updateCard('sox', data.stock_sox);
             updateCard('usbond', data.us_bond);
             updateCard('oil', data.oil_brent);
             updateCard('vix', data.vix_index);
+            updateCard('usdt', data.usdt); // MAX 數據
             updateCard('usdindex', data.usd_index);
             const liveTwd = updateCard('twd', data.usd_twd);
             updateCard('jpy', data.usd_jpy);
