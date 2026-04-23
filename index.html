@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v15.2 PRO</title>
+    <title>全球投資戰情室 v16.2 PRO</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -71,7 +71,7 @@
         <div class="header-title">戰情室</div>
         <div id="last-update" class="update-tag">INITIALIZING...</div>
     </div>
-    <div style="background:var(--blue); color:#000; padding:5px 12px; border-radius:6px; font-weight:900; font-size:14px;">v15.2 PRO</div>
+    <div style="background:var(--blue); color:#000; padding:5px 12px; border-radius:6px; font-weight:900; font-size:14px;">v16.2 PRO</div>
 </div>
 
 <div class="dashboard">
@@ -89,15 +89,28 @@
     <div id="card-us_bond" class="card"><div class="label">US10Y · 10年美債</div><div id="p-us_bond" class="main-val loading">--</div><div id="diff-us_bond" class="sub-val">--</div><div class="chart-container"><canvas id="chart-us_bond"></canvas></div></div>
     <div id="card-oil_brent" class="card"><div class="label">BZ=F · 布蘭特原油</div><div id="p-oil_brent" class="main-val loading">--</div><div id="diff-oil_brent" class="sub-val">--</div><div class="chart-container"><canvas id="chart-oil_brent"></canvas></div></div>
 
-    <!-- 恐慌指數 (移除台股 VIX 卡片，美股 VIX 全寬) -->
+    <!-- 恐慌指數 -->
     <div class="section-label span-all">恐慌指數 / VOLATILITY</div>
-    <div id="card-vix_index" class="card full-width"><div class="label">^VIX · 美股恐慌 (Yahoo)</div><div id="p-vix_index" class="main-val loading">--</div><div id="diff-vix_index" class="sub-val">--</div><div class="alert-hint">⚠ 基準線：昨日收盤價</div><div class="chart-container" style="height:55px;"><canvas id="chart-vix_index"></canvas></div></div>
+    <div id="card-taifex_vix" class="card">
+        <div class="label">VIXTWN · 台股恐慌 (期交所)</div>
+        <div id="p-taifex_vix" class="main-val loading">--</div>
+        <div id="diff-taifex_vix" class="sub-val">--</div>
+        <div id="date-taifex_vix" class="alert-hint">⚠ 警戒：> 35</div>
+        <div class="chart-container"><canvas id="chart-taifex_vix"></canvas></div>
+    </div>
+    <div id="card-vix_index" class="card">
+        <div class="label">^VIX · 美股恐慌 (Yahoo)</div>
+        <div id="p-vix_index" class="main-val loading">--</div>
+        <div id="diff-vix_index" class="sub-val">--</div>
+        <div class="alert-hint">⚠ 警戒：> 30</div>
+        <div class="chart-container" style="height:50px;"><canvas id="chart-vix_index"></canvas></div>
+    </div>
 
-    <!-- 外匯 -->
+    <!-- 外匯 (USDT 與 台幣並列) -->
     <div class="section-label span-all">外匯 / FX</div>
     <div id="card-usdt" class="card"><div class="label">USDT / TWD (MAX)</div><div id="p-usdt" class="main-val loading">--</div><div id="diff-usdt" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdt"></canvas></div></div>
-    <div id="card-usd_index" class="card"><div class="label">DXY · 美元指數</div><div id="p-usd_index" class="main-val loading">--</div><div id="diff-usd_index" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usd_index"></canvas></div></div>
     <div id="card-twd" class="card"><div class="label">USD / TWD (Yahoo)</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
+    <div id="card-usd_index" class="card"><div class="label">DXY · 美元指數</div><div id="p-usd_index" class="main-val loading">--</div><div id="diff-usd_index" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usd_index"></canvas></div></div>
     <div id="card-usd_jpy" class="card"><div class="label">USD / JPY</div><div id="p-usd_jpy" class="main-val loading">--</div><div id="diff-usd_jpy" class="sub-val">--</div><div class="alert-hint">⚠ 警戒：> 159.5</div><div class="chart-container"><canvas id="chart-usd_jpy"></canvas></div></div>
 
     <!-- 商品 -->
@@ -130,13 +143,10 @@
             <div id="fngValue">--</div>
         </div>
         <div id="fngLabel" style="font-family:'JetBrains Mono'; font-size:18px; margin-top:15px; color:var(--muted);">--</div>
-        
-        <!-- 保留按鈕列 -->
         <div class="btn-row">
             <a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">CNN 恐慌指數</a>
             <a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link btn-vix">台股 VIX (玩股網)</a>
         </div>
-        
         <button class="btn-refresh" onclick="updateAll()">↻ FORCE REFRESH</button>
     </div>
 </div>
@@ -185,44 +195,49 @@
         });
     }
 
+    function updateTaifexVix(data) {
+        if (!data || data.error) { addLog('⚠️ 期交所 VIX 讀取失敗'); return; }
+        const price = data.price;
+        const prev = data.prev;
+        const diff = price - prev;
+        const perc = (diff / prev) * 100;
+        const color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#00ff88' : '#ffffff');
+
+        document.getElementById('p-taifex_vix').innerText = price.toFixed(2);
+        document.getElementById('p-taifex_vix').style.color = color;
+        document.getElementById('p-taifex_vix').classList.remove('loading');
+        document.getElementById('diff-taifex_vix').innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
+        document.getElementById('diff-taifex_vix').style.color = color;
+        
+        const card = document.getElementById('card-taifex_vix');
+        // 修正：警戒值改為 35
+        card.className = `card ${diff > 0 ? 'up' : 'down'} ${price > 35 ? 'alert-active' : ''}`;
+        
+        renderSparkline('taifex_vix', data.history, color, prev);
+    }
+
     function updateCard(id, data) {
         const elP = document.getElementById(`p-${id}`);
         const elD = document.getElementById(`diff-${id}`);
         const card = document.getElementById(`card-${id}`);
-        
         if (!elP || !data || data.error || !data.chart?.result) return null;
-        
         const res = data.chart.result[0];
         let price = res.meta.regularMarketPrice;
         if (!price) { try { const closeArr = res.indicators.quote[0].close.filter(v => v !== null); price = closeArr[closeArr.length - 1]; } catch(e) {} }
         if (!price) price = res.meta.chartPreviousClose || res.meta.previousClose;
         if (!price) return null;
-
         const prev = res.meta.previousClose || res.meta.chartPreviousClose || price;
         const diff = price - prev;
         const perc = (diff / prev) * 100;
         const color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#00ff88' : '#ffffff');
         const decimals = (id === 'twd' || id === 'usd_jpy' || id === 'us_bond' || id === 'usd_index' || id === 'usdt') ? 3 : 2;
-        
-        let displayPrice = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-        if (id === 'us_bond') displayPrice += '%';
-        
-        elP.innerText = displayPrice;
+        elP.innerText = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + (id === 'us_bond' ? '%' : '');
         elP.style.color = color;
         elP.classList.remove('loading');
-
-        if (elD) {
-            elD.innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(decimals)} (${perc.toFixed(2)}%)`;
-            elD.style.color = color;
-        }
-
+        if (elD) { elD.innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(decimals)} (${perc.toFixed(2)}%)`; elD.style.color = color; }
         const isAlert = (id === 'usd_jpy' && price > 159.5) || (id === 'vix_index' && price > 30);
-        card.className = `card ${['gold_price', 'vix_index'].includes(id) ? 'full-width' : ''} ${diff > 0 ? 'up' : 'down'} ${isAlert ? 'alert-active' : ''}`;
-
-        try {
-            const h = res.indicators.quote[0].close.filter(v => v !== null);
-            if (h.length > 0) renderSparkline(id, h, color, prev);
-        } catch (e) {}
+        card.className = `card ${['gold_price'].includes(id) ? 'full-width' : ''} ${diff > 0 ? 'up' : 'down'} ${isAlert ? 'alert-active' : ''}`;
+        try { const h = res.indicators.quote[0].close.filter(v => v !== null); if (h.length > 0) renderSparkline(id, h, color, prev); } catch (e) {}
         return price;
     }
 
@@ -246,6 +261,8 @@
             updateCard('usd_index', data.usd_index);
             const liveTwd = updateCard('twd', data.twd);
             updateCard('usd_jpy', data.usd_jpy);
+            
+            updateTaifexVix(data.taifex_vix);
 
             if (data.gold_price) {
                 const gp = updateCard('gold_price', data.gold_price);
@@ -279,14 +296,9 @@
             const res = await fetch(`${PROXY_URL}?action=ai`);
             const data = await res.json();
             if (data.ai_analysis) {
-                aiEl.innerText = '';
-                let i = 0;
-                const text = data.ai_analysis;
-                function typeWriter() {
-                    if (i < text.length) { aiEl.innerText += text.charAt(i); i++; setTimeout(typeWriter, 5); }
-                    else { runBtn.disabled = false; runBtn.innerText = 'RUN ANALYSIS'; }
-                }
-                typeWriter();
+                aiEl.innerText = data.ai_analysis;
+                runBtn.disabled = false;
+                runBtn.innerText = 'RUN ANALYSIS';
                 addLog('✅ AI Report Delivered.');
             }
         } catch (e) {
