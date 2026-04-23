@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全球投資戰情室 v16.2 PRO</title>
+    <title>全球投資戰情室 v16.3 PRO</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -209,8 +209,11 @@
         document.getElementById('diff-taifex_vix').innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`;
         document.getElementById('diff-taifex_vix').style.color = color;
         
+        // 確保日期標籤存在並更新
+        const dateEl = document.getElementById('date-taifex_vix');
+        if (dateEl) dateEl.innerText = `日期: ${data.lastDate}`;
+        
         const card = document.getElementById('card-taifex_vix');
-        // 修正：警戒值改為 35
         card.className = `card ${diff > 0 ? 'up' : 'down'} ${price > 35 ? 'alert-active' : ''}`;
         
         renderSparkline('taifex_vix', data.history, color, prev);
