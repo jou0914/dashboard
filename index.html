@@ -2,379 +2,206 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7769 鴻勁 - AI 綜合分析 v4.3.0</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>全球投資戰情室 v16.4 PRO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+TC:wght@500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { 
-            --buy-red: #d20000; --sell-green: #008000; --bg: #f0f2f5; 
-            --card-bg: #ffffff; --border: #e1e4e8; --text-main: #1a1a1a;
-            --text-sub: #666666; --accent: #007bff; --sbl-blue: #0056b3; --ai-purple: #8e44ad; --foreign-gold: #b8860b; --tlt-navy: #002366;
+        :root {
+            --red: #ff4d4d; --green: #00ff88; --bg: #05070a; --card: #11151c;
+            --text: #ffffff; --muted: #a0aec0; --gold: #ffcc00; --blue: #58a6ff;
+            --border: rgba(255,255,255,0.15);
         }
-        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: var(--bg); padding: 15px; margin: 0; color: var(--text-main); }
-        .container { max-width: 1000px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        
-        .version-tag { font-size: 10px; color: #bbb; vertical-align: middle; margin-left: 5px; }
-
-        .dash-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .price-main { grid-column: span 2; display: flex; flex-direction: column; justify-content: center; }
-        .current-price { font-size: 38px; font-weight: 800; line-height: 1; outline: none; }
-        .price-diff { font-size: 16px; font-weight: 600; margin-top: 5px; outline: none; }
-        .dash-item { display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #ddd; padding-left: 15px; }
-        .dash-label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
-        .dash-val { font-size: 15px; font-weight: 600; color: #333; outline: none; }
-
-        /* TLT 專用樣式 */
-        .tlt-section { border-left: 4px solid var(--tlt-navy) !important; background: #f0f2f8; }
-        .tlt-label { color: var(--tlt-navy); font-weight: bold; }
-
-        .sbl-section { border-left: 4px solid var(--sbl-blue) !important; background: #f0f7ff; }
-        .foreign-section { border-left: 4px solid var(--foreign-gold) !important; background: #fffdf0; }
-        .highlight-gold { color: var(--foreign-gold); font-size: 18px; }
-
-        .action-bar { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-        .btn { padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none; }
-        .btn-link { background: #2c3e50; color: white; }
-        .btn-fetch { background: #28a745; color: white; }
-        .btn-ai { background: var(--ai-purple); color: white; }
-        .btn-upload { background: #007bff; color: white; position: relative; }
-        .btn-screenshot { background: #6f42c1; color: white; }
-        .btn-copy { background: #fd7e14; color: white; }
-        
-        .btn:hover { opacity: 0.8; }
-        input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-
-        .ai-section { margin-top: 15px; padding: 20px; background: #f9f0ff; border-radius: 12px; border: 1px solid #dcd0ff; display: none; }
-        .ai-title { color: var(--ai-purple); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .ai-content { font-size: 14px; line-height: 1.6; color: #4a4a4a; white-space: pre-wrap; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; background: white; }
-        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #eee; }
-        th { background: #f1f3f5; color: #555; font-weight: 600; }
-        .up { color: var(--buy-red); font-weight: bold; }
-        .down { color: var(--sell-green); font-weight: bold; }
-
-        .summary { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; font-weight: bold; border: 1px solid #eee; }
-
-        .report-area { margin-top: 25px; padding: 15px; background: #f1f3f5; border-radius: 10px; border: 1px dashed #ccc; }
-        textarea { width: 100%; height: 250px; border: none; background: transparent; font-family: monospace; font-size: 12px; color: #333; resize: none; outline: none; }
-
-        .debug-panel { margin-top: 20px; padding: 15px; background: #1a1a1a; color: #00ff00; font-family: monospace; font-size: 11px; border-radius: 8px; overflow-y: auto; max-height: 150px; border: 1px solid #444; }
-
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
-        #previewImg { max-width: 100%; max-height: 80%; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        .close-btn { margin-top: 20px; background: white; color: black; padding: 10px 40px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .price-main { grid-column: span 1; } .dash-item { border-left: none; padding-left: 0; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; align-items: center; padding: 16px; min-height: 100vh;
+            background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(88,166,255,0.1) 0%, transparent 70%);
+        }
+        .header { width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+        .header-title { font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700; color: #fff; letter-spacing: 3px; }
+        .update-tag { font-family: 'JetBrains Mono'; font-size: 14px; color: var(--green); font-weight: 800; }
+        .section-label { width: 100%; max-width: 1000px; font-family: 'JetBrains Mono'; font-size: 16px; color: var(--blue); letter-spacing: 2px; margin: 25px 0 12px 2px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; font-weight: 800; }
+        .span-all { grid-column: 1 / -1; }
+        .section-label::after { content: ''; flex: 1; height: 2px; background: var(--border); }
+        .dashboard { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (min-width: 768px) { .dashboard { grid-template-columns: 1fr 1fr 1fr 1fr; } }
+        .card { background: var(--card); border-radius: 16px; border: 2px solid var(--border); min-height: 190px; display: flex; flex-direction: column; padding: 20px; position: relative; overflow: hidden; }
+        .card.up { border-color: rgba(255, 77, 77, 0.5); }
+        .card.down { border-color: rgba(0, 255, 136, 0.5); }
+        .card.alert-active { border-color: var(--gold); border-width: 4px; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3); }
+        .full-width { grid-column: 1 / -1; min-height: 150px; }
+        .label { font-family: 'JetBrains Mono'; font-size: 14px; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
+        .main-val { font-family: 'Rajdhani', sans-serif; font-size: 2.4rem; font-weight: 700; line-height: 1; color: #fff; letter-spacing: -1px; }
+        .sub-val { font-family: 'JetBrains Mono'; font-size: 16px; margin-top: 10px; font-weight: 700; }
+        .alert-hint { font-family: 'Noto Sans TC'; font-size: 13px; color: var(--gold); margin-top: 8px; font-weight: 800; background: rgba(255,204,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .chart-container { width: 100%; height: 65px; margin-top: auto; padding-top: 10px; }
+        .ai-section { grid-column: 1 / -1; background: #1a202c; border: 3px solid var(--blue); border-radius: 16px; padding: 24px; margin-top: 20px; }
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ai-title { font-size: 20px; font-weight: 800; color: var(--blue); display: flex; align-items: center; gap: 10px; }
+        .btn-run { background: var(--blue); color: #000; font-size: 16px; font-weight: 800; padding: 10px 25px; border-radius: 8px; cursor: pointer; border: none; }
+        .ai-content { font-size: 18px; line-height: 1.8; color: #ffffff; font-weight: 500; white-space: pre-wrap; }
+        .fng-area { grid-column: 1 / -1; background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .fng-gauge-wrapper { position: relative; width: 240px; height: 120px; margin-top: 15px; }
+        #fngValue { font-family: 'Rajdhani', sans-serif; font-size: 4rem; font-weight: 700; position: absolute; bottom: -10px; width: 100%; text-align: center; color: #fff; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 25px; max-width: 600px; }
+        .btn-link { text-decoration: none; display: flex; align-items: center; justify-content: center; height: 60px; border-radius: 12px; font-size: 16px; font-weight: 800; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .btn-cnn { background: rgba(180, 0, 0, 0.3); color: #ff8888; }
+        .btn-vix { background: #1a1f26; color: #d0dcea; }
+        .btn-refresh { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 12px; font-family: 'JetBrains Mono'; font-weight: 800; width: 100%; margin-top: 20px; cursor: pointer; letter-spacing: 2px; font-size: 16px; text-transform: uppercase; }
+        #log-window { background: #000; padding: 15px; font-family: 'JetBrains Mono'; font-size: 12px; color: #00ff00; height: 100px; width: 100%; max-width: 1000px; border-radius: 12px; border: 2px solid var(--border); margin-top: 20px; overflow-y: auto; }
+        .loading { animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-<div class="container" id="captureArea">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div>
-            <h2 style="margin:0; font-size: 24px; color: #333;">7769 鴻勁 <span class="version-tag">v4.3.0 AI</span></h2>
-            <div style="font-size: 13px; color: var(--text-sub);">上市半導體 | 綜合數據分析終端</div>
-        </div>
-        <div style="text-align: right;">
-            <div id="trade-date" style="font-size: 13px; color: var(--text-sub); font-weight: bold;">同步中...</div>
-            <div id="sync-status" style="font-size: 10px; color: #aaa;">來源偵測中</div>
-        </div>
+<div class="header">
+    <div>
+        <div class="header-title">戰情室</div>
+        <div id="last-update" class="update-tag">INITIALIZING...</div>
+    </div>
+    <div style="background:var(--blue); color:#000; padding:5px 12px; border-radius:6px; font-weight:900; font-size:14px;">v16.4 PRO</div>
+</div>
+
+<div class="dashboard">
+    <div class="section-label span-all">亞股 / ASIA</div>
+    <div id="card-stock_twii" class="card"><div class="label">^TWII · 台股大盤 (Fugle)</div><div id="p-stock_twii" class="main-val loading">--</div><div id="diff-stock_twii" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_twii"></canvas></div></div>
+    <div id="card-stock_n225" class="card"><div class="label">^N225 · 日經225</div><div id="p-stock_n225" class="main-val loading">--</div><div id="diff-stock_n225" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_n225"></canvas></div></div>
+    <div id="card-stock_ks11" class="card"><div class="label">^KS11 · 韓國綜合</div><div id="p-stock_ks11" class="main-val loading">--</div><div id="diff-stock_ks11" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_ks11"></canvas></div></div>
+    <div id="card-stock_7769" class="card"><div class="label">7769 · 鴻勁 (Fugle)</div><div id="p-stock_7769" class="main-val loading">--</div><div id="diff-stock_7769" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_7769"></canvas></div></div>
+
+    <div class="section-label span-all">美股 / US MARKET</div>
+    <div id="card-stock_ym" class="card"><div class="label">YM=F · 道瓊期貨</div><div id="p-stock_ym" class="main-val loading">--</div><div id="diff-stock_ym" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_ym"></canvas></div></div>
+    <div id="card-stock_sox" class="card"><div class="label">^SOX · 費半指數</div><div id="p-stock_sox" class="main-val loading">--</div><div id="diff-stock_sox" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_sox"></canvas></div></div>
+    <div id="card-us_bond" class="card"><div class="label">US10Y · 10年美債</div><div id="p-us_bond" class="main-val loading">--</div><div id="diff-us_bond" class="sub-val">--</div><div class="chart-container"><canvas id="chart-us_bond"></canvas></div></div>
+    <!-- 新增 TLT 卡片 -->
+    <div id="card-stock_tlt" class="card"><div class="label">TLT · 20年美債ETF</div><div id="p-stock_tlt" class="main-val loading">--</div><div id="diff-stock_tlt" class="sub-val">--</div><div class="chart-container"><canvas id="chart-stock_tlt"></canvas></div></div>
+
+    <div class="section-label span-all">恐慌指數 / VOLATILITY</div>
+    <div id="card-taifex_vix" class="card"><div class="label">VIXTWN · 台股恐慌 (期交所)</div><div id="p-taifex_vix" class="main-val loading">--</div><div id="diff-taifex_vix" class="sub-val">--</div><div id="date-taifex_vix" class="alert-hint">⚠ 警戒：> 35</div><div class="chart-container"><canvas id="chart-taifex_vix"></canvas></div></div>
+    <div id="card-vix_index" class="card"><div class="label">^VIX · 美股恐慌 (Yahoo)</div><div id="p-vix_index" class="main-val loading">--</div><div id="diff-vix_index" class="sub-val">--</div><div class="alert-hint">⚠ 警戒：> 30</div><div class="chart-container" style="height:50px;"><canvas id="chart-vix_index"></canvas></div></div>
+
+    <div class="section-label span-all">外匯 / FX</div>
+    <div id="card-usdt" class="card"><div class="label">USDT / TWD (MAX)</div><div id="p-usdt" class="main-val loading">--</div><div id="diff-usdt" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usdt"></canvas></div></div>
+    <div id="card-twd" class="card"><div class="label">USD / TWD (Yahoo)</div><div id="p-twd" class="main-val loading">--</div><div id="diff-twd" class="sub-val">--</div><div class="chart-container"><canvas id="chart-twd"></canvas></div></div>
+    <div id="card-usd_index" class="card"><div class="label">DXY · 美元指數</div><div id="p-usd_index" class="main-val loading">--</div><div id="diff-usd_index" class="sub-val">--</div><div class="chart-container"><canvas id="chart-usd_index"></canvas></div></div>
+    <div id="card-usd_jpy" class="card"><div class="label">USD / JPY</div><div id="p-usd_jpy" class="main-val loading">--</div><div id="diff-usd_jpy" class="sub-val">--</div><div class="alert-hint">⚠ 警戒：> 159.5</div><div class="chart-container"><canvas id="chart-usd_jpy"></canvas></div></div>
+
+    <div id="card-gold_price" class="card full-width">
+        <div class="label">XAU · 國際現貨黃金</div>
+        <div style="display:flex; align-items:baseline; gap:20px;"><div id="p-gold_price" class="main-val loading">--</div><div id="diff-gold_price" class="sub-val">--</div></div>
+        <div id="calc-gold" style="font-family:'JetBrains Mono'; font-size:16px; color:var(--gold); margin-top:12px; border-top:2px solid var(--border); padding-top:12px; font-weight:800;">計算中...</div>
+        <div class="chart-container" style="height:45px;"><canvas id="chart-gold_price"></canvas></div>
     </div>
 
-    <!-- 行情儀表板 -->
-    <div id="price-dashboard" class="dash-section">
-        <div class="price-main">
-            <div id="cur-price" class="current-price">----</div>
-            <div id="cur-diff" class="price-diff">-- ( --% )</div>
-        </div>
-        <div class="dash-item"><span class="dash-label">開盤</span><span id="p-open" class="dash-val">--</span></div>
-        <div class="dash-item"><span class="dash-label">最高</span><span id="p-high" class="dash-val">--</span></div>
-        <div class="dash-item"><span class="dash-label">最低</span><span id="p-low" class="dash-val">--</span></div>
-        <div class="dash-item"><span class="dash-label">成交量</span><span id="p-vol" class="dash-val">--</span></div>
+    <div class="section-label span-all">AI 戰略顧問 / AI INSIGHT</div>
+    <div class="ai-section">
+        <div class="ai-header"><div class="ai-title">GEMINI STRATEGY REPORT</div><div class="ai-btn-group"><button id="btn-run-ai" class="btn-run" onclick="fetchAIAnalysis()">RUN ANALYSIS</button><button style="background:rgba(255,255,255,0.1); color:#fff; border:none; padding:10px 20px; border-radius:8px; font-weight:800; cursor:pointer;" onclick="copyAIReport()">COPY</button></div></div>
+        <div id="ai-content" class="ai-content">市場數據已就緒，點擊按鈕開始分析。</div>
     </div>
 
-    <!-- 全球宏觀指標 (TLT) -->
-    <div id="tlt-dashboard" class="dash-section tlt-section">
-        <div class="dash-item" style="border-left:none; padding-left:0;"><span class="dash-label tlt-label">TLT 美債 20Y ETF</span><span id="tlt-price" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">TLT 漲跌</span><span id="tlt-diff" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">TLT 幅度</span><span id="tlt-percent" class="dash-val">—</span></div>
-    </div>
-
-    <!-- 外資持股儀表板 -->
-    <div id="foreign-dashboard" class="dash-section foreign-section">
-        <div class="dash-item" style="border-left:none; padding-left:0;"><span class="dash-label">外資持股比例</span><span id="f-ratio" class="dash-val highlight-gold">—</span></div>
-        <div class="dash-item"><span class="dash-label">持有股數</span><span id="f-shares" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">發行總股數</span><span id="f-issued" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">外資資料日期</span><span id="f-date" class="dash-val">—</span></div>
-    </div>
-
-    <!-- 借券資訊儀表板 -->
-    <div id="sbl-dashboard" class="dash-section sbl-section">
-        <div class="dash-item" style="border-left:none; padding-left:0;"><span class="dash-label">當日借券餘額</span><span id="sbl-bal" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">今日賣出</span><span id="sbl-sell" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">今日還券</span><span id="sbl-ret" class="dash-val">—</span></div>
-        <div class="dash-item"><span class="dash-label">借券資料日期</span><span id="sbl-date" class="dash-val">—</span></div>
-    </div>
-    
-    <div class="action-bar" data-html2canvas-ignore>
-        <a href="https://bsr.twse.com.tw/bshtm/" target="_blank" class="btn btn-link">🔗 開啟證交所</a>
-        <button onclick="fetchAllData()" class="btn btn-fetch">🔄 同步最新數據</button>
-        <button onclick="askGemini()" class="btn btn-ai" id="aiBtn">🤖 AI 分析</button>
-        <div class="btn btn-upload">📁 上傳分點 CSV<input type="file" id="csvFile" accept=".csv"></div>
-        <button onclick="generatePreview()" id="shotBtn" class="btn btn-screenshot">📸 截圖</button>
-        <button onclick="copyAllLog()" class="btn btn-copy">📋 複製報告</button>
-    </div>
-
-    <div id="aiSection" class="ai-section">
-        <div class="ai-title">✨ Gemini 專業金融分析</div>
-        <div id="aiContent" class="ai-content">正在思考中...</div>
-    </div>
-
-    <div id="summary-info" class="summary" style="display:none;">
-        <span style="color:var(--buy-red)">總買進：<span id="total-buy">0</span> 張</span>
-        <span style="color:var(--sell-green)">總賣出：<span id="total-sell">0</span> 張</span>
-    </div>
-
-    <div id="result" class="grid" style="display:none;">
-        <div>
-            <table>
-                <thead><tr><th colspan="3" style="background:#fff1f0; color:var(--buy-red)">買超前十名 (張)</th></tr></thead>
-                <tbody id="buy-body"></tbody>
-            </table>
-        </div>
-        <div>
-            <table>
-                <thead><tr><th colspan="3" style="background:#f6ffed; color:var(--sell-green)">賣超前十名 (張)</th></tr></thead>
-                <tbody id="sell-body"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="report-area" id="reportContainer" data-html2canvas-ignore>
-        <textarea id="textReport" readonly></textarea>
-    </div>
-
-    <div class="debug-panel" id="debugPanel" data-html2canvas-ignore>
-        <div id="debugContent">系統日誌啟動...</div>
+    <div class="section-label span-all">情緒 / SENTIMENT</div>
+    <div class="fng-area">
+        <div class="label">Crypto Fear & Greed Index</div>
+        <div class="fng-gauge-wrapper"><canvas id="fngGauge"></canvas><div id="fngValue">--</div></div>
+        <div id="fngLabel" style="font-family:'JetBrains Mono'; font-size:18px; margin-top:15px; color:var(--muted);">--</div>
+        <div class="btn-row"><a href="https://www.cnn.com/markets/fear-and-greed" target="_blank" class="btn-link btn-cnn">CNN 恐慌指數</a><a href="https://www.wantgoo.com/index/vixtwn" target="_blank" class="btn-link btn-vix">台股 VIX (玩股網)</a></div>
+        <button class="btn-refresh" onclick="updateAll()">↻ FORCE REFRESH</button>
     </div>
 </div>
 
-<div id="overlay">
-    <div style="color:white; margin-bottom:15px; font-weight: bold; text-align: center;">截圖已產生！<br>請長按圖片「拷貝」或「儲存」</div>
-    <img id="previewImg" src="" alt="截圖預覽">
-    <div class="close-btn" onclick="document.getElementById('overlay').style.display='none'">關閉預覽</div>
-</div>
+<div id="log-window">▶ System Ready.</div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxn5J6wIVLxRHuWbAigreCh7f9lOliJAgGFPkOqKj3-elZyS0xVahYDQvxcQuSXrXS/exec';
-    let currentBuyList = [];
-    let currentSellList = [];
-    let globalData = {};
-    let finmindForeign = null;
-    let finmindSBL = null;
+    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyNlJGWxjsAK-uX34PxvTT3nFaezansCwcL9a7dvGS9ccOsFW8IviPc59WlVKshS9DzQg/exec';
+    let charts = {};
 
-    function log(msg) {
-        const d = document.getElementById('debugContent');
-        d.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${msg}`;
-        d.scrollTop = d.scrollHeight;
+    function addLog(msg) { const el = document.getElementById('log-window'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerHTML; }
+
+    function drawGauge(value) {
+        const canvas = document.getElementById('fngGauge'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1;
+        canvas.width = 240 * dpr; canvas.height = 120 * dpr; canvas.style.width = '240px'; canvas.style.height = '120px'; ctx.scale(dpr, dpr); ctx.clearRect(0, 0, 240, 120);
+        ctx.beginPath(); ctx.arc(120, 110, 90, Math.PI, 0); ctx.lineWidth = 15; ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.stroke();
+        const grad = ctx.createLinearGradient(30, 0, 210, 0); grad.addColorStop(0, '#ff4d4d'); grad.addColorStop(0.5, '#f5c842'); grad.addColorStop(1, '#00ff88');
+        ctx.beginPath(); ctx.arc(120, 110, 90, Math.PI, Math.PI + (Math.PI * value / 100)); ctx.strokeStyle = grad; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.stroke();
     }
 
-    async function fetchAllData() {
-        const btn = document.querySelector('.btn-fetch');
-        btn.innerText = "同步中...";
-        log("連線 GAS 與 FinMind...");
-        await Promise.all([fetchYahooPrice(), fetchForeignData(), fetchShortSaleData()]);
-        btn.innerText = "同步完成";
-        updateTextReport();
-        setTimeout(() => { btn.innerText = "🔄 同步最新數據"; }, 2000);
+    function renderSparkline(id, historyData, color, prevClose) {
+        const canvas = document.getElementById(`chart-${id}`); if (!canvas) return; const ctx = canvas.getContext('2d'); if (charts[id]) charts[id].destroy();
+        const baselineData = new Array(historyData.length).fill(prevClose);
+        charts[id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: historyData.map((_, i) => i),
+                datasets: [
+                    { data: historyData, borderColor: color, borderWidth: 3, pointRadius: 0, fill: true, backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0, 0, 0, 60); g.addColorStop(0, color + '40'); g.addColorStop(1, color + '00'); return g; }, tension: 0.4, zIndex: 2 },
+                    { data: baselineData, borderColor: 'rgba(255, 255, 255, 0.4)', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0, zIndex: 1 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, suggestedMin: prevClose * 0.997, suggestedMax: prevClose * 1.003 } }, animation: { duration: 800 } }
+        });
     }
 
-    async function fetchYahooPrice() {
+    function updateTaifexVix(data) {
+        if (!data || data.error) { addLog('⚠️ 期交所 VIX 讀取失敗'); return; }
+        const price = data.price, prev = data.prev, diff = price - prev, perc = (diff / prev) * 100, color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#00ff88' : '#ffffff');
+        document.getElementById('p-taifex_vix').innerText = price.toFixed(2); document.getElementById('p-taifex_vix').style.color = color; document.getElementById('p-taifex_vix').classList.remove('loading');
+        document.getElementById('diff-taifex_vix').innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(2)} (${perc.toFixed(2)}%)`; document.getElementById('diff-taifex_vix').style.color = color;
+        document.getElementById('date-taifex_vix').innerText = `日期: ${data.lastDate}`;
+        const card = document.getElementById('card-taifex_vix'); card.className = `card ${diff > 0 ? 'up' : 'down'} ${price > 35 ? 'alert-active' : ''}`;
+        renderSparkline('taifex_vix', data.history, color, prev);
+    }
+
+    function updateCard(id, data) {
+        const elP = document.getElementById(`p-${id}`), elD = document.getElementById(`diff-${id}`), card = document.getElementById(`card-${id}`);
+        if (!elP || !data || data.error || !data.chart?.result) return null;
+        const res = data.chart.result[0]; let price = res.meta.regularMarketPrice;
+        if (!price) { try { const closeArr = res.indicators.quote[0].close.filter(v => v !== null); price = closeArr[closeArr.length - 1]; } catch(e) {} }
+        if (!price) price = res.meta.chartPreviousClose || res.meta.previousClose;
+        if (!price) return null;
+        const prev = res.meta.previousClose || res.meta.chartPreviousClose || price, diff = price - prev, perc = (diff / prev) * 100, color = diff > 0 ? '#ff4d4d' : (diff < 0 ? '#00ff88' : '#ffffff');
+        const decimals = (id === 'twd' || id === 'usd_jpy' || id === 'us_bond' || id === 'usd_index' || id === 'usdt') ? 3 : 2;
+        elP.innerText = price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + (id === 'us_bond' ? '%' : '');
+        elP.style.color = color; elP.classList.remove('loading');
+        if (elD) { elD.innerText = `${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(decimals)} (${perc.toFixed(2)}%)`; elD.style.color = color; }
+        const isAlert = (id === 'usd_jpy' && price > 159.5) || (id === 'vix_index' && price > 30);
+        card.className = `card ${['gold_price'].includes(id) ? 'full-width' : ''} ${diff > 0 ? 'up' : 'down'} ${isAlert ? 'alert-active' : ''}`;
+        try { const h = res.indicators.quote[0].close.filter(v => v !== null); if (h.length > 0) renderSparkline(id, h, color, prev); } catch (e) {}
+        return price;
+    }
+
+    async function updateAll() {
+        addLog('▶ Syncing Market Data...'); document.getElementById('last-update').innerText = 'UPDATING...';
         try {
-            const res = await fetch(GAS_URL);
-            const data = await res.json();
-            globalData = data;
-            if (data.price) {
-                const p = data.price;
-                document.getElementById('trade-date').innerText = "日期：" + p.date;
-                document.getElementById('cur-price').innerText = p.close;
-                document.getElementById('p-open').innerText = p.open;
-                document.getElementById('p-high').innerText = p.high;
-                document.getElementById('p-low').innerText = p.low;
-                document.getElementById('p-vol').innerText = p.vol + " 張";
-                const color = parseFloat(p.diff) > 0 ? 'var(--buy-red)' : (parseFloat(p.diff) < 0 ? 'var(--sell-green)' : 'var(--text-main)');
-                document.getElementById('cur-diff').innerText = `${parseFloat(p.diff) > 0 ? '▲' : '▼'} ${Math.abs(p.diff)} (${p.percent}%)`;
-                document.getElementById('cur-diff').style.color = color;
-                document.getElementById('cur-price').style.color = color;
-                document.getElementById('sync-status').innerText = `來源：${p.source}`;
+            const res = await fetch(`${PROXY_URL}?action=market`); const data = await res.json();
+            updateCard('stock_twii', data.stock_twii); updateCard('stock_n225', data.stock_n225); updateCard('stock_ks11', data.stock_ks11); updateCard('stock_7769', data.stock_7769);
+            updateCard('stock_ym', data.stock_ym); updateCard('stock_sox', data.stock_sox); updateCard('us_bond', data.us_bond); updateCard('stock_tlt', data.stock_tlt);
+            updateCard('vix_index', data.vix_index); updateCard('usdt', data.usdt); updateCard('usd_index', data.usd_index);
+            const liveTwd = updateCard('twd', data.twd); updateCard('usd_jpy', data.usd_jpy);
+            updateTaifexVix(data.taifex_vix);
+            if (data.gold_price) {
+                const gp = updateCard('gold_price', data.gold_price);
+                if (liveTwd && gp) { const ntG = (gp * liveTwd) / 31.1035; document.getElementById('calc-gold').innerHTML = `換算 &nbsp;${Math.round(ntG).toLocaleString()} NT$ / 克 &nbsp; | &nbsp; 銀樓估價 ${(Math.round(ntG * 3.75) + 500).toLocaleString()} NT$ / 錢`; }
             }
-            if (data.tlt) {
-                const t = data.tlt;
-                document.getElementById('tlt-price').innerText = t.close;
-                document.getElementById('tlt-diff').innerText = t.diff;
-                document.getElementById('tlt-percent').innerText = t.percent + "%";
-                const tColor = parseFloat(t.diff) > 0 ? 'var(--buy-red)' : (parseFloat(t.diff) < 0 ? 'var(--sell-green)' : 'var(--text-main)');
-                document.getElementById('tlt-price').style.color = tColor;
-            }
-            log("✅ 行情同步成功");
-        } catch (e) { log("❌ 行情同步失敗"); }
+            if (data.crypto_fng?.data) { const val = parseInt(data.crypto_fng.data[0].value); document.getElementById('fngValue').innerText = val; document.getElementById('fngLabel').innerText = data.crypto_fng.data[0].value_classification.toUpperCase(); drawGauge(val); }
+            document.getElementById('last-update').innerText = `UPDATED: ${new Date().toLocaleTimeString()}`; addLog('✅ All Data Updated.');
+        } catch (e) { addLog('❌ Sync Error: ' + e.message); document.getElementById('last-update').innerText = 'ERROR'; }
     }
 
-    async function fetchForeignData() {
-        const today = new Date();
-        const start = new Date(today); start.setDate(today.getDate() - 30);
-        const fmt = d => d.toISOString().slice(0, 10);
-        const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockShareholding&data_id=7769&start_date=${fmt(start)}&end_date=${fmt(today)}`;
+    async function fetchAIAnalysis() {
+        const aiEl = document.getElementById('ai-content'), runBtn = document.getElementById('btn-run-ai');
+        runBtn.disabled = true; runBtn.innerText = 'ANALYZING...'; aiEl.innerHTML = 'AI 顧問正在分析數據...';
         try {
-            const res = await fetch(url);
-            const json = await res.json();
-            if (json.data && json.data.length > 0) {
-                const d = json.data[json.data.length - 1];
-                finmindForeign = d;
-                document.getElementById('f-ratio').textContent = d.ForeignInvestmentSharesRatio.toFixed(2) + '%';
-                document.getElementById('f-shares').textContent = Number(d.ForeignInvestmentShares).toLocaleString() + " 股";
-                document.getElementById('f-issued').textContent = Number(d.NumberOfSharesIssued).toLocaleString() + " 股";
-                document.getElementById('f-date').textContent = d.date;
-                log("✅ 外資數據同步成功");
-            }
-        } catch (e) { log("❌ 外資抓取失敗"); }
+            const res = await fetch(`${PROXY_URL}?action=ai`); const data = await res.json();
+            if (data.ai_analysis) { aiEl.innerText = data.ai_analysis; runBtn.disabled = false; runBtn.innerText = 'RUN ANALYSIS'; addLog('✅ AI Report Delivered.'); }
+        } catch (e) { aiEl.innerText = 'AI 分析失敗。'; runBtn.disabled = false; runBtn.innerText = 'RUN ANALYSIS'; }
     }
 
-    async function fetchShortSaleData() {
-        const today = new Date();
-        const start = new Date(today); start.setDate(today.getDate() - 30);
-        const fmt = d => d.toISOString().slice(0, 10);
-        const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanDailyShortSaleBalances&data_id=7769&start_date=${fmt(start)}&end_date=${fmt(today)}`;
-        try {
-            const res = await fetch(url);
-            const json = await res.json();
-            if (json.data && json.data.length > 0) {
-                const d = json.data[json.data.length - 1];
-                finmindSBL = d;
-                document.getElementById('sbl-bal').textContent = Number(d.SBLShortSalesCurrentDayBalance).toLocaleString() + " 股";
-                document.getElementById('sbl-sell').textContent = Number(d.SBLShortSalesShortSales).toLocaleString() + " 股";
-                document.getElementById('sbl-ret').textContent = Number(d.SBLShortSalesReturns).toLocaleString() + " 股";
-                document.getElementById('sbl-date').textContent = d.date;
-                log("✅ 借券數據同步成功");
-            }
-        } catch (e) { log("❌ 借券抓取失敗"); }
-    }
+    function copyAIReport() { const text = document.getElementById('ai-content').innerText; navigator.clipboard.writeText(text).then(() => { alert('報告已複製！'); }); }
 
-    document.getElementById('csvFile').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.readAsText(file, 'Big5');
-        reader.onload = function(event) {
-            const lines = event.target.result.split('\n');
-            const brokerMap = {};
-            let totalBuy = 0, totalSell = 0;
-            lines.forEach(line => {
-                const cols = line.replace(/"/g, '').split(',');
-                if (cols.length >= 5) processRow(cols[1], cols[3], cols[4], brokerMap, (b,s)=>{totalBuy+=b; totalSell+=s;});
-                if (cols.length >= 11) processRow(cols[7], cols[9], cols[10], brokerMap, (b,s)=>{totalBuy+=b; totalSell+=s;});
-            });
-            const resultArr = Object.keys(brokerMap).map(name => {
-                const d = brokerMap[name];
-                return { name: name.replace(/^\d{4}\s*/, ''), buy: Math.round(d.buy/1000), sell: Math.round(d.sell/1000), net: Math.round((d.buy-d.sell)/1000) };
-            });
-            document.getElementById('total-buy').innerText = Math.round(totalBuy/1000);
-            document.getElementById('total-sell').innerText = Math.round(totalSell/1000);
-            document.getElementById('summary-info').style.display = 'flex';
-            currentBuyList = resultArr.filter(i=>i.net>0).sort((a,b)=>b.net-a.net).slice(0,10);
-            currentSellList = resultArr.filter(i=>i.net<0).sort((a,b)=>Math.abs(b.net)-Math.abs(a.net)).slice(0,10);
-            document.getElementById('buy-body').innerHTML = currentBuyList.map(i=>`<tr><td style="text-align:left; font-weight:500;">${i.name}</td><td style="color:#888; font-size:11px;">${i.buy}/${i.sell}</td><td class="up">${i.net}</td></tr>`).join('');
-            document.getElementById('sell-body').innerHTML = currentSellList.map(i=>`<tr><td style="text-align:left; font-weight:500;">${i.name}</td><td style="color:#888; font-size:11px;">${i.buy}/${i.sell}</td><td class="down">${Math.abs(i.net)}</td></tr>`).join('');
-            document.getElementById('result').style.display = 'grid';
-            updateTextReport();
-        };
-    });
-
-    function processRow(name, b, s, map, cb) {
-        if (!name || name.includes("券商") || name.trim()==="") return;
-        if (!map[name]) map[name] = {buy:0, sell:0};
-        const bVal = parseFloat(b.replace(/,/g,''))||0, sVal = parseFloat(s.replace(/,/g,''))||0;
-        map[name].buy += bVal; map[name].sell += sVal;
-        cb(bVal, sVal);
-    }
-
-    async function askGemini() {
-        const aiBtn = document.getElementById('aiBtn');
-        const aiSection = document.getElementById('aiSection');
-        const aiContent = document.getElementById('aiContent');
-        if (!globalData.price) { alert("請先同步行情數據"); return; }
-        aiBtn.innerText = "🤖 思考中...";
-        aiBtn.disabled = true;
-        aiSection.style.display = "block";
-        aiContent.innerText = "正在分析大數據籌碼、借券、外資與美債連動...";
-        let sblText = finmindSBL ? `借券餘額 ${Number(finmindSBL.SBLShortSalesCurrentDayBalance).toLocaleString()}股` : "";
-        let fText = finmindForeign ? `外資持股比例 ${finmindForeign.ForeignInvestmentSharesRatio}%` : "";
-        let tltText = globalData.tlt ? `TLT美債價格 ${globalData.tlt.close} (${globalData.tlt.percent}%)` : "";
-        const payload = { price: globalData.price, tltInfo: tltText, creditText: sblText, foreignText: fText, topBuy: currentBuyList.slice(0,3).map(i => i.name).join(', '), topSell: currentSellList.slice(0,3).map(i => i.name).join(', ') };
-        try {
-            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await res.json();
-            aiContent.innerText = result.analysis || "AI 暫時無法回應。";
-        } catch (e) { aiContent.innerText = "AI 連線失敗。"; }
-        finally { aiBtn.innerText = "🤖 AI 分析"; aiBtn.disabled = false; }
-    }
-
-    function updateTextReport() {
-        if (!globalData.price) return;
-        const p = globalData.price;
-        const date = document.getElementById('trade-date').innerText;
-        const diff = document.getElementById('cur-diff').innerText;
-        const vol = document.getElementById('p-vol').innerText;
-
-        let report = `📊 7769 鴻勁 綜合分析報告\n${date}\n收盤：${p.close} (${diff})\n開盤：${p.open} | 最高：${p.high} | 最低：${p.low}\n成交量：${vol}\n`;
-        
-        if (globalData.tlt) {
-            report += `--------------------\n【全球宏觀】TLT美債：${globalData.tlt.close} (${globalData.tlt.percent}%)\n`;
-        }
-
-        if (finmindForeign) {
-            report += `--------------------\n【外資持股詳細】(資料日:${finmindForeign.date})\n`;
-            report += `外資持股比例：${finmindForeign.ForeignInvestmentSharesRatio.toFixed(2)}%\n`;
-            report += `外資持有股數：${Number(finmindForeign.ForeignInvestmentShares).toLocaleString()} 股\n`;
-            report += `發行總股數：${Number(finmindForeign.NumberOfSharesIssued).toLocaleString()} 股\n`;
-        }
-        if (finmindSBL) {
-            report += `--------------------\n【借券賣出詳細】(資料日:${finmindSBL.date})\n`;
-            report += `當日借券餘額：${Number(finmindSBL.SBLShortSalesCurrentDayBalance).toLocaleString()} 股\n`;
-            report += `今日借券賣出：${Number(finmindSBL.SBLShortSalesShortSales).toLocaleString()} 股\n`;
-            report += `今日還券股數：${Number(finmindSBL.SBLShortSalesReturns).toLocaleString()} 股\n`;
-        }
-
-        if (currentBuyList.length > 0) {
-            report += `--------------------\n【買超前十】\n`;
-            currentBuyList.forEach((item, idx) => report += `${idx + 1}. ${item.name} (+${item.net}張)\n`);
-        }
-        if (currentSellList.length > 0) {
-            report += `\n【賣超前十】\n`;
-            currentSellList.forEach((item, idx) => report += `${idx + 1}. ${item.name} (-${Math.abs(item.net)}張)\n`);
-        }
-        document.getElementById('textReport').value = report;
-    }
-
-    function copyAllLog() {
-        const t = document.getElementById('textReport');
-        t.select(); document.execCommand('copy'); alert("✅ 報告已複製！");
-    }
-
-    async function generatePreview() {
-        const btn = document.getElementById('shotBtn'); btn.innerText = "正在產生...";
-        try {
-            const canvas = await html2canvas(document.querySelector("#captureArea"), { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-            document.getElementById('previewImg').src = canvas.toDataURL("image/png");
-            document.getElementById('overlay').style.display = "flex";
-            btn.innerText = "📸 截圖";
-        } catch (err) { alert("截圖失敗"); btn.innerText = "📸 截圖"; }
-    }
-
-    fetchAllData();
+    updateAll(); setInterval(updateAll, 600000);
 </script>
-
 </body>
 </html>
